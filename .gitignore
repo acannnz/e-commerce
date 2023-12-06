@@ -48,3 +48,5 @@ Thumbs.db
 *.mov
 *.wmv
 
+production/application/cache
+development/application/cache

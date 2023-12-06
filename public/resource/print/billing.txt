@@ -1,0 +1,16 @@
+			{CompanyName}
+		
+Tgl/jam : {Waktu}		Dokter	 : {Dokter}
+No.Bukti: {NoBukti}		Tipe	 : {Tipe}
+NRM	: {NRM}		
+Nama	: {Nama}
+---------------------------------------------------
+Qty   Nama Obat		Harga@	Disc%	Total Hrg
+---------------------------------------------------
+{Qty} {NamaObat}	{Harga} {Disc}	{TotHrg}
+
+---------------------------------------------------
+			Total 	= Rp. {tot_bayar}
+			Diskon 	= Rp. {tot_disc}
+			-------------------------(-)
+			Grand Total = Rp. {grand}

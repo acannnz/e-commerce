@@ -1,0 +1,76 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed'); 
+?>
+
+<?php echo form_open( base_url("{$nameroutes}/export"), array("target" => "_blank") ); ?>
+<div class="row">
+	<div class="col-md-12">
+		<div class="panel panel-default">
+            <div class="panel-heading">  
+                <div class="panel-bars">
+					<ul class="btn-bars">
+                        <li class="dropdown">
+                            <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:;">
+                                <i class="fa fa-bars fa-lg tip" data-placement="left" title="<?php echo lang("actions") ?>"></i>
+                            </a>
+                            <ul class="dropdown-menu pull-right" role="menu">
+                                <li>
+                                	<a href="<?php echo site_url("{$nameroutes}/create") ?>"><i class="fa fa-plus"></i> <?php echo lang('action:add') ?></a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <h3 class="panel-title"><?php echo lang('reports:stock_opname_heading'); ?></h3>
+            </div>
+            <div class="panel-body table-responsive">
+				<input type="hidden" id="SectionName" name="f[SectionName]" value="<?php echo @$item->SectionName ?>">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group">
+							<label class="col-md-3 control-label"><?php echo lang('reports:date_label')?></label>
+							<div class="col-md-3">
+								<input id="date_start" name="f[date_start]" type="text" class="form-control datepicker" value="<?php echo date("Y-m-d"); ?>" />
+							</div>
+							<label class="col-md-3 control-label text-center"><?php echo lang('reports:till_label')?></label>
+							<div class="col-md-3">
+							   <input id="date_end" name="f[date_end]" type="text" class="form-control datepicker" value="<?php echo date("Y-m-t"); ?>" />
+							</div>
+						</div>   				
+						<div class="form-group">
+							<label class="col-md-3 control-label"><?php echo lang('reports:export_to_label')?></label>
+							<div class="col-md-9">
+								<select id="export_to" name="export_to" class="form-control">
+									<option value="pdf">PDF</option>
+									<option value="excel">EXCEL</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12 text-right">
+								<button type="submit" class="btn btn-primary"><b><i class="fa fa-file"></i> <?php echo lang( 'buttons:export' ) ?></b></button>
+								<button type="reset" class="btn btn-default"><?php echo lang( 'buttons:reset' ) ?></button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php echo form_close()?>
+<script type="text/javascript">
+(function (e) {	
+	$(document).ready(function(e) {
+
+			$('body').on('focus',".datepicker", function(){
+				$(this).datetimepicker({
+						format: "YYYY-MM-DD", 
+						widgetPositioning: {
+							horizontal: 'auto', // horizontal: 'auto', 'left', 'right'
+							vertical: 'auto' // vertical: 'auto', 'top', 'bottom'
+						},
+					});
+			});				
+    });
+}) (jQuery);
+</script>
