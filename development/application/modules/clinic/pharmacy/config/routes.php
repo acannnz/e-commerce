@@ -1,4 +1,4 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 $route['pharmacy/selling-view(/:any)?'] = 'pharmacy/selling_view$1';
 $route['pharmacy/selling-return(/:any)?'] = 'pharmacy/selling_return$1';
@@ -30,6 +30,11 @@ $route['pharmacy/reports/warehouse-cards(/:any)(/:any)'] = "reports/warehouse_ca
 $route['pharmacy/reports/recap-stocks'] = "reports/recap_stocks";
 $route['pharmacy/reports/recap-stocks(/:any)'] = "reports/recap_stocks$1";
 $route['pharmacy/reports/recap-stocks(/:any)(/:any)'] = "reports/recap_stocks$1$2";
+
+// retur penjualan
+$route['pharmacy/reports/retur-penjualan'] = "reports/retur_penjualan";
+$route['pharmacy/reports/retur-penjualan(/:any)'] = "reports/retur_penjualan$1";
+$route['pharmacy/reports/retur-penjualan(/:any)(/:any)'] = "reports/retur_penjualan$1$2";
 
 // stock opname
 $route['pharmacy/reports/stock-opname'] = "reports/stock_opname";
@@ -65,4 +70,3 @@ $route['pharmacy/reports/drug-sale-suppliers(/:any)(/:any)'] = "reports/drug_sal
 $route['pharmacy/reports/doctor-drug-incentives'] = "reports/doctor_drug_incentives";
 $route['pharmacy/reports/doctor-drug-incentives(/:any)'] = "reports/doctor_drug_incentives$1";
 $route['pharmacy/reports/doctor-drug-incentives(/:any)(/:any)'] = "reports/doctor_drug_incentives$1$2";
-
