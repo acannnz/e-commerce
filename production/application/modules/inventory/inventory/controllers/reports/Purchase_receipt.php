@@ -11,6 +11,7 @@ class Purchase_receipt extends Admin_Controller
 
 		$this->load->language('reports');
 		$this->load->model('section_model');
+		$this->load->model('item_typegroup_model');
 
 		$this->page = 'Penerimaan Pembelian';
 		$this->template->title($this->page);
@@ -30,9 +31,13 @@ class Purchase_receipt extends Admin_Controller
 	public function dialog($is_ajax = FALSE)
 	{
 		$option_section = $this->section_model->get_all(NULL, 0, ['KelompokSection' => 11, 'StatusAktif' => 1]);
+		$option_kelompok_jenis = $this->item_typegroup_model->dropdown_data(['Kelompok' => 'OBAT']);
+		// print_r($option_kelompok_jenis);
+		// exit;
 		$data = [
 			"lookup_supplier" => base_url("{$this->nameroutes}/lookup_supplier"),
 			"option_section" => $option_section,
+			"option_kelompok_jenis" => $option_kelompok_jenis,
 			"nameroutes" => $this->nameroutes,
 			"datatables" => true,
 			"datepicker" => true,
@@ -121,8 +126,9 @@ class Purchase_receipt extends Admin_Controller
 			$location = $this->input->post('f[location]');
 			$supplier = $this->input->post('f[supplier_id]');
 			$payment_type = $this->input->post('f[Type_Pembayaran]');
+			$kelompok_jenis = $this->input->post('f[KelompokJenis]');
 
-			report_helper::export_purchase_receipt($date_start, $date_end, $location, $supplier, $opsi, $payment_type);
+			report_helper::export_purchase_receipt($date_start, $date_end, $location, $supplier, $opsi, $payment_type, $kelompok_jenis);
 
 			exit(0);
 		}

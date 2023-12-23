@@ -15,6 +15,7 @@ class Cashier_detail_model extends Public_Model
 
 	public function create($data)
 	{
+		// print_r($data);exit;
 		$this->db->insert($this->table, $data);
 		return (int) $this->db->insert_id(); 
 	}

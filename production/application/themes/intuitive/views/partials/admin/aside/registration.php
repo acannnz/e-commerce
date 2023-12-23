@@ -29,6 +29,7 @@
     
     <li class="title"><?php echo lang("nav:servings") ?></li>
     <li<?php if(in_array(@$page, array("reservations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'reservations' ) ?>"><i class="fa fa-plus-square"></i> <?php echo lang("nav:reservation") ?></a></li>
+    <li<?php if(in_array(@$page, array("reservations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'reservations/calender' ) ?>"><i class="fa fa-square"></i> <?php echo lang("nav:reservation") ?> Calender</a></li>
     <li<?php if(in_array(@$page, array("registrations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'registrations' ) ?>"><i class="fa fa-user-plus"></i> <b><?php echo lang("nav:registration") ?></b></a></li>
 	<!-- <li<?php if(in_array(@$page, array("registrations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'registrations/transfer_inpatient' ) ?>"><i class="fa fa-bed"></i> <?php echo lang("nav:transfer_inpatient") ?></a></li> -->
     <li<?php if(in_array(@$page, array("cashier"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'cashier/general-payment' ) ?>"><i class="fa fa-money"></i> <?php echo lang("nav:cashier") ?></a></li>

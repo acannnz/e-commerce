@@ -264,6 +264,42 @@ final class report_helper
 		
 		return FALSE;
 	}
+	
+	public static function get_top_drugs( $date_start, $date_end)
+	{
+		
+		$db = self::ci()->db;
+		
+		$query = "
+		select TOP 10 c.Barang_ID, c.Nama_Barang as NamaResepObat, COUNT(C.Nama_Barang) as Jumlah from BILLFarmasi a 
+			join BILLFarmasiDetail b on a.NoBukti = b.NoBukti
+			join mBarang c on b.Barang_ID = c.Barang_ID
+			where Tanggal >= '$date_start'
+			and Tanggal <= '$date_end'
+			and c.KelompokGrading = 'OTC'
+			and c.KelompokJenis != 'PAKET BHP'
+			group by c.Nama_Barang, c.Barang_ID
+			order by Jumlah DESC
+				";
+		
+		$query = $db->query( $query );
+		if( $query->num_rows() )
+		{			
+			$collection = array();
+			foreach( $query->result() as $item )
+			{	
+				// Pengelompokan Opname Berdasarkan Section Name
+				$HargaGrading = $db->query("Select * from dbo.GetHargaObatNew_WithStok(3,'xx',0,$item->Barang_ID,0,'". 'SECT0002' ."',0)")->row();		
+				$item->Harga = $HargaGrading->Harga_Baru;
+				$collection[] = $item;
+			}
+			print_r($collection);exit;
+			
+			return $collection;
+		}		
+		
+		return FALSE;
+	}
 	public static function get_stock_opname( $date_start, $date_end, $section_id )
 	{
 		
@@ -934,8 +970,101 @@ final class report_helper
 		$writer->save('php://output');
 		exit;
 	}
+	
+	public static function export_excel_get_top_drugs( $date_start, $date_end)
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
 
-	public static function get_recap_transactions( $date_start, $date_end, $section_id, $shift_id, $user_id )
+		// $section = $_ci->section_model->get_one($section_id);
+		$collection = self::get_top_drugs( $date_start, $date_end);	
+
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
+		$file_name = sprintf('%s periode %s s/d %s ', 'Laporan Top 10 Penggunaan Obat', $date_start->format('d F Y'), $date_end->format('d F Y'));
+		
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( 'Laporan Top 10 Penggunaan Obat' )
+				->setSubject( 'Laporan Top 10 Penggunaan Obat')
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:I1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$tb_row = 3;
+		$i = 1;
+
+		$_sheet->setCellValue("A{$tb_row}", 'No'); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("B{$tb_row}", 'Nama Obat'); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("C{$tb_row}", 'Jumlah Obat Terpakai'); 
+		$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+		$tb_row++;
+			
+		if(!empty($collection)) : foreach ($collection as $row) :
+				$_sheet->setCellValue("A{$tb_row}", $i++);
+				$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->setCellValue("B{$tb_row}", @$row->NamaResepObat);
+				$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->setCellValue("C{$tb_row}", @$row->Jumlah);
+				$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$tb_row++;
+		endforeach; endif;
+
+		/*$spreadsheet->getActiveSheet()->getColumnDimension('A')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);*/
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'REKAP' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
+	public static function get_recap_transactions($date_start, $date_end, $section_id, $kelompokjenis, $shift_id, $user_id)
 	{
 		$_ci = self::ci();
 		$_ci->load->model('section_model');
@@ -943,10 +1072,9 @@ final class report_helper
 
 		$collection = ['data' => [], 'payment' => [], 'merchan' => []];
 		// collection data
-		$query = $_ci->db->query("exec FAR_Rpt_RekapTransaksi '{$date_start}','{$date_end}','{$section->SectionID}','{$shift_id}','{$user_id}'");
-		foreach( $query->result() as $row )
-		{	
-			$collection['data'][ $row->JenisKerjasama ][$row->NoBukti .' => '. $row->Keterangan][] = [
+		$query = $_ci->db->query("exec FAR_Rpt_RekapTransaksi '{$date_start}','{$date_end}','{$section->SectionID}','{$kelompokjenis}','{$shift_id}','{$user_id}'");
+		foreach ($query->result() as $row) {
+			$collection['data'][$row->JenisKerjasama][$row->NoBukti . ' => ' . $row->Keterangan][] = [
 				'JenisKerjasama' => $row->JenisKerjasama,
 				'Barang_ID' => $row->Barang_ID,
 				'NamaObat' => $row->Nama_Barang,
@@ -962,7 +1090,7 @@ final class report_helper
 		$collection['merchan'] = $_ci->db->query("exec FAR_Rpt_RekapTransaksiMerchan '{$date_start}','{$date_end}','{$section->SectionID}', '{$shift_id}', '{$user_id}'")->result();
 		// Total Jenis Pembayaran
 		$collection['payment'] = $_ci->db->query("exec FAR_Rpt_RekapTransaksiPayment '{$date_start}','{$date_end}','{$section->SectionID}','{$shift_id}', '{$user_id}'")->row();
-		
+
 		return $collection;
 	}
 	

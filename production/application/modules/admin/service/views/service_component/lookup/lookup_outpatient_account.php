@@ -71,7 +71,7 @@
 										type: "POST",
 										data: function( params ){
 											params._where = {
-												"Group_ID" : "4",
+												
 											}
 										}
 									},

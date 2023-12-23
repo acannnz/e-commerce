@@ -57,6 +57,20 @@ class Pharmacy extends Admin_Controller
 			->set_breadcrumb( "Farmasi" )
 			->build('pharmacies/datatable', (isset($data) ? $data : NULL));
 	}
+
+	public function index_bhp()
+	{
+		$data = [
+			'page' => $this->page,
+			"form" => TRUE,
+			'datatables' => TRUE,
+		];
+				
+		$this->template
+			->set( "heading", "BHP" )
+			->set_breadcrumb( "BHP" )
+			->build('pharmacies/datatable_bhp', (isset($data) ? $data : NULL));
+	}
 	
 
 	public function selling( $NoResep = NULL)
@@ -243,6 +257,176 @@ class Pharmacy extends Admin_Controller
 			->build('pharmacies/form_selling', $data);
 	}
 
+	public function selling_bhp( $NoBuktiPOP = NULL)
+	{
+		$item = [
+			"KerjasamaID" => 3,
+			"Jam" => date('Y-m-d H:i:s'),
+			"Tanggal" => date('Y-m-d'),
+			"SectionInput" => $this->section->SectionID,
+			"SectionID" => $this->section->SectionID,
+			"SectionAsalID" => $this->section->SectionID,
+			"Shift" => $this->session->userdata('shift_id')
+		];
+		
+		if( $this->input->post() ) 
+		{
+			$farmasi = array_merge( $item, $this->input->post("farmasi") );
+			$farmasi["NoBukti"] = $NoBuktiPOP;	
+
+			$farmasi_detail = array();
+			foreach( $this->input->post("farmasi_detail") as $row ){
+				$row["NoBuktiPOP"] = $farmasi["NoBukti"];
+				$farmasi_detail[] = $row;
+			}
+			$this->load->library( 'form_validation' );
+			
+			$this->form_validation->set_rules( $this->get_model()->rules['insert'] );
+			$this->form_validation->set_data( $this->input->post("farmasi") );
+			$response = array(
+					"status" => "success",
+					"message" => "",
+					"code" => 200
+				);
+
+			if( !$this->form_validation->run() )
+			{
+
+				$this->db->trans_begin();
+					
+					$this->db->delete("SIMtrDetailPOP", array("NoBuktiPOP" => $NoBuktiPOP) );				
+					
+					$section = $this->pharmacy_m->get_row_data( "SIMmSection", array("SectionID" => $farmasi['SectionID'] ));
+					$total_bhp = $sub_tot_bhp = 0;
+					foreach( $farmasi_detail as $k => $v )
+					{
+						
+						$this->db->insert("SIMtrDetailPOP", $v );
+						
+						if ( $v["Barang_Id"] != 0 )
+						{
+							// Mangambil total stok terakhir yang ada pada kartu gudang
+							$qty_last_stock = $this->pharmacy_m->get_last_stock_warehouse_card( array("Lokasi_ID" => $section->Lokasi_ID, "Barang_ID" => $v["Barang_Id"]) );
+							$qty_saldo = $qty_last_stock - $v["Qty"];
+							$kartu_gudang = array(
+									"Lokasi_ID" => $section->Lokasi_ID,
+									"Barang_ID" => $v["Barang_Id"],
+									"No_Bukti" => $v["NoBuktiPOP"],
+									"JTransaksi_ID" => 564,
+									"Tgl_Transaksi" => $farmasi["Tanggal"],
+									"Kode_Satuan" => $v["Satuan"],
+									"Qty_Masuk" => 0,
+									"Harga_Masuk" =>  0,
+									"Qty_Keluar" => $v["Qty"],
+									"Harga_Keluar" => $v["HargaSatuan"],
+									"Qty_Saldo" => $qty_saldo,
+									"Harga_Persediaan" => $v["HargaSatuan"],
+									"Jam" => $farmasi["Jam"],
+							);
+							$this->db->insert("GD_trKartuGudang", $kartu_gudang );
+							$this->db->update("mBarang", array("Tgl_Transaksi_Terakhir" => $farmasi['Tanggal']), array("Barang_ID" => $v['Barang_Id']));
+						
+							$farmasi_pemakaian = array(
+									"IDPemakaian" => 1,
+									"NoBukti" => $farmasi['NoBukti'],
+									"Barang_ID" => $v["Barang_Id"],
+									"NoUrut" => ++$k,
+									"Jam" => date("Y-m-d H:i:s"),
+									"Tanggal" => date("Y-m-d"),
+									"JmlObat" => $v["Qty"],
+									"JmlSdhDipakai" =>0,
+									"JmlDipakai" => $v["Qty"],
+									"UseID" => $this->user_auth->User_ID,
+									"NoPemakaian" => $farmasi['NoBukti']
+								);
+	
+							$this->db->insert("BILLFarmasiPemakaian", $farmasi_pemakaian );
+						}
+						$total_bhp = $v['Qty'] * $v['HargaSatuan'];
+						$sub_tot_bhp = $sub_tot_bhp + $v['Total'];
+					}
+				$this->db->update("SIMtrPOP", array("Realisasi_Farmasi" => 1, "JumlahTransaksi" => $sub_tot_bhp), array("NoBuktiPOP" => $farmasi['NoBukti']));
+				// Insert User Aktivities
+				$activities_description = sprintf( "%s # %s # %s", "INSERT BILLING OBAT BEBAS FARMASI", $farmasi['NoBukti'], $section->SectionName );			
+				$this->db->query("EXEC InsertUserActivities '". $farmasi['Tanggal']."','". $farmasi['Jam']."',". $this->user_auth->User_ID .",'". $farmasi['NoBukti']."','". $activities_description ."','BILLFarmasi'");
+
+
+				// Jika Merupakan Resep Dokter, Maka Update data Realisasi Farmasi Menjadi 1
+				if ( !empty($farmasi['NoBuktiPOP']) )
+				{
+					$this->db->update("SIMtrPOP", array("Realisasi_Farmasi" => 1), array("NoBuktiPOP" => $farmasi['NoBuktiPOP']));
+				}
+											
+				if ( $this->db->trans_status() === FALSE )
+				{
+					$this->db->trans_rollback();
+					$response = array(
+							"status" => 'error',
+							"message" => lang('global:created_failed'),
+							"code" => 500
+						);
+				}
+				else
+				{
+					//$this->db->trans_rollback();
+					$this->db->trans_commit();
+					$response = array(
+							"NoBukti" => $farmasi['NoBukti'],
+							"status" => 'success',
+							"message" => lang('global:created_successfully'),
+							"code" => 200
+						);
+				}				
+
+			} else
+			{
+				$response = array(
+						"status" => 'error',
+						"message" => $this->form_validation->get_all_error_string(),
+						"code" => 500
+					);
+			}
+			
+			print_r( json_encode($response, JSON_NUMERIC_CHECK) );
+			exit(0);
+			
+		}
+		
+		#JIKA BHP DARI SECTION LAIN
+		if( $NoBuktiPOP ){
+			$item = array_merge( $item, (array) $this->pharmacy_m->get_prescription_data_bhp( $NoBuktiPOP ) );		
+		}
+		$item["NoBukti"] = $NoBuktiPOP;
+
+		
+		$option_patient_type = $this->pharmacy_m->get_option_patient_type();
+		$option_section = $this->pharmacy_m->get_options("SIMmSection", array("TipePelayanan" => "RJ", "StatusAktif" => 1), array("by" => "SectionName", "sort" => "ASC"));
+		
+		
+		$data = [
+			"page" => $this->page."_".strtolower(__FUNCTION__),
+			"item" => (object) @$item,
+			"user" => $this->user_auth,
+			"section" => $this->section,
+			"option_patient_type" => @$option_patient_type,
+			"option_section" => $option_section,
+			"option_dosis" => $this->pharmacy_m->get_options("SIMmDosisObat", array(), array("by" => "KodeDosis", "sort" => "ASC")),
+			"lookup_supplier" => base_url("pharmacy/lookup_supplier"),
+			"form" => TRUE,
+			"datatables" => TRUE,
+			"typeahead" => TRUE,
+			"lookup_supplier" => base_url("pharmacy/lookup_supplier"),
+			"lookup_examination" => base_url("pharmacy/lookup_examination"),
+			"lookup_cooperation" => base_url("pharmacy/lookup_cooperation"),
+			"lookup_prescription" => base_url("pharmacy/lookup_prescription"),
+			"lookup_products_bhp" => base_url("pharmacy/pharmacies/details_bhp/lookup_product_bhp"),
+		];
+		
+		$this->template
+			->set_breadcrumb( "Farmasi", base_url("pharmacy") )
+			->build('pharmacies/form_selling_bhp', $data);
+	}
+
 	public function selling_view( $NoBukti = NULL )
 	{
 
@@ -286,6 +470,50 @@ class Pharmacy extends Admin_Controller
 				->set_breadcrumb( "Farmasi", base_url("pharmacy") )
 				->set_breadcrumb( "Lihat Penjualan Obat Bebas" )
 				->build('pharmacies/form_selling_view', $data);
+		}
+	}
+
+	public function selling_view_bhp( $NoBuktiPOP = NULL )
+	{
+
+		$item = $this->pharmacy_m->get_pharmacy_data_bhp(["NoBuktiPOP" => $NoBuktiPOP]);
+		
+		if( $this->input->is_ajax_request() )
+		{
+			$data = array(
+					'item' => (object)$item,
+					"patient" => @$patient,
+					"cooperation" => @$cooperation,
+					"is_ajax_request" => TRUE,
+					"is_modal" => TRUE,
+				);
+			
+			$this->load->view( 
+					'pharmacy/modal/create_edit', 
+					array('form_child' => $this->load->view('pharmacy/form', $data, true))
+				);
+		} else
+		{
+			$data = array(
+					"page" => $this->page."_".strtolower(__FUNCTION__),
+					"item" => @$item,
+					"user" => $this->simple_login->get_user(),
+					"pharmacy" => @$pharmacy,
+					// "cooperation" => $cooperation,
+					// "option_patient_type" => @$option_patient_type,
+					"form" => TRUE,
+					"datatables" => TRUE,
+					"return_link" => base_url("pharmacy/selling-return/{$item->NoBuktiPOP}"),
+					"create_link" => base_url("pharmacy/selling"),
+					"pay_link" => base_url("pharmacy/drug-payment/pay/{$item->NoBuktiPOP}"),
+					"print_billing_link" => base_url("pharmacy/print_billing/"),
+				);
+			
+			$this->template
+				->set( "heading", "Lihat Detail BHP" )
+				->set_breadcrumb( "Farmasi", base_url("pharmacy") )
+				->set_breadcrumb( "Lihat Detail BHP" )
+				->build('pharmacies/form_selling_view_bhp', $data);
 		}
 	}
 

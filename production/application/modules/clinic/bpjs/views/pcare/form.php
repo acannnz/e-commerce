@@ -85,7 +85,7 @@ if (!defined('BASEPATH'))
 						<div class="form-group">
 							<label class="col-md-3 control-label"><?= lang('label:complaint') ?></label>
 							<div class="col-md-9">
-								<textarea id="keluhan" class="form-control"></textarea>
+								<textarea id="keluhan" class="form-control"><?= @$item->Symptom?></textarea>
 							</div>
 						</div>
 						<div class="form-group">
@@ -191,14 +191,14 @@ if (!defined('BASEPATH'))
 									<div class="col-md-6">
 										<label>Tinggi Badan</label>
 										<div class="input-group">
-											<input type="number" id="vitalHeight" name="v[Height]" min="0" placeholder="" class="form-control">
+											<input type="text" id="vitalHeight" name="v[Height]" min="0" placeholder="" class="form-control">
 											<span class="input-group-addon help-block">CM</span>
 										</div>
 									</div>
 									<div class="col-md-6">
 										<label>Berat Badan</label>
 										<div class="input-group">
-											<input type="number" id="vitalWeight" name="v[Weight]" min="0" placeholder="placeholder" class="form-control">
+											<input type="text" id="vitalWeight" name="v[Weight]" min="0" placeholder="placeholder" class="form-control">
 											<span class="input-group-addon help-block">KG</span>
 										</div>
 									</div>
@@ -207,7 +207,7 @@ if (!defined('BASEPATH'))
 									<div class="col-md-6">
 										<label>Suhu Tubuh</label>
 										<div class="input-group">
-											<input type="number" id="vitalTemperature" name="v[Temperature]" value="<?= @$item->Temperature  ?>" min="0" placeholder="" class="form-control">
+											<input type="text" id="vitalTemperature" name="v[Temperature]" value="<?= @$item->Temperature  ?>" min="0" placeholder="" class="form-control">
 											<span class="input-group-addon help-block">C<sup>o</sup></span>
 										</div>
 									</div>
@@ -233,9 +233,9 @@ if (!defined('BASEPATH'))
 									<div class="col-md-12">
 										<label>Sistole/Diastole</label>
 										<div class="input-group">
-											<input type="number" id="vitalSystolic" name="v[Systolic]" placeholder="" min="90" max="120" class="form-control" />
+											<input type="number" id="vitalSystolic" name="v[Systolic]" placeholder="" class="form-control" />
 											<span class="input-group-addon">/</span>
-											<input type="number" id="vitalDiastolic" name="v[Diastolic]" placeholder="" min="60" max="80" class="form-control" />
+											<input type="number" id="vitalDiastolic" name="v[Diastolic]" placeholder="" class="form-control" />
 											<span class="input-group-addon help-block">MM/HG</span>
 										</div>
 									</div>
@@ -346,7 +346,7 @@ if (!defined('BASEPATH'))
 					( response.status == true )
 						? $.alert_success('Kunjungan Pcare ditemukan')
 						: $.alert_error('Kunjungan Pcare tidak ditemukan : '+ response.message);
-										
+					
 					$.each(response.collection, function(i, v){
 						if(v.noKunjungan == '<?= $item->NoKunjungan ?>'){
 							$('#keluhan').val( v.keluhan );
@@ -366,6 +366,7 @@ if (!defined('BASEPATH'))
 							$('#tglEstRujuk').html( v.tglEstRujuk );
 							
 							dataVisite = v;
+							console.log(v);					
 						}
 					});
 										
@@ -466,24 +467,6 @@ if (!defined('BASEPATH'))
 					}
 				}).done(function(response) {					
 					var _data = response.data;
-					
-					if(_data.diag2 == null){
-						_data.diag2 = {
-							kdDiag: $('#kdDiag2').val(),
-							nmDiag: $('#nmDiag2').val() 
-						}
-					}
-					
-					if(_data.diag3 == null){
-						_data.diag3 = {
-							kdDiag: $('#kdDiag3').val(),
-							nmDiag: $('#nmDiag3').val() 
-						}
-					}
-					
-					if($('#providerRujukLanjut').val() != ''){
-						_data.providerRujukLanjut = $('#providerRujukLanjut').html();
-					}
 										
 					var _form = document.createElement('form');
 					_form.method = 'POST';

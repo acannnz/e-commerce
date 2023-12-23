@@ -17,10 +17,12 @@ class Item_typegroup extends ADMIN_Controller
 		$this->load->library('inventory');
 		$this->load->helper('inventory');
 		
+		$this->load->model('item_type_model');
 		$this->load->model('item_typegroup_model');
 		$this->load->model('procurement_model');
 		
 		$this->data['populate_group']= ['' => 'Pilih Kelompok','OBAT' => 'OBAT','UMUM' => 'UMUM'];
+		$this->data['populate_precurement']= $this->procurement_model->to_list_data(0,'Pilih Pengadaan');
 		//$this->data['populate_precurement']= $this->procurement_model->to_list_data(INV_LOCATION_ID,'Pilih Pengadaan');
 	}
 	

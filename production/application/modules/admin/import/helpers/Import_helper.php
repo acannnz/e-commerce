@@ -49,7 +49,7 @@ final class Import_helper
 		return $number;
 	}
 	
-	public static function previsew_patient()
+	public static function preview_patient()
 	{
 		self::init();
 		$_ci = self::ci();
@@ -67,7 +67,7 @@ final class Import_helper
 			$activeSheet = $spreadsheet->getActiveSheet();
 			$highestCell = $activeSheet->getHighestColumn() . $activeSheet->getHighestRow();
 			$getCollection = $activeSheet->rangeToArray(
-								"A2:{$highestCell}",     // The worksheet range that we want to retrieve
+								"A1:{$highestCell}",     // The worksheet range that we want to retrieve
 								NULL,        // Value that should be returned for empty cells
 								TRUE,        // Should formulas be calculated (the equivalent of getCalculatedValue() for each cell)
 								TRUE,        // Should values be formatted (the equivalent of getFormattedValue() for each cell)
@@ -75,6 +75,7 @@ final class Import_helper
 							);
 							
 			$NRM = self::gen_mr_number();
+			$NRMLama = '0000000000';
 			$_patient = [];
 			foreach($getCollection as $key => $row):			
 				if(empty($row['B'])){
@@ -92,6 +93,16 @@ final class Import_helper
 					JenisKerjasamaID
 					NRMLama
 				*/
+				$JK = strlen($row['S']);
+				$NomorNRMLama[0] = '0';
+				unset($NomorNRMLama); // $foo is gone
+				$NomorNRMLama = array(); // $foo is here again
+				for ($i = 0; $i < 10-$JK; $i++) {
+					$NomorNRMLama[] = '0';
+				}
+				$NRMLama = @implode( '', $NomorNRMLama );
+				$NRMLama = $NRMLama.$row['S'];
+
 				if( !empty($row['A']) && ! empty($row['B']) ):		
 					$birthdate = date('Y-m-d');
 					if(!empty($row['C'])):
@@ -128,9 +139,15 @@ final class Import_helper
 						'PenanggungHubungan' => 'Pasien Sendiri',
 						'PenanggungPekerjaan' => NULL,
 						'Aktif' => 1,
-						'NRMLama' => $row['S'],
+						'NRMLama' => $NRMLama,
 					];
 				endif;
+						
+				$NRM = 1 . str_replace('.', '', $NRM);
+				$NRM = ++$NRM;
+				$NRM = substr($NRM, 1); 
+				$arrayNRM = @str_split( $NRM, 2 );
+				$NRM = @implode( '.', $arrayNRM );
 			endforeach;
 			
 			response_json($_patient);exit;
@@ -139,8 +156,9 @@ final class Import_helper
 		}
 	}
 	
-	public static function processs_patient()
+	public static function process_patient()
 	{
+
 		self::init();
 		$_ci = self::ci();
 		
@@ -148,6 +166,7 @@ final class Import_helper
 		
 		if( $do_upload['status'] == 'success')
 		{
+
 			$inputFileType = ucfirst(str_replace('.', '', $do_upload['upload_data']['file_ext']));
 			$inputFileName = realpath(FCPATH . '../../assets/import/'.$do_upload['upload_data']['file_name']);
 
@@ -157,19 +176,20 @@ final class Import_helper
 			$activeSheet = $spreadsheet->getActiveSheet();
 			$highestCell = $activeSheet->getHighestColumn() . $activeSheet->getHighestRow();
 			$getCollection = $activeSheet->rangeToArray(
-								"A2:{$highestCell}",     // The worksheet range that we want to retrieve
+								"A1:{$highestCell}",     // The worksheet range that we want to retrieve
 								NULL,        // Value that should be returned for empty cells
 								TRUE,        // Should formulas be calculated (the equivalent of getCalculatedValue() for each cell)
 								TRUE,        // Should values be formatted (the equivalent of getFormattedValue() for each cell)
 								TRUE         // Should the array be indexed by cell row and cell column
 							);
-			$_ci->db->trans_begin();
+				$_ci->db->trans_begin();
+
 				$NRM = self::gen_mr_number();
-				$_patient = [];
+
 				foreach($getCollection as $key => $row) {				
-					if(empty($row['B'])){
-						continue;
-					}
+					// if(empty($row['B'])){
+					// 	continue;
+					// }
 					
 					// [A] => NRMLama, [B] => NamaPasien, [C] => PasienHubungan, [D] => JK, [E] => Umur, [F]=> TGL Lahir 
 					// [G] => NamaPendamping, [H]=> PendampingHubungan, [I]=> Alamat, [J]=> NoTelp, [K] => Pekerjaan 
@@ -182,40 +202,84 @@ final class Import_helper
 						JenisKerjasamaID
 						NRMLama
 					*/
-					if( !empty($row['A']) && ! empty($row['B']) ):		
+					// $JK = strlen($row['S']);
+					// $NomorNRMLama[0] = '0';
+					// unset($NomorNRMLama); // $foo is gone
+					// $NomorNRMLama = array(); // $foo is here again
+					// for ($i = 0; $i < 10-$JK; $i++) {
+					// 	$NomorNRMLama[] = '0';
+					// }
+					// $NRMLama = @implode( '', $NomorNRMLama );
+					// $NRMLama = $NRMLama.$row['S'];
+
+					if( !empty($row['A'])):		
 						$birthdate = date('Y-m-d');
 						if(!empty($row['C'])):
-							$birthdate = date('Y-m-d', strtotime($row['C']));
+							$birthdate = date('Y-m-d', strtotime($row['E']));
 						endif;
-									
-						$_patient = [
-							'NRM' => $row['A'],
-							'NamaPasien' => $row['B'],
-							'JenisKelamin' => ($row['F'] == 'L') ? 'M' : 'F',
-							'TglLahir' => $birthdate,
-							'TglLahirDiketahui' => 0,
-							'UmurSaatInput' => calculate_age($birthdate),
-							'Alamat' => $row['D'],
-							'Pekerjaan' => '',
-							'NoKartu' => '',
-							'Phone' => '',
-							'JenisPasien' => ($row['E'] == 'UMUM') ? 'UMUM' : 'BPJS',
-							'JenisKerjasamaID' => ($row['E'] == 'UMUM') ? 3 : 9,
-							'NationalityID' => 'INA',
-							'PropinsiID' => 1,
-							'PasienKTP' => 1,
-							'TglInput' => date('Y-m-d'),
-							'UserID' => self::$user_auth->User_ID,
-							'DokterID_ReferensiPertama' => NULL,
-							'PenanggungNama' => $row['B'],
-							'PenanggungAlamat' => $row['D'],
-							'PenanggungPhone' => '',
-							'PenanggungHubungan' => 'Pasien Sendiri',
-							'PenanggungPekerjaan' => NULL,
-							'Aktif' => 1,
-							'NRMLama' => $row['A'],
-						];
-						$_ci->patient_model->create( $_patient );
+						
+						// print_r($row['E']);exit;
+						$NRMs = $_ci->db->select('NRMLama')->where('NRMLama', @$row['S'])->get('mPasien')->row();
+						// $_patient = [
+						// 	'TglLahir' => date("Y-m-d", strtotime($row['E'])),
+							// 'NoPemeriksaan' => "220507UMU-000001",
+							// 'NRM' => !empty($NRM->NRM) ? $NRM->NRM : '00.29.55' ,
+							// 'DokterID' => 'XX',
+							// 'Subjective' => @$row['B'],
+							// 'Objective' => @$row['C'],
+							// 'Assessment' => @$row['F']. ' '.@$row['G'] ,
+							// 'Plan' => @$row['D'],
+							// 'CreatedBy' => self::$user_auth->User_ID,
+							// 'CreatedAt' => date("Y-m-d", strtotime($row['H'])),
+							// 'UpdatedBy' => self::$user_auth->User_ID,
+							// 'UpdatedAt' => date("Y-m-d", strtotime($row['H'])),
+						// ];
+						if (!empty($NRMs)) {
+							$_patient = [
+								'TglLahir' => $birthdate,
+							];
+							// print_r($_patient);exit;
+							$_ci->db->where('NRMLama', $NRMs->NRMLama)->update('mPasien', $_patient);
+
+							// $_patient = [
+							// 	'NRM' => $NRM,
+							// 	'NamaPasien' => @$row['A'],
+							// 	'JenisKelamin' => (@$row['D'] == 'L') ? 'M' : 'F',
+							// 	'TglLahir' => $birthdate,
+							// 	'TglLahirDiketahui' => empty($row['E']) ? 0 : 1,
+							// 	'UmurSaatInput' => $row['F'],
+							// 	'Alamat' => $row['H'],
+							// 	'Pekerjaan' => $row['G'],
+							// 	'NoIdentitas' => $row['C'],
+							// 	'NoKartu' => $row['O'],
+							// 	'Phone' => $row['L'],
+							// 	'JenisPasien' => ($row['M'] == 'UMUM') ? 'UMUM' : 'BPJS',
+							// 	'JenisKerjasamaID' => ($row['N'] == 'UMUM') ? 3 : 9,
+							// 	'NationalityID' => 'INA',
+							// 	'PropinsiID' => $row['I'],
+							// 	'KabupatenID' => $row['J'],
+							// 	'KecamatanID' => $row['K'],
+							// 	'KodePos' => $row['P'],
+							// 	'Agama' => $row['Q'],
+							// 	'TempatLahir' => $row['R'],
+							// 	'PasienKTP' => 1,
+							// 	'TglInput' => date('Y-m-d'),
+							// 	'UserID' => self::$user_auth->User_ID,
+							// 	'DokterID_ReferensiPertama' => NULL,
+							// 	'PenanggungNama' => @$row['A']. ' ' . @$row['B'],
+							// 	'PenanggungAlamat' => $row['H'],
+							// 	'PenanggungPhone' => '',
+							// 	'PenanggungHubungan' => 'Pasien Sendiri',
+							// 	'PenanggungPekerjaan' => NULL,
+							// 	'Aktif' => 1,
+							// 	'NRMLama' => $row['S'],
+							// ];
+							// print_r($_patient);exit;
+
+							// $_ci->patient_model->create( $_patient );
+						}
+						$_ci->db->trans_commit();
+
 						
 						$NRM = 1 . str_replace('.', '', $NRM);
 						$NRM = ++$NRM;
@@ -226,14 +290,14 @@ final class Import_helper
 					
 				}
 				
-				$import_log = [
-					'FileName' => $do_upload['upload_data']['file_name'],
-					'ImportType' => __FUNCTION__,
-					'Collection' => json_encode( $getCollection ),
-					'CreatedAt' => date('Y-m-d H:i:s'),
-					'CreatedBy' => self::$user_auth->User_ID
-				];
-				$_ci->import_model->create( $import_log );				
+				// $import_log = [
+				// 	'FileName' => $do_upload['upload_data']['file_name'],
+				// 	'ImportType' => __FUNCTION__,
+				// 	'Collection' => json_encode( $getCollection ),
+				// 	'CreatedAt' => date('Y-m-d H:i:s'),
+				// 	'CreatedBy' => self::$user_auth->User_ID
+				// ];
+				// $_ci->import_model->create( $import_log );				
 			
 			if($_ci->db->trans_status() === FALSE)
 			{
@@ -241,7 +305,6 @@ final class Import_helper
 				return ["status" => 'error', "message" => lang('global:created_failed')];
 			}
 			//$_ci->db->trans_rollback();
-			$_ci->db->trans_commit();
 			return ["status" => 'success', "message" => lang('global:created_successfully')];
 			
 		} else {
@@ -1031,7 +1094,7 @@ final class Import_helper
 				$activeSheet = $spreadsheet->getActiveSheet();
 				$highestCell = $activeSheet->getHighestColumn() . $activeSheet->getHighestRow();
 				$getCollection = $activeSheet->rangeToArray(
-									"A2:{$highestCell}",     // The worksheet range that we want to retrieve
+									"A1:{$highestCell}",     // The worksheet range that we want to retrieve
 									NULL,        // Value that should be returned for empty cells
 									TRUE,        // Should formulas be calculated (the equivalent of getCalculatedValue() for each cell)
 									TRUE,        // Should values be formatted (the equivalent of getFormattedValue() for each cell)
@@ -1062,7 +1125,7 @@ final class Import_helper
 						continue;
 					}
 					$item = [
-						'Kelas_ID' => @$class[$row['E']],
+						'Kelas_ID' => 86,
 						'Lokasi_ID' => 1426,
 						'Kode_Barang' => $row['A'],
 						'Nama_Barang' => $row['B'],
@@ -1070,61 +1133,64 @@ final class Import_helper
 						'Metode_Inventori' => 'A',
 						'PPn' => 0,
 						'Keterangan' => '-',
-						'Harga_Beli' => $row['L'],
-						'Harga_Jual' => $row['M'],
-						'Harga_Jual_Lama' => $row['M'],
+						'Harga_Beli' => $row['C'],
+						'Harga_Jual' => $row['C'],
+						'Harga_Jual_Lama' => $row['C'],
+						'HRataRata' => $row['C'],
 						'TglBerlaku_Harga' => date('Y-m-d'),
-						'Stok_Satuan_ID' => $unit[$row['I']],
-						'Konversi' => $row['J'],
+						'Stok_Satuan_ID' => $row['D'],
+						'Konversi' => 1,
 						'Aktif' => 1,
 						'Beli' => 0,
 						'Jual' => 0,
 						'Inventory' => 0,
 						'Beli_IncludeTax' => 1,
-						'Beli_Satuan_Id' => $unit[$row['G']],
+						'Beli_Satuan_Id' => $row['D'],
 						'Jual_IncludeTax' => 0,
-						'Jual_Satuan_Id' => $unit[$row['I']],
-						'Kategori_Id' => @$category[$row['D']],
-						'SubKategori_Id' => @$subcategory[$row['G']],
+						'Jual_Satuan_Id' => $row['D'],
+						'Kategori_Id' => $row['G'],
+						'SubKategori_Id' => $row['H'],
+						'Komposisi' => $row['I'],
 						'Kelompok' => 'OBAT',
 						'GolonganID' => 2,
 						'UserID' => self::$user_auth->User_ID,
 						'DateUpdate' => date('Y-m-d'),
-						'KelompokJenis' => 'ALL',
+						'KelompokJenis' => $row['F'],
 						'HRataRata' => 0,
 						'HRataRata_Lama' => 0,
 						'HExt' => 0,
 						'Paket' => 0,
-						'KelompokGrading' => $row['F'],
-						'PPn_Persen' => 0,
+						'KelompokGrading' => 'XX',
+						'PPn_Persen' => 11,
 						'Supplier_ID' => NULL,
 						'Formularium' => 0,
 						'Isi' => 0,
 					];
+				// response_json($item);exit;
 					
 					$item_id = $_ci->item_model->create( $item );
 					
 					$item_location = [
 						[
-							'Lokasi_ID' => 1366,
+							'Lokasi_ID' => 1426,
 							'Barang_ID' => $item_id,
 							'JenisBarangID' => 0,
 							'Qty_Stok' => 0,
 							'Min_Stok' => 1,
 							'Max_Stok' => 10,
 							'Aktif' => 1,
-							'Kode_Satuan' => $row['H']
+							'Kode_Satuan' => $row['E']
 						],
-						[
-							'Lokasi_ID' => 296,
-							'Barang_ID' => $item_id,
-							'JenisBarangID' => 0,
-							'Qty_Stok' => 0,
-							'Min_Stok' => 1,
-							'Max_Stok' => 10,
-							'Aktif' => 1,
-							'Kode_Satuan' => $row['H']
-						],
+						// [
+						// 	'Lokasi_ID' => 296,
+						// 	'Barang_ID' => $item_id,
+						// 	'JenisBarangID' => 0,
+						// 	'Qty_Stok' => 0,
+						// 	'Min_Stok' => 1,
+						// 	'Max_Stok' => 10,
+						// 	'Aktif' => 1,
+						// 	'Kode_Satuan' => $row['D']
+						// ],
 					];
 					
 					$_ci->item_location_model->mass_create( $item_location );

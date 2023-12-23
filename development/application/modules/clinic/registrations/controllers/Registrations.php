@@ -135,6 +135,7 @@ class Registrations extends Admin_Controller
 		$patient = (object) [
 			'NationalityID' => 'INA',
 			'PropinsiID' => 1,
+			'Agama' => 'LL',
 		];
 
 		$vital = (object) [
@@ -259,19 +260,34 @@ class Registrations extends Admin_Controller
 			"NamaPasien" => $reservasi->Nama
 		);
 
-		if (!empty($reservasi->NRM)) {
-			$patient = $this->registration_model->get_patient($reservasi->NRM);
-		}
+		if (@$reservasi->PasienBaru == 1) :
+			$patient = $this->registration_model->get_patient_reservasi(@$NoReservasi);
+			$patient->NRM = registration_helper::gen_general_nrm_number();
+		else :
+			$patient = $this->registration_model->get_patient(@$reservasi->NRM);
+		endif;
+
+		// if (!empty($reservasi->NRM)) {
+		// 	$patient = $this->registration_model->get_patient(@$reservasi->NRM);
+		// }
+
+		$datetimeString = $reservasi->Waktu;
+		$dateTime = new DateTime($datetimeString);
+		$timeString = $dateTime->format('H:i:s');
+		// print_r($patient);exit;
 
 		$item = [
+			"NRM" => registration_helper::gen_general_nrm_number(),
 			'NoReg' => registration_helper::gen_registration_number(),
 			'NoReservasi' => $NoReservasi,
 			'JenisKerjasamaID' => $reservasi->JenisKerjasamaID,
-			'Waktu' => $reservasi->Waktu,
-			'JamReservasi' => $reservasi->Waktu,
+			'Waktu' => $timeString,
+			'JamReservasi' => $timeString,
 			'TglReg' => date("Y-m-d"),
 			'JamReg' => date("H:i:s"),
 			'User_ID' => $this->user_auth->User_ID,
+			'PasienBaru' => @$reservasi->PasienBaru,
+			'Nama' => $reservasi->Nama,
 			'PenanggungIsPasien' => @$patient->PenanggungIsPasien,
 			'PenanggungNRM' => @$patient->PenanggungNRM,
 			'PenanggungNama' => @$patient->PenanggungNama,
@@ -282,7 +298,7 @@ class Registrations extends Admin_Controller
 			'PenanggungPekerjaan' => @$patient->PenanggungPekerjaan,
 			'Keterangan' => @$reservasi->Memo,
 		];
-
+		
 		$vital = (object) [
 			'Height' => 0,
 			'Weight' => 0,
@@ -576,6 +592,7 @@ class Registrations extends Admin_Controller
 				$this->db->trans_begin();
 
 				$this->registration_model->update(["Batal" => 1], $NoReg);
+				$this->reservation_model->update(["Registrasi" => 0], $item->NoReservasi);
 				$this->registration_data_model->update(["Batal" => 1], $NoReg);
 				$this->patient_model->update(["SedangDirawat" => 0], $item->NRM);
 
@@ -1265,8 +1282,8 @@ EOSQL;
 			,a.PasienBaru
 			,a.NRM
 			,a.Nama
-			,a.Alamat
-			,a.Phone
+			,e.Alamat
+			,e.Phone
 			,a.UntukSectionID
 			,a.UntukDokterID
 			,a.UntukHari

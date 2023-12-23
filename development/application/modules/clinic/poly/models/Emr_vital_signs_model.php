@@ -115,15 +115,6 @@ class Emr_vital_signs_model extends CI_Model
 		return (TRUE == $to_array) ? $query->row_array() : $query->row();
 	}
 
-	public function get_by_order(array $where, $to_array = FALSE, $order = NULL)
-	{
-		$this->db->where($where);
-		$this->db->order_by('CreatedAt', $order);
-
-		$query = $this->db->get($this->table, 1);
-		return (TRUE == $to_array) ? $query->row_array() : $query->row();
-	}
-
 	public function get_all($limit = NULL, $offset = 0, $where = NULL, $to_array = FALSE)
 	{
 		if (!is_null($where) && !empty($where)) {

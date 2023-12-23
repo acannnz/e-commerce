@@ -88,6 +88,14 @@ if (!defined('BASEPATH'))
 									]); ?>
 							</div>
 						</div>
+						<div class="form-group">
+							<label class="control-label col-md-3">Opsi</label>
+								<div class="col-sm-8 col-xs-12">
+									<input type="hidden" name="f[Barang_Konsinyasi]" value="0">
+									<input type="checkbox" id="Barang_Konsinyasi" name="f[Barang_Konsinyasi]" value="1">
+									<label><b>Barang Konsinyasi</b></label>
+								</div>
+						</div>
                     </div>
                     <div class="col-md-6">
 						<div class="form-group">
@@ -167,8 +175,8 @@ if (!defined('BASEPATH'))
 						</tbody>
 					</table>
 					<div class="form-group">
-                        <a href="javascript:;" data-action-url="<?php echo @$item_lookup ?>"  data-title="<?php echo lang('heading:item_list')?>" data-modal-lg="1" data-act="ajax-modal" class="btn btn-primary btn-block"><b><i class="fa fa-plus"></i> Tambah Barang</b></a>
-                    </div>
+						<a href="javascript:;" id="btnTambahBarang" data-action-url-all="<?php echo htmlspecialchars(@$item_lookup) ?>" data-action-url-konsinyasi="<?php echo htmlspecialchars(@$item_lookup_konsinyasi) ?>" data-title="<?php echo lang('heading:item_list') ?>" data-modal-lg="1" data-act="ajax-modal" class="btn btn-primary btn-block"><b><i class="fa fa-plus"></i> Tambah Barang</b></a>
+					</div>
 				</div>
 				<hr/>
                 <div class="row">
@@ -302,6 +310,37 @@ if (!defined('BASEPATH'))
 <script type="text/javascript">
 //<![CDATA[
 (function( $ ){
+	
+	// Mendapatkan referensi checkbox dan tombol "Tambah Barang"
+    const checkboxBarangKonsinyasi = document.getElementById('Barang_Konsinyasi');
+    const btnTambahBarang = document.getElementById('btnTambahBarang');
+
+    // Fungsi untuk mengubah status tombol "Tambah Barang" berdasarkan status checkbox
+    function toggleTambahBarangButton() {
+        if (checkboxBarangKonsinyasi.checked) {
+            // Jika checkbox di-check, atur URL tombol untuk barang konsinyasi
+            btnTambahBarang.setAttribute('data-action-url', btnTambahBarang.getAttribute('data-action-url-konsinyasi'));
+        } else {
+            // Jika checkbox tidak di-check, atur URL tombol untuk semua barang
+            btnTambahBarang.setAttribute('data-action-url', btnTambahBarang.getAttribute('data-action-url-all'));
+        }
+    }
+
+    // Panggil fungsi untuk mengatur status tombol saat halaman dimuat
+    toggleTambahBarangButton();
+
+    // Tambahkan event listener untuk mengubah status tombol ketika checkbox di-klik
+    checkboxBarangKonsinyasi.addEventListener('change', toggleTambahBarangButton);
+
+    // Tambahkan event listener untuk menghandle klik pada tombol "Tambah Barang"
+    btnTambahBarang.addEventListener('click', function () {
+        const actionUrl = btnTambahBarang.getAttribute('data-action-url');
+        // Lakukan sesuatu dengan actionUrl, misalnya mengarahkan ke URL tersebut
+        console.log('URL tujuan:', actionUrl);
+    });
+
+
+
 				
 		var _datatable;		
 		var _datatable_populate;
@@ -780,6 +819,7 @@ if (!defined('BASEPATH'))
 								Tgl_Penerimaan : $('#Tgl_Penerimaan').val(),
 								Lokasi_ID : $('#Lokasi_ID').val(),
 								Keterangan : $('#Keterangan').val(),
+								Barang_Konsinyasi : $('#Barang_Konsinyasi').val(),
 								Order_ID : $('#Order_ID').val(),
 								Supplier_ID : $('#Supplier_ID').val(),
 								Tgl_JatuhTempo : $('#Tgl_JatuhTempo').val(),

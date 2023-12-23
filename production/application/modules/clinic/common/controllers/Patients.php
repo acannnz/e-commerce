@@ -14,9 +14,13 @@ class Patients extends Admin_Controller
 		$this->load->model( "patient_type_m" );
 		$this->load->model( "zone_m" );
 		$this->load->model( "nationality_m" );
+		$this->load->model( "regional_m" );
+		$this->load->model( "vw_regional_m" );
 		
 		$this->load->model( "section_group_model" );
 		$this->load->model( "patient_nrm_model" );
+		$this->load->model( "patient_type_model" );
+		$this->load->model( "registrations/cooperation_member_model" );
 		
 		$this->load->helper( "patient" );
 		
@@ -74,7 +78,7 @@ class Patients extends Admin_Controller
 			"KodePos" => NULL,
 			"EtnisID" => NULL,
 			"Pekerjaan" => NULL,
-			"AnggotaBaru" => 0,
+			"AnggotaBaru" => NULL,
 			"CustomerKerjasamaID" => 0,
 			"NoKartu" => NULL,
 			"NoANggotaE" => NULL,
@@ -85,89 +89,106 @@ class Patients extends Admin_Controller
 			"KdKelas" => 'xx',
 			"NonPBI" => NULL,
 			"TempatLahir" => NULL,
-			"NamaAlias" => NULL
+			"NamaAlias" => NULL,
+			"PasienBaru" => 1
 		);
 				
 		if( $this->input->post() ) 
 		{
-			
-			
-			
 			$item = (object) array_merge( (array) $item, $this->input->post("f") );
-			
+			$TipePasien = $this->db->where('JenisKerjasamaID', $item->JenisKerjasamaID)->get('SIMmJenisKerjasama')->row();
+			$item->JenisPasien = $TipePasien->JenisKerjasama;
+
 			$message = NULL;
 			$validation = TRUE;
-			if ( in_array($item->JenisKerjasamaID, array(9, 2)) && ( empty($item->CustomerKerjasamaID) || empty($item->NoAnggota ) ) )
-			{
-				$message = lang('patients:type_empty_company_card');				
-				$validation = FALSE;
-			}
-			
-			if ( 
-					in_array($item->JenisKerjasamaID, array(1, 2)) 
-					&& $item->AnggotaBaru && $item->Klp <> "E" 
-					&& (empty($item->NoAnggotaE) || empty($item->NamaAnggotaE)) 
-				)
-			{
-				$message = lang('patients:type_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
-			if ( $item->AnggotaBaru && empty($item->NoKartu) )
-			{
-				$message = lang('patients:new_member_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
-			if ( $item->JenisKerjasamaID == 9 && empty($item->NoKartu) )
-			{
-				$message = lang('patients:bpjs_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
+
+			if($item->AnggotaBaru){
+				if(empty($item->NoAnggota)){
+					response_json( [
+						'status' => 'error',
+						"message" => 'Nomor Kartu Anggota Kerjasama Belum Terisi',
+						"code" => 500
+					] );	
+				}
+				
+				if($this->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota]))
+				{
+					response_json( [
+						'status' => 'error',
+						"message" => "Nomor Kartu {$item->NoAnggota} Sudah Pernah Terdaftar Disistem, tidak dapat menyimpan sebagai Anggota baru",
+						"code" => 500
+					] );
+				}
+			}		
+
 			$this->load->library( 'form_validation' );
 			$this->form_validation->set_data( (array) $item );
 			$this->form_validation->set_rules( $this->get_model()->rules['insert'] );
 			if( $this->form_validation->run() && $validation )
 			{
-				if( $_FILES )
-				{
-					if( !empty($upload_les = $this->_les_upload( $item )) )
-					{
-						$item->FileLes = $upload_les['upload_data']['file_name'];
-						$item->FileLesFullPath = $upload_les['upload_data']['full_path'];
-					} else
-					{
-						make_flashdata(array(
-							'response_status' => 'error',
-							'message' => lang('patients:updated_failed')
-						));
-
-					}
-				}
 				
 				if( $this->get_model()->create( $item ) )
-				{						
-					make_flashdata(array(
-							'response_status' => 'success',
-							'message' => lang('patients:created_successfully')
-						));
-						
-					redirect( 'common/patients' );
+				{	
+					if($item->AnggotaBaru){
+						if($this->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota, "NRM" => $item->NRM, "CustomerKerjasamaID" => $item->CustomerKerjasamaID]))
+						{
+							$cooperation_card = [
+								"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+								"NRM" => $item->NRM,
+								"Nama" => $item->NamaPasien,
+								"Active" => 1,
+								"Klp" => NULL,
+								"TglLahir" => $item->TglLahir,
+								"Alamat" => $item->Alamat,
+								"Phone" => $item->Phone,
+								"Gender" => $item->JenisKelamin,
+							];
+
+							$this->cooperation_member_model->update( $cooperation_card, $item->NoAnggota);	
+						} else {
+							$cooperation_card = [
+								"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+								"NRM" => $item->NRM,
+								"NoAnggota" => $item->NoAnggota,
+								"Nama" => $item->NamaPasien,
+								"Active" => 1,
+								"Klp" => NULL,
+								"TglLahir" => $item->TglLahir,
+								"Alamat" => $item->Alamat,
+								"Phone" => $item->Phone,
+								"Gender" => $item->JenisKelamin,
+							];
+
+							$this->cooperation_member_model->create( $cooperation_card );				
+						}
+					}			
+
+					$message = [
+						"status" => 'success',
+						'message' => lang('patients:created_successfully'),
+						"code" => 200
+					];
+
 				} else
 				{
-					make_flashdata(array(
-							'response_status' => 'error',
-							'message' => lang('patients:created_failed')
-						));
+					$message = [
+						"status" => 'success',
+						'message' => lang('patients:created_failed'),
+						"code" => 500
+					];
+
 				}
 			} else
 			{
-				make_flashdata(array(
-						'response_status' => 'error',
-						'message' => !empty($message) ? $message : $this->form_validation->get_all_error_string()
-					));
+				$message = [
+					"status" => 'error',
+					'message' => !empty($message) ? $message : $this->form_validation->get_all_error_string(),
+					"code" => 500
+				];
 			}
+			
+			response_json( $message );
+
 		}
 		
 		// dropdown options
@@ -217,8 +238,10 @@ class Patients extends Admin_Controller
 					"option_district" => $option_district,
 					"option_village" => $option_village,
 					"option_area" => $option_area,
+					"list_provinsi" => array_replace(['' => '-- Pilih --'], $this->regional_m->dropdown_data(['Level_Ke' => 1])),
 					"lookup_cooperation" => base_url("common/patients/lookup_cooperation"),
 					"lookup_patient_cooperation_card" => base_url("common/patients/lookup_patient_cooperation_card"),
+					"regional_lookup" => base_url("common/patients/lookup_regional"),
 				);
 			
 			$this->template
@@ -238,89 +261,108 @@ class Patients extends Admin_Controller
 			redirect('common/patients');
 		}
 		
-		$item = $this->get_model()->get_row( $NRM );
+		$item = $this->get_model()->get_patient( $NRM );
+		$regional = $this->vw_regional_m->get_by(['DesaId' => @$item->KodeRegional]);
 		$this->load->library( 'my_object', (array)$item, 'item' );
 				
 		if( $this->input->post() ) 
 		{
 			
-			
 			$item = (object) array_merge( (array) $item, $this->input->post("f") );
+			$TipePasien = $this->db->where('JenisKerjasamaID', $item->JenisKerjasamaID)->get('SIMmJenisKerjasama')->row();
+			$item->JenisPasien = $TipePasien->JenisKerjasama;
 
 			$message = NULL;
 			$validation = TRUE;
-			if ( in_array($item->JenisKerjasamaID, array(9, 2)) && ( empty($item->CustomerKerjasamaID) || empty($item->NoAnggota ) ) )
-			{
-				$message = lang('patients:type_empty_company_card');				
-				$validation = FALSE;
-			}
 			
-			if ( 
-					in_array($item->JenisKerjasamaID, array(1, 2)) 
-					&& $item->AnggotaBaru && $item->Klp <> "E" 
-					&& (empty($item->NoAnggotaE) || empty($item->NamaAnggotaE)) 
-				)
-			{
-				$message = lang('patients:type_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
-			if ( $item->AnggotaBaru && empty($item->NoKartu) )
-			{
-				$message = lang('patients:new_member_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
-			if ( $item->JenisKerjasamaID == 9 && empty($item->NoKartu) )
-			{
-				$message = lang('patients:bpjs_empty_employee_card');				
-				$validation = FALSE;
-			}
-			
+
+			if($item->AnggotaBaru){
+				if(empty($item->NoAnggota)){
+					response_json( [
+						'status' => 'error',
+						"message" => 'Nomor Kartu Anggota Kerjasama Belum Terisi',
+						"code" => 500
+					] );	
+				}
+				
+				if($this->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota]))
+				{
+					response_json( [
+						'status' => 'error',
+						"message" => "Nomor Kartu {$item->NoAnggota} Sudah Pernah Terdaftar Disistem, tidak dapat menyimpan sebagai Anggota baru",
+						"code" => 500
+					] );
+				}
+			}	
+
 			$this->load->library( 'form_validation' );
 			$this->form_validation->set_data( (array) $item );
 			$this->form_validation->set_rules( $this->get_model()->rules['modify'] );
-			
-			if( $this->form_validation->run($this) )
+			if( $this->form_validation->run() && $validation )
 			{
-				if( $_FILES )
-				{
-					if( !empty($upload_les = $this->_les_upload( $item )) )
-					{
-						$item->FileLes = $upload_les['upload_data']['file_name'];
-						$item->FileLesFullPath = $upload_les['upload_data']['full_path'];
-					} else
-					{
-						make_flashdata(array(
-							'response_status' => 'error',
-							'message' => lang('patients:updated_failed')
-						));
-
-					}
-				}
 				
 				if( $this->get_model()->update( $item, @$NRM ) )
-				{					
-					make_flashdata(array(
-							'response_status' => 'success',
-							'message' => lang('patients:updated_successfully')
-						));
-						
-					redirect( 'common/patients' );
+				{				
+					if($item->AnggotaBaru){
+						if($this->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota, "NRM" => $item->NRM, "CustomerKerjasamaID" => $item->CustomerKerjasamaID]))
+						{
+							$cooperation_card = [
+								"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+								"NRM" => $item->NRM,
+								"Nama" => $item->NamaPasien,
+								"Active" => 1,
+								"Klp" => NULL,
+								"TglLahir" => $item->TglLahir,
+								"Alamat" => $item->Alamat,
+								"Phone" => $item->Phone,
+								"Gender" => $item->JenisKelamin,
+							];
+
+							$this->cooperation_member_model->update( $cooperation_card, $item->NoAnggota);	
+						} else {
+							$cooperation_card = [
+								"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+								"NRM" => $item->NRM,
+								"NoAnggota" => $item->NoAnggota,
+								"Nama" => $item->NamaPasien,
+								"Active" => 1,
+								"Klp" => NULL,
+								"TglLahir" => $item->TglLahir,
+								"Alamat" => $item->Alamat,
+								"Phone" => $item->Phone,
+								"Gender" => $item->JenisKelamin,
+							];
+
+							$this->cooperation_member_model->create( $cooperation_card );				
+						}
+					}	
+
+					$message = [
+						"status" => 'success',
+						'message' => lang('patients:created_successfully'),
+						"code" => 200
+					];
+
 				} else
 				{
-					make_flashdata(array(
-							'response_status' => 'error',
-							'message' => lang('patients:updated_failed')
-						));
+					$message = [
+						"status" => 'success',
+						'message' => lang('patients:created_failed'),
+						"code" => 500
+					];
+
 				}
 			} else
 			{
-				make_flashdata(array(
-						'response_status' => 'error',
-						'message' => $this->form_validation->get_all_error_string()
-					));
+				$message = [
+					"status" => 'error',
+					'message' => !empty($message) ? $message : $this->form_validation->get_all_error_string(),
+					"code" => 500
+				];
 			}
+			
+			response_json( $message );
+
 		}
 				
 		// dropdown options
@@ -332,7 +374,8 @@ class Patients extends Admin_Controller
 		$option_district = $this->get_model()->get_option_zones( "mKecamatan" );
 		$option_village = $this->get_model()->get_option_zones( "mDesa");
 		$option_area = $this->get_model()->get_option_zones( "mBanjar");
-		
+		// $cooperation = $this->get_model()->get_customer( array("Kode_Customer" => $item['KodePerusahaan']) );
+		// print_r($cooperation);exit;
 		if( $this->input->is_ajax_request() )
 		{
 			$data = array(
@@ -347,9 +390,11 @@ class Patients extends Admin_Controller
 					"option_district" => $option_district,
 					"option_village" => $option_village,
 					"option_area" => $option_area,
+					// "cooperation" => $this->get_model->get_customer( array("Kode_Customer" => $item['KodePerusahaan']) ), // Perusahaan Kerja sama
 					"lookup_cooperation" => base_url("common/patients/lookup_cooperation"),
 					"lookup_patient_cooperation_card" => base_url("common/patients/lookup_patient_cooperation_card"),
 				);
+				print_r($data);exit;
 			
 			$this->load->view( 
 					'patients/modal/create_edit', 
@@ -360,6 +405,7 @@ class Patients extends Admin_Controller
 			$data = array(
 					"page" => $this->page,
 					"item" => $item,
+					"regional" => $regional,
 					"form" => TRUE,
 					"fileinput" => TRUE,
 					"datatables" => TRUE,
@@ -370,8 +416,11 @@ class Patients extends Admin_Controller
 					"option_district" => $option_district,
 					"option_village" => $option_village,
 					"option_area" => $option_area,
+					// "cooperation" => $this->get_model->get_customer( array("Kode_Customer" => $item['KodePerusahaan']) ), // Perusahaan Kerja sama
 					"lookup_cooperation" => base_url("common/patients/lookup_cooperation"),
 					"lookup_patient_cooperation_card" => base_url("common/patients/lookup_patient_cooperation_card"),
+					"list_provinsi" => array_replace(['' => '-- Pilih --'], $this->regional_m->dropdown_data(['Level_Ke' => 1])),
+					"regional_lookup" => base_url("common/patients/lookup_regional"),
 				);
 				
 			$this->template

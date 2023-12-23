@@ -15,8 +15,7 @@ final class general_payment_report_helper
 		$_ci = self::ci();
 		
 		$collection = self::_get_transaction_recap_by_section_doctor( $date_start, $date_end, $section_id, $doctor_id );
-
-		//print_r($collection);exit;
+		// print_r($date_end);exit;
 		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
 		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
 		$doctor = $_ci->supplier_model->get_by(['Kode_Supplier' => $doctor_id]);
@@ -90,8 +89,12 @@ final class general_payment_report_helper
 		endforeach;
 		$_sheet->mergeCells("A1:{$th_col}1");
 		$_sheet->mergeCells("A2:{$th_col}2");
+
+		// $_sheet->setCellValue("{$th_col}4", 'Obat');
+		// $_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		// $th_col++;
 		
-		$_sheet->setCellValue("{$th_col}4", 'Pendapatan');
+		$_sheet->setCellValue("{$th_col}4", 'Total Nilai');
 		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
 		$th_col++;
 		
@@ -101,9 +104,42 @@ final class general_payment_report_helper
 		$th_col++;
 		$_sheet->setCellValue("{$th_col}4", 'Keterangan Diskon');
 		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Beban/Keuntungan');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Nama Dokter');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Tunai');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Kartu Kredit/Debit');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Dijamin Ke Perusahaan');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Dijamin BPJS');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Event Healthy Day');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'SKTM');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Bon Karyawan');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Kartu Bali Sehat');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
+		$th_col++;
+		$_sheet->setCellValue("{$th_col}4", 'Kredit/Bon');
+		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
 		
 		$tb_row = 5; $no = 1;
-		foreach ( $collection['data'] as $key => $val ):
+		foreach ( $collection['data'] as $key => $val ): 
 			$val = (object) $val; $tb_row_start = $tb_row;
 			$_sheet->setCellValue("A{$tb_row}", $no);
 			$_sheet->setCellValue("B{$tb_row}", @$val->NoReg);
@@ -117,14 +153,17 @@ final class general_payment_report_helper
 
 			$_multi_service = count($val->Jasa) > 1 ? TRUE : FALSE;
 			$sub_total = 0;
-			foreach($val->Jasa as $ser => $com):
+			$sub_beban = 0;
+			
+			foreach($val->Jasa as $ser => $com): 
 				$_sheet->setCellValue("I{$tb_row}", @$ser);
 				$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
 				$tb_col = 'J'; //$sub_total = 0;
-				foreach($collection['component'] as $k => $v): // List Component Header (thead)
+				foreach($collection['component'] as $k => $v): // List Component Header (thead) 
 					$_sheet->setCellValue("{$tb_col}{$tb_row}", (@$com[$v] > 0 )? @$com[$v] : '');
 					$_sheet->getStyle("{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 					$sub_total = $sub_total + (float) @$com[$v];
+					$sub_beban = $sub_total - @$val->NilaiDiskon;
 					$tb_col++;
 				endforeach;
 				
@@ -145,7 +184,14 @@ final class general_payment_report_helper
 			$_sheet->getStyle("J{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 
 			// Discount and Discount Description			
-			$tb_col++;
+			// $tb_col++;
+			// if($_multi_service)
+			// 	$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			// $_sheet->setCellValue("{$tb_col}{$tb_row_start}", $sub_beban);
+			// $_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			// $_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++; 
 			if($_multi_service)
 				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
 			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->NilaiDiskon > 0 ? $val->NilaiDiskon : '');
@@ -157,6 +203,88 @@ final class general_payment_report_helper
 				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
 			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->KeteranganDiskon);
 			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->BebanKeuntunganKlinik);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->NamaDOkter);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->Tunai);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->KartuDebitKredit);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->DijaminKePerusahaan);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->DijaminBPJS);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->EventHealthyDay);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->SKTM);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->SKTM);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->BONKaryawan);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			$tb_col++;
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->KartuBaliSehat);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+
+			if($_multi_service)
+				$_sheet->mergeCells("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}");
+			$_sheet->setCellValue("{$tb_col}{$tb_row_start}", $val->KreditBON);
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("{$tb_col}{$tb_row_start}:{$tb_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 			
 			
 			if($_multi_service):
@@ -196,18 +324,98 @@ final class general_payment_report_helper
 			$tf_col++;
 		endforeach;
 		
+		// Obat Total
+		// $obat_col = $tf_col;
+		// $_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		// $_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		// $_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		// $tf_col++;
+
 		// Pendapatan Total
-		$pendapatan_col = $tf_col;
 		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
 		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
 		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
-		$tf_col++;
+		$pendapatan_col = $tf_col++;
 		
 		// Diskon Total
 		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
 		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
 		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
-		$discount_col = $tf_col;
+		$discount_col = $tf_col++;
+
+		// Keterangan Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$keterangan_col = $tf_col++;
+
+		// Beban/Keuntungan Total
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$beban_col = $tf_col++;
+
+		// NamaDokter Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$namadokter_col = $tf_col++;
+
+		// Tunai Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$tunai_col = $tf_col++;
+
+		// Kredit/Debit Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$kreditdebit_col = $tf_col++;
+
+		// Dijamin Ke Perusahaan Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$jaminperusahaan_col = $tf_col++;
+
+		// Dijamin BPJS Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$jaminbpjs_col = $tf_col++;
+
+		// EventHealthyDay Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$EventHealthyDay_col = $tf_col++;
+
+		// SKTM Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$SKTM_col = $tf_col++;
+
+		// BONKaryawan Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$BONKaryawan_col = $tf_col++;
+
+		// KartuBaliSehat Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$KartuBaliSehat_col = $tf_col++;
+
+		// KreditBON Diskon
+		$_sheet->setCellValue("{$tf_col}{$tb_row}", "=SUM({$tf_col}5:{$tf_col}{$sum_till})");
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$KreditBON_col = $tf_col;
+
+
 		// Set Border and Style		
 		$_sheet->getStyle("A5:{$th_col}{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 		
@@ -215,12 +423,14 @@ final class general_payment_report_helper
 		$tb_row++;
 		$_sheet->mergeCells("A{$tb_row}:I{$tb_row}");
 		$_sheet->getStyle("A{$tb_row}:I{$tb_row}")->applyFromArray( self::_get_style( 'sum_name' ) );
-		$_sheet->setCellValue("A{$tb_row}", 'GRANDTOTAL (TOTAL PENDAPATAN - TOTAL DISKON)');
+		$_sheet->setCellValue("A{$tb_row}", 'GRANDTOTAL (TOTAL PENDAPATAN - TOTAL BEBAN/KEUNTUNGAN)');
 		
-		$tf_col++;
+		// $tf_col++;
+		// $_sheet->mergeCells("J{$tb_row}:{$tf_col}{$tb_row}");
 		$_sheet->mergeCells("J{$tb_row}:{$tf_col}{$tb_row}");
 		$sub_total_row = $tb_row - 1;
-		$_sheet->setCellValue("J{$tb_row}", "={$pendapatan_col}{$sub_total_row} - {$discount_col}{$sub_total_row}");
+		// print_r($sub_total_row);exit;
+		$_sheet->setCellValue("J{$tb_row}", "={$pendapatan_col}{$sub_total_row} - {$beban_col}{$sub_total_row}");
 		$_sheet->getStyle("J{$tb_row}:{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
 		$_sheet->getStyle("J{$tb_row}:{$tf_col}{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 		
@@ -321,68 +531,18 @@ final class general_payment_report_helper
 		$date_start = DateTime::createFromFormat('Y-m-d', $date_start )->setTime(0, 0);
 		$date_start->add(new DateInterval('PT8H'));
 		$date_end = DateTime::createFromFormat('Y-m-d', $date_end )->setTime(0, 0);
-		$date_end->add(new DateInterval('P1DT8H'));
+		$date_end->add(new DateInterval('P0DT8H'));
 		
 		$where_doctor = (!empty($doctor_id)) ? "AND SIMtrKasir.DokterID = '{$doctor_id}'" : '';
 		$query = self::ci()->db
-				->query("
-					SELECT * FROM
-					(
-						SELECT SIMtrKasir.RJ, SIMtrRJ.Tanggal AS TglTindakan,
-								SIMtrKasir.Tanggal AS TglClosing,
-								VW_Registrasi.NoReg,
-								VW_Registrasi.NRM,
-								VW_Registrasi.NamaPasien,
-								VW_Registrasi.JenisKerjasama,
-								VW_Registrasi.Nama_Customer,
-								VW_Registrasi.PasienBaru,
-								SIMmListJasa.JasaName,
-								SIMmKomponenBiaya.KomponenName,
-								SUM(SIMtrRJTransaksi.Qty*SIMtrRJTransaksiDetail.Harga) AS Nilai,
-								Vw_Dokter.NamaDOkter,
-								SIMtrKasir.NoBukti, SIMtrRJTransaksi.JasaID, 
-								SIMmKomponenBiaya.KomponenBiayaID, SIMtrRJ.NoBukti AS NoPeriksa
-						FROM SIMtrRJ
-							INNER JOIN SIMtrRJTransaksi ON SIMtrRJ.NoBukti=SIMtrRJTransaksi.NoBukti
-							INNER JOIN SIMtrRJTransaksiDetail ON SIMtrRJTransaksi.NoBukti = SIMtrRJTransaksiDetail.NoBukti
-								AND SIMtrRJTransaksi.JasaID = SIMtrRJTransaksiDetail.JasaID
-								AND SIMtrRJTransaksi.Nomor = SIMtrRJTransaksiDetail.Nomor
-							INNER JOIN SIMmListJasa ON SIMtrRJTransaksi.JasaID = SIMmListJasa.JasaID 
-							INNER JOIN VW_Registrasi ON SIMtrRJ.RegNo = VW_Registrasi.NoReg
-							INNER JOIN SIMmKomponenBiaya ON SIMtrRJTransaksiDetail.KomponenID = SIMmKomponenBiaya.KomponenBiayaID 
-							INNER JOIN SIMtrKasir ON VW_Registrasi.NoReg = SIMtrKasir.NoReg
-							LEFT OUTER JOIN Vw_Dokter ON SIMtrKasir.DokterID = Vw_Dokter.DokterID   
-						WHERE 
-							SIMtrRJ.Batal = 0
-							AND SIMtrKasir.Batal = 0
-							AND VW_Registrasi.JamReg >= '". $date_start->format('Y-m-d H:i:s') ."'
-							AND VW_Registrasi.JamReg <= '". $date_end->format('Y-m-d H:i:s') ."'
-							AND SIMtrKasir.SectionPerawatanID = '{$section_id}'
-							". $where_doctor ."
-						GROUP BY SIMtrKasir.RJ,
-							SIMtrRJ.Tanggal,
-							SIMtrKasir.Tanggal,
-							VW_Registrasi.NoReg,
-							VW_Registrasi.NRM,
-							VW_Registrasi.NamaPasien,
-							VW_Registrasi.JenisKerjasama,
-							VW_Registrasi.Nama_Customer,
-							VW_Registrasi.PasienBaru,
-							SIMmListJasa.JasaName,
-							SIMmKomponenBiaya.KomponenName,
-							Vw_Dokter.NamaDOkter,
-							SIMtrKasir.NoBukti, SIMtrRJTransaksi.JasaID, 
-							SIMmKomponenBiaya.KomponenBiayaID, SIMtrRJ.NoBukti
-					) kom					
-					ORDER BY kom.NoReg ASC
-				");
+				->query("EXEC RekapPendapatan_Klinik '{$date_start->format('Y-m-d H:i:s')}', '{$date_end->format('Y-m-d H:i:s')}', '$section_id'");
 				// inner join SIMtrAudit on SIMtrKasir.NoBukti=SIMtrAudit.NoInvoice
 				// and SIMtrAudit.Batal =0 
 				// and NOT (SIMtrAudit.NoBukti LIKE '%-SPLIT%')
-
+						
 		$collection = ['data' => [], 'component' => [], 'payment' => []];	
 		foreach($query->result() as $row)
-		{
+		{ 
 			if(empty($collection['data'][ $row->NoReg ]))
 			{
 				$collection['data'][ $row->NoReg ] =[
@@ -396,6 +556,18 @@ final class general_payment_report_helper
 					'Jasa' => [],
 					'NilaiDiskon' => 0,
 					'KeteranganDiskon' => '',
+					'BebanKeuntunganKlinik' => $row->BebanKeuntunganKlinik,
+					'NamaDOkter' => $row->NamaDOkter,
+					'Obat'	=> $row->Obat,
+					'Tunai' => $row->Tunai,
+					'KartuDebitKredit' => $row->KartuDebitKredit,
+					'DijaminKePerusahaan' => $row->DijaminKePerusahaan,
+					'DijaminBPJS' => $row->DijaminBPJS,
+					'EventHealthyDay' => $row->EventHealthyDay,
+					'SKTM' => $row->SKTM,
+					'BONKaryawan' => $row->BONKaryawan,
+					'KartuBaliSehat' => $row->KartuBaliSehat,
+					'KreditBON' => $row->KreditBON
 				];
 				
 				$_get_discount = self::ci()->db->select('b.NamaDiscount, a.NilaiDiscount ')
@@ -424,7 +596,7 @@ final class general_payment_report_helper
 			
 			$collection['component'][$row->KomponenBiayaID] = $row->KomponenName;
 		}
-	
+		
 		if(!empty($collection['component']))
 			asort($collection['component']);
 		

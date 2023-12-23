@@ -49,13 +49,23 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-3 control-label"><?php echo "Kelompok Jenis" ?></label>
+						<div class="col-md-9">
+							<select id="KelompokJenis" name="f[KelompokJenis]" class="form-control">
+								<?php foreach ($option_kelompok_jenis as $row) : ?>
+									<option value="<?php echo $row ?>"><?php echo $row ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-3 control-label"><?php echo 'Supplier' ?></label>
 						<div class="col-md-9">
 							<div class="input-group">
 								<input type="hidden" id="supplier" name="f[supplier_id]">
 								<input type="text" id="supplier_name" name="f[supplier_name]" class="form-control" readonly>
 								<span class="input-group-btn">
-									<a href="<?php echo @$lookup_supplier ?>" data-title="<?php echo 'Daftar Supplier' ?>" data-modal-lg="1" data-toggle="lookup-ajax-modal"  class="btn btn-default"><i class="fa fa-search"></i></a>
+									<a href="<?php echo @$lookup_supplier ?>" data-title="<?php echo 'Daftar Supplier' ?>" data-modal-lg="1" data-toggle="lookup-ajax-modal" class="btn btn-default"><i class="fa fa-search"></i></a>
 								</span>
 							</div>
 						</div>

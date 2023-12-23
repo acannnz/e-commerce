@@ -56,7 +56,7 @@ if (!defined('BASEPATH'))
                                             'class' => 'form-control'
                                         ]); ?>
                             	</div>
-                                <div class="col-sm-8">
+                                <div class="col-sm-7">
                                 	<?php echo form_input('s[words]', '', [
                                             'id' => 'input_code', 
                                             'placeholder' => 'Kata Kunci', 
@@ -66,10 +66,10 @@ if (!defined('BASEPATH'))
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-3 col-xs-12">
+                        <div class="col-sm-2 col-xs-12">
                         	<div class="form-group">
 								<?php echo form_label('Lokasi', '', ['class' => 'control-label col-sm-12']) ?>
-                                <div class="col-sm-12">
+                                <div class="col-sm-10">
 									<?php echo form_dropdown('s[location]', $populate_section, 'ALL', [
                                             'id' => 'input_parent', 
                                             'placeholder' => '',
@@ -79,7 +79,7 @@ if (!defined('BASEPATH'))
                             	</div>
                             </div>
                         </div>
-                        <div class="col-sm-3 col-xs-12">
+                        <div class="col-sm-4 col-xs-12">
                         	<div class="form-group">
 								<?php echo form_label('Status', '', ['class' => 'control-label col-sm-12']) ?>
                                 <div class="col-sm-12">
@@ -104,6 +104,13 @@ if (!defined('BASEPATH'))
 											'checked' => true,
 											'class' => 'radio'
 										]).' '.form_label('<b>Semua</b>', 'checkbox_status_3'); ?>
+									<?php echo form_radio([
+											'id' => 'checkbox_status_4',
+											'name' => 's[status]',
+											'value' => 4,
+											'checked' => false,
+											'class' => 'radio'
+										]).' '.form_label('<b>Konsinyasi</b>', 'checkbox_status_4'); ?>
                                 </div>
                             </div>
                         </div>

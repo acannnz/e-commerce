@@ -1626,6 +1626,36 @@ EOSQL;
 		return $number;
 	}
 
+	public static function gen_bhp_poly_number()
+	{
+		$_ci = self::ci();
+		$NOW = new DateTime();
+
+		$date_start = $NOW->format("Y-m-01 00:00:00.000");
+		$date_end = $NOW->format("Y-m-t 00:00:00.000");
+		$date_y = $NOW->format("y");
+		$date_m = $NOW->format("m");
+		$date_d = $NOW->format("d");
+
+		$query =  $_ci->db
+			->select("MAX(NoBuktiPOP) as max_number")
+			->where([
+				"LEN([NoBuktiPOP]) =" => 16,
+				"LEFT(LTRIM([NoBuktiPOP]),2) =" => $date_y,
+				"RIGHT(LEFT(LTRIM([NoBuktiPOP]),9),3) =" => 'BHP',
+			])
+			->get("SIMtrPOP")
+			->row();
+		if (!empty($query->max_number)) {
+			$query->max_number++;
+			$number = $query->max_number;
+		} else {
+			$number = (string) (sprintf("%02d%02d%02dBHP-%06d", $date_y, $date_m, $date_d, 1));
+		}
+
+		return $number;
+	}
+
 	public static function gen_helper_number()
 	{
 		$NOW = new DateTime();

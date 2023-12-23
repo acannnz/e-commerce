@@ -18,7 +18,7 @@ class Patient_m extends Public_Model
 						array(
 								'field' => 'JenisPasien',
 								'label' => lang('patients:type_label'),
-								'rules' => 'integer|required'
+								'rules' => 'required'
 							),
 						array(
 								'field' => 'NamaPasien',
@@ -159,7 +159,124 @@ class Patient_m extends Public_Model
 	
 	public function get_row( $NRM )
 	{
+
 		return $this->db->where( $this->primary_key, $NRM)->get( $this->table)->row();		
+	}
+
+	public function get_patient( $NRM )
+	{
+		// get result filtered
+		$db_select = <<<EOSQL
+			a.NRM
+			,a.NRMLama
+			,a.NamaPasien
+			,a.NoIdentitas
+			,a.JenisKelamin
+			,a.TglLahir
+			,a.TglLahirDiketahui
+			,a.UmurSaatInput
+			,a.Pekerjaan
+			,a.Alamat
+			,a.PropinsiID
+			,a.KabupatenID
+			,a.KecamatanID
+			,a.DesaID
+			,a.BanjarID
+			,a.Phone
+			,a.Email
+			
+			,a.JenisPasien
+			,a.JenisKerjasamaID
+			,a.AnggotaBaru
+			,a.CustomerKerjasamaID
+			,a.NoKartu
+			,a.Klp
+			,a.JabatanDiPerusahaan
+			,a.PasienLoyal
+			
+			,a.TotalKunjunganRawatInap
+			,a.TotalKunjunganRawatJalan
+			,a.KunjunganRJ_TahunIni
+			,a.KunjunganRI_TahunIni
+			
+			,a.EtnisID
+			,a.NationalityID
+			,a.PasienVVIP
+			,a.PasienKTP
+			,a.TglInput
+			,a.UserID
+			,a.CaraDatangPertama
+			,a.DokterID_ReferensiPertama
+			,a.SedangDirawat
+			,a.KodePos
+			
+			,a.TglRegKasusKecelakaanBaru
+			,a.NoRegKecelakaanBaru
+			,a.Aktive_Keanggotaan
+			,a.Agama
+			,a.NoANggotaE
+			,a.NamaAnggotaE
+			,a.GenderAnggotaE
+			,a.TglTidakAktif
+			,a.TipePasienAsal
+			,a.NoKartuAsal
+			,a.NamaPerusahaanAsal
+
+			,a.PenanggungIsPasien
+			,a.PenanggungNRM
+			,a.PenanggungNama
+			,a.PenanggungAlamat
+			,a.PenanggungPhone
+			,a.PenanggungKTP
+			,a.PenanggungHubungan
+			,a.PenanggungPekerjaan
+			
+			,a.Aktif
+			,a.PasienBlackList
+			,a.NamaIbuKandung
+			,a.NonPBI
+			,a.KdKelas
+			,a.Prematur
+			,a.NamaAlias
+			,a.RiwayatAlergi
+			,a.RiwayatPenyakit
+			,a.RiwayatObat
+			,a.CatatanPatient
+			,a.TempatLahir
+			,a.KodeRegional
+			
+			,d.Nama_Customer
+			,d.Kode_Customer AS CompanyID
+			,l.NoAnggota
+			
+			
+EOSQL;
+
+		$this->db
+			->select( $db_select )
+			->from( "mPasien a" )
+			->join( "SIMmJenisKerjasama b", "a.JenisKerjasamaID = b.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "SIMdCustomerKerjasama c", "a.CustomerKerjasamaID = c.CustomerKerjasamaID", "LEFT OUTER" )
+			->join( "mCustomer d", "c.CustomerID = d.Customer_ID", "LEFT OUTER" )
+			->join( "mPropinsi f", "a.PropinsiID = f.Propinsi_ID", "LEFT OUTER" )
+			->join( "mKabupaten g", "a.KabupatenID = g.Kode_Kabupaten", "LEFT OUTER" )
+			->join( "mKecamatan h", "a.KecamatanID = h.KecamatanID", "LEFT OUTER" )
+			->join( "mDesa i", "a.DesaID = i.DesaID", "LEFT OUTER" )
+			->join( "mBanjar j", "a.BanjarID = j.BanjarID", "LEFT OUTER" )
+			->join( "mNationality k", "a.NationalityID = k.NationalityID", "LEFT OUTER" )
+			->join( "SIMdAnggotaKerjasama l", "a.CustomerKerjasamaID = l.CustomerKerjasamaID", "LEFT OUTER" )
+			;
+		
+		$query = $this->db
+					->where("a.NRM", $NRM)
+					->get();
+
+		if ( $query->num_rows() > 0 )
+		{
+			return $query->row();
+		}
+		
+		return false;
 	}
 
 	public function create( $data )
@@ -174,6 +291,25 @@ class Patient_m extends Public_Model
 		$this->db->update( $this->table, $data, array( $this->primary_key => $NRM));
 		
 		return $this->db->affected_rows();
+	}
+
+	public function get_customer( $where = NULL)
+	{
+		if (!$where)
+		{
+			return false;
+		}
+		
+		$query = $this->db
+					->where( $where )
+					->get("mCustomer");
+		
+		if ( $query->num_rows() > 0 )
+		{
+			return $query->row();
+		}
+		
+		return false;
 	}
 
 }

@@ -19,7 +19,6 @@ class Medical_record extends Admin_Controller
 
 	public function index($NoReg, $NRM, $NoBukti = NULL, $is_edit = FALSE)
 	{
-
 		if ($is_edit) :
 			$vital = $this->emr_vital_signs_model->get_by(['NoReg' => $NoReg, 'NoPemeriksaan' => $NoBukti]);
 		elseif ($get_vital = $this->emr_vital_signs_model->get_by(['NoReg' => $NoReg, 'NoPemeriksaan is NULL' => NULL, 'Parent' => 1])) :
@@ -66,29 +65,18 @@ class Medical_record extends Admin_Controller
 
 	public function index_obgyn($NoReg, $NRM, $NoBukti = NULL, $is_edit = FALSE)
 	{
-		$vital = $this->emr_vital_signs_model->get_by_order(['NRM' => $NRM], FALSE, 'DESC');
-
 		if ($is_edit) :
-			$vital = $this->emr_vital_signs_model->get_by(['NoReg' => $NoReg, 'NoPemeriksaan' => $NoBukti]);
-		elseif ($get_vital = $this->emr_vital_signs_model->get_by(['NoReg' => $NoReg, 'NoPemeriksaan is NULL' => NULL, 'Parent' => 1])) :
-			$get_vital->Hpht = $vital->Hpht;
-			$get_vital->Rwt_Menstruasi = $vital->Rwt_Menstruasi;
-			$get_vital->Rwt_Kehamilan = $vital->Rwt_Kehamilan;
-			$get_vital->Rwt_Persalinan_Sebelumnya = $vital->Rwt_Persalinan_Sebelumnya;
-			$get_vital->Rwt_KB = $vital->Rwt_KB;
-			$get_vital->BB_Lahir = $vital->BB_Lahir;
-			$get_vital->lingkarKepala = $vital->lingkarKepala;
-			$get_vital->Rwt_Kelahiran = $vital->Rwt_Kelahiran;
-			$get_vital->Height = $vital->Height;
-			$get_vital->Weight = $vital->Weight;
-
-			$vital = $get_vital;
+			$vital = $this->emr_vital_signs_model->get_by(['NoPemeriksaan' => $NoBukti]);
+		elseif ($get_vital = $this->db->where(['NRM' => $NRM])->order_by("CreatedAt", "DESC")->get("SIMtrEMRVitalSigns")->result()) :
+			$get_vital_now = $this->emr_vital_signs_model->get_by(['NoReg' => $NoReg, 'NoPemeriksaan is NULL' => NULL, 'Parent' => 1]);
+			$get_vital[1]->IdVitalSigns = $get_vital_now->IdVitalSigns;
+			@$vital = $get_vital[1];
 
 		else :
 			$vital = (object) [
 				'IdVitalSigns' => 0,
-				'Height' => 0,
-				'Weight' => 0,
+				'Height' => @$vital->Height,
+				'Weight' => @$vital->Weight,
 				'Temperature' => 0,
 				'Systolic' => 0,
 				'Diastolic' => 0,
@@ -96,17 +84,15 @@ class Medical_record extends Admin_Controller
 				'RespiratoryRate' => 0,
 				'OxygenSaturation' => 0,
 				'Pain' => 0,
-				'Hpht' => $vital->Hpht,
-				'Rwt_Menstruasi' => $vital->Rwt_Menstruasi,
-				'Rwt_Kehamilan' => $vital->Rwt_Kehamilan,
-				'Rwt_Persalinan_Sebelumnya' => $vital->Rwt_Persalinan_Sebelumnya,
-				'Rwt_KB' => $vital->Rwt_KB,
-				'BB_Lahir' => $vital->BB_Lahir,
-				'lingkarKepala' => $vital->lingkarKepala,
-				'Parent' => 1
+				'Parent' => 1,
+				'Hpht' => @$vital->Hpht,
+				'Rwt_Menstruasi' => @$vital->Rwt_Menstruasi,
+				'Rwt_Kehamilan' => @$vital->Rwt_Kehamilan,
+				'Rwt_Persalinan_Sebelumnya' => @$vital->Rwt_Persalinan_Sebelumnya,
+				'Rwt_KB' => @$vital->Rwt_KB,
 			];
 		endif;
-
+		
 		if ($is_edit) :
 			$soap = $this->emr_soap_notes_model->get_by(['NoPemeriksaan' => $NoBukti]);
 		else :
@@ -127,7 +113,7 @@ class Medical_record extends Admin_Controller
 			"lookup_drug_history" => base_url("{$this->nameroutes}/lookup_drug_history/{$NRM}"),
 			'nameroutes' => $this->nameroutes,
 		];
-
+		
 		$this->load->view('outpatient/form/medical_record_obgyn', $data);
 	}
 
@@ -176,7 +162,7 @@ class Medical_record extends Admin_Controller
 
 		$this->load->view('outpatient/form/medical_record_anak', $data);
 	}
-
+	
 	public function index_penyakit_dalam($NoReg, $NRM, $NoBukti = NULL, $is_edit = FALSE)
 	{
 		if ($is_edit) :
@@ -222,7 +208,7 @@ class Medical_record extends Admin_Controller
 
 		$this->load->view('outpatient/form/medical_record_penyakit_dalam', $data);
 	}
-
+	
 	public function index_tht($NoReg, $NRM, $NoBukti = NULL, $is_edit = FALSE)
 	{
 		if ($is_edit) :

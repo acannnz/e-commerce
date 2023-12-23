@@ -19,7 +19,7 @@ class Payment extends Admin_Controller
 			"item" => $item,
 			"collection" => general_payment_helper::get_detail_payment( @$item->NoBukti ),
 		);
-		
+		// print_r($data);exit;
 		$this->load->view( 'general_payment/form/payment', @$data );	
 	}
 
@@ -47,6 +47,21 @@ class Payment extends Admin_Controller
 				);
 		} 
 	}
+
+	public function lookup_form_credit_card_2( $is_ajax_request=false )
+	{
+		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
+		{
+			$data = array(
+				"lookup_merchan_2" => base_url("cashier/general-payments/payment/lookup_merchan_2")
+			);
+			
+			$this->load->view( 
+					'general_payment/modal/credit_card', 
+					array('form_child' => $this->load->view('general_payment/form/credit_card_2', $data, true))
+				);
+		} 
+	}
 	
 	public function lookup_form_credit_bon( $is_ajax_request=false )
 	{
@@ -68,6 +83,14 @@ class Payment extends Admin_Controller
 		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
 		{
 			$this->load->view( 'cashier/general_payment/lookup/merchan' );
+		} 
+	}
+
+	public function lookup_merchan_2( $is_ajax_request = false )
+	{
+		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
+		{
+			$this->load->view( 'cashier/general_payment/lookup/merchan_2' );
 		} 
 	}
 	

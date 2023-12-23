@@ -580,93 +580,87 @@ final class general_payment_helper
 		return trim($kalimat. "");
 	}
 	
-	public static function money_to_text_english($number){
-	$numbers = array('0','0','0','0','0','0','0','0','0','0',
-			'0','0','0','0','0','0');
-	$words = array('','one','two','three','four','five',
-		'six','seven','eight','nine');
-	$levels = array('','thousand','million','billion','trillion');
+	public static function money_to_text_english($number)
+	{
+		$numbers = array(
+			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+			'0', '0', '0', '0', '0', '0'
+		);
+		$words = array(
+			'', 'one', 'two', 'three', 'four', 'five',
+			'six', 'seven', 'eight', 'nine'
+		);
+		$tens = array(
+			'', '', 'twenty', 'thirty', 'forty', 'fifty',
+			'sixty', 'seventy', 'eighty', 'ninety'
+		);
+		$teens = array(
+			'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+			'sixteen', 'seventeen', 'eighteen', 'nineteen'
+		);
+		$levels = array('', 'thousand', 'million', 'billion', 'trillion');
 
-	$number_length = strlen($number);
+		$number_length = strlen($number);
 
-	/* checking the length of the number */
-	if ($number_length > 15) {
-		$sentence = "Out of Range";
-		return $sentence;
-	}
-
-	/* extracting the digits from the number,
-	and storing them in an array */
-	for ($i = 1; $i <= $number_length; $i++) {
-		$numbers[$i] = substr($number,-($i),1);
-	}
-
-	$i = 1;
-	$j = 0;
-	$sentence = "";
-
-
-	/* starting the iteration process on the numbers array */
-	while ($i <= $number_length) {
-
-		$subsentence = "";
-		$word1 = "";
-		$word2 = "";
-		$word3 = "";
-
-		/* for hundreds */
-		if ($numbers[$i+2] != "0") {
-			if ($numbers[$i+2] == "1") {
-				$word1 = "one hundred";
-			} else {
-				$word1 = $words[$numbers[$i+2]] . " hundred";
-			}
+		// Check if the number is out of range
+		if ($number_length > 15) {
+			return "Out of Range";
 		}
 
-		/* for tens or teens */
-		if ($numbers[$i+1] != "0") {
-			if ($numbers[$i+1] == "1") {
-				if ($numbers[$i] == "0") {
-					$word2 = "ten";
-				} elseif ($numbers[$i] == "1") {
-					$word2 = "eleven";
+		// Extract the digits from the number and store them in an array
+		for ($i = 1; $i <= $number_length; $i++) {
+			$numbers[$i] = substr($number, - ($i), 1);
+		}
+
+		$i = 1;
+		$j = 0;
+		$sentence = "";
+
+		// Iterate through the numbers array
+		while ($i <= $number_length) {
+			$subsentence = "";
+			$word1 = "";
+			$word2 = "";
+			$word3 = "";
+
+			// Handle hundreds
+			if ($numbers[$i + 2] != "0") {
+				$word1 = $words[$numbers[$i + 2]] . " hundred";
+			}
+
+			// Handle tens or teens
+			if ($numbers[$i + 1] != "0") {
+				if ($numbers[$i + 1] == "1") {
+					$word2 = $teens[$numbers[$i]];
 				} else {
-					$word2 = $words[$numbers[$i]] . "teen";
+					$word2 = $tens[$numbers[$i + 1]];
+					if ($numbers[$i] != "0") {
+						$word2 .= '';
+					}
 				}
-			} else {
-				$word2 = $words[$numbers[$i+1]] . "ty";
 			}
-		}
 
-		/* for ones */
-		if ($numbers[$i] != "0") {
-			if ($numbers[$i+1] != "1") {
+			// Handle ones
+			if ($numbers[$i] != "0" && $numbers[$i + 1] != "1") {
 				$word3 = $words[$numbers[$i]];
 			}
+
+			// Check if the number is not all zeros, then add the level
+			if ($numbers[$i] != "0" || $numbers[$i + 1] != "0" || $numbers[$i + 2] != "0") {
+				$subsentence = "$word1 $word2 $word3 " . $levels[$j] . " ";
+			}
+
+			// Concatenate the subsentence to the sentence
+			$sentence = $subsentence . $sentence;
+			$i = $i + 3;
+			$j = $j + 1;
 		}
 
-		/* checking if the number is not all zeros,
-		then adding the level */
-		if (($numbers[$i] != "0") OR ($numbers[$i+1] != "0") OR
-		($numbers[$i+2] != "0")) {
-			$subsentence = "$word1 $word2 $word3 " . $levels[$j] . " ";
-		}
+		// Replace "one thousand" with "a thousand" if necessary
+		$sentence = str_replace("one thousand", "a thousand", $sentence);
 
-		/* concatenating the subsentence variable (for each block of 3 digits)
-		to the sentence variable */
-		$sentence = $subsentence . $sentence;
-		$i = $i + 3;
-		$j = $j + 1;
-
+		return trim($sentence);
 	}
-
-	/* replacing "one thousand" with "a thousand" if necessary */
-	if (($numbers[5] == "0") AND ($numbers[6] == "0")) {
-		$sentence = str_replace("one thousand","a thousand",$sentence);
-	}
-
-	return trim($sentence. "");
-}
 		
 	private static function & ci()
 	{

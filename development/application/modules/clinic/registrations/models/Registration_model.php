@@ -235,6 +235,32 @@ EOSQL;
 		return false;
 	}
 
+	public function get_patient_reservasi($NoReservasi)
+	{
+		// get result filtered
+		$db_select = <<<EOSQL
+			a.NoReservasi
+			,a.Nama AS NamaPasien
+			,a.PasienBaru
+			
+			
+EOSQL;
+
+		$this->db
+			->select($db_select)
+			->from("SIMtrReservasi a");
+
+		$query = $this->db
+			->where("a.NoReservasi", $NoReservasi)
+			->get();
+
+		if ($query->num_rows() > 0) {
+			return $query->row();
+		}
+
+		return false;
+	}
+
 	public function get_customer($where = NULL)
 	{
 		if (!$where) {

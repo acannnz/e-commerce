@@ -158,7 +158,7 @@
 				_datatable.DataTable().draw(true);	*/
 				
 				_datatable.DataTable()
-				   .ajax.url("<?php echo config_item('bpjs_api_baseurl')."/obat/dpho/filter/" ?>"+ words +"/limit/1000")
+				   .ajax.url("<?php echo config_item('bpjs_api_baseurl')."/diagnosa/" ?>"+ words +"/1000")
 				   .load().draw();
 			}
 			

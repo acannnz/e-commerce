@@ -27,15 +27,19 @@ final class general_payment_helper
 		
 		$JenisBayar = [];
 		$JenisBayar['DIJAMIN BPJS']['NilaiBayar'] = $payments['BPJS'];
-		$JenisBayar['BEBAN/KEUNTUNGAN RS']['NilaiBayar'] = $payments['Beban'];
-		$JenisBayar['BON KARYAWAN']['NilaiBayar'] = $payments['BonKaryawan'];
+		// $JenisBayar['BEBAN/KEUNTUNGAN KLINIK']['NilaiBayar'] = $payments['Beban'];
+		// $JenisBayar['BON KARYAWAN']['NilaiBayar'] = $payments['BonKaryawan'];
 		$JenisBayar['DIJAMIN KE PERUSAHAAN']['NilaiBayar'] = $payments['DijaminPerusahaan'];
 		$JenisBayar['KARTU KREDIT/DEBIT']['NilaiBayar'] = $payments['KartuKredit'];
+		$JenisBayar['KARTU KREDIT/DEBIT 2']['NilaiBayar'] = $payments['KartuKredit_2'];
 		$transaction->NilaiPembayaranKKAwal = $payments['KartuKredit'] > 0 ? $payments['KartuKredit'] : 0;
 		$JenisBayar['KREDIT / BON']['NilaiBayar'] = $payments['Kredit'];
 		$JenisBayar['TAGIHAN L.O.G']['NilaiBayar'] = $payments['TagihanLOG'];
 		$JenisBayar['TUNAI']['NilaiBayar'] = $payments['Tunai'];
-				
+		// $JenisBayar['SKTM']['NilaiBayar'] = 0;
+		// $JenisBayar['KARTU BALI SEHAT']['NilaiBayar'] = 0;
+		// $JenisBayar['EVENT HEALTHY DAY']['NilaiBayar'] = 0;
+		// print_r($JenisBayar);exit;
 		$_ci->db->trans_begin();					
 			$_registration = $_ci->registration_model->get_one($transaction->NoReg);
 			$transaction->SectionPerawatanID = $_registration->SectionPerawatanID;
@@ -90,6 +94,7 @@ final class general_payment_helper
 			
 			// INPUT DETAIL PEMBAYARAN & Insert user activity
 			foreach($JenisBayar as $key => $val ) {
+				// print_r($JenisBayar);exit;
 				$_ci->cashier_detail_model->create( $val );	
 				$activities_description = sprintf( " %s # %s # %s # %s # %s", "INPUT DETAIL BAYAR KASIR.", $transaction->NoBukti, $key, "NILAI", $val['NilaiBayar'] );			
 				$_ci->db->query("EXEC InsertUserActivities '$transaction->Tanggal','$time', ". self::$user_auth->User_ID .", '$item->NoBukti','$activities_description','SIMtrKasirDetail'");
@@ -145,7 +150,7 @@ final class general_payment_helper
 
 		$JenisBayar = [];
 		$JenisBayar['DIJAMIN BPJS']['NilaiBayar'] = $payments['BPJS'];
-		$JenisBayar['BEBAN/KEUNTUNGAN RS']['NilaiBayar'] = $payments['Beban'];
+		$JenisBayar['BEBAN/KEUNTUNGAN KLINIK']['NilaiBayar'] = $payments['Beban'];
 		$JenisBayar['BON KARYAWAN']['NilaiBayar'] = $payments['BonKaryawan'];
 		$JenisBayar['DIJAMIN KE PERUSAHAAN']['NilaiBayar'] = $payments['DijaminPerusahaan'];
 		$JenisBayar['KARTU KREDIT/DEBIT']['NilaiBayar'] = $payments['KartuKredit'];
@@ -465,25 +470,196 @@ final class general_payment_helper
 		}
 	}
 
-	public static function money_to_text($angka){
-		$money = array("","satu","dua","tiga","empat","lima","enam","tujuh","delapan","sembilan","sepuluh","sebelas");
-		if($angka < 12 ){
-			return " ".$money[$angka];
-		}elseif($angka < 20 ){
-			return self::money_to_text($angka-10)." belas";
-		}elseif($angka < 100 ){
-			return self::money_to_text($angka/10)." puluh" . self::money_to_text($angka%10);
-		}elseif($angka < 200){
-			return "seratus".self::money_to_text($angka-100);
-		}elseif($angka < 1000){
-			return self::money_to_text($angka /100)." ratus".self::money_to_text($angka%100);
-		}elseif($angka < 2000){
-			return "seribu".self::money_to_text($angka-1000);
-		}elseif($angka < 1000000 ){
-			return self::money_to_text($angka/1000). " ribu".self::money_to_text($angka%1000);
-		}elseif($angka < 1000000000 ){
-			return self::money_to_text($angka < 1000000). " juta".self::money_to_text($angka%1000000);
+	public static function money_to_text($bilangan){
+		// $money = array("satu","dua","tiga","empat","lima","enam","tujuh","delapan","sembilan","sepuluh","sebelas","dua belas");
+		// return " ".$money[$angka];
+		// if($angka < 12 ){
+		// 	return " ".$money[$angka];
+		// }elseif($angka < 20 ){
+		// 	return self::money_to_text($angka-10)." belas";
+		// }elseif($angka < 100 ){
+		// 	return self::money_to_text($angka/10)." puluh" . self::money_to_text($angka%10);
+		// }elseif($angka < 200){
+		// 	return " seratus".self::money_to_text($angka-100);
+		// }elseif($angka < 1000){
+		// 	return self::money_to_text($angka /100)." ratus".self::money_to_text($angka%100);
+		// }elseif($angka < 2000){
+		// 	return "seribu".self::money_to_text($angka-1000);
+		// }elseif($angka < 1000000 ){
+		// 	return self::money_to_text($angka/1000). " ribu".self::money_to_text($angka%1000);
+		// }elseif($angka < 1000000000 ){
+		// 	return self::money_to_text($angka < 1000000). " juta".self::money_to_text($angka%1000000);
+		// }
+
+		
+
+		$angka = array('0','0','0','0','0','0','0','0','0','0',
+				'0','0','0','0','0','0');
+		$kata = array('','satu','dua','tiga','empat','lima',
+			'enam','tujuh','delapan','sembilan');
+		$tingkat = array('','ribu','juta','milyar','triliun');
+
+		$panjang_bilangan = strlen($bilangan);
+
+		/* pengujian panjang bilangan */
+		if ($panjang_bilangan > 15) {
+			$kalimat = "Diluar Batas";
+			return $kalimat;
 		}
+
+		/* mengambil angka-angka yang ada dalam bilangan,
+		dimasukkan ke dalam array */
+		for ($i = 1; $i <= $panjang_bilangan; $i++) {
+			$angka[$i] = substr($bilangan,-($i),1);
+		}
+
+		$i = 1;
+		$j = 0;
+		$kalimat = "";
+
+
+		/* mulai proses iterasi terhadap array angka */
+		while ($i <= $panjang_bilangan) {
+
+			$subkalimat = "";
+			$kata1 = "";
+			$kata2 = "";
+			$kata3 = "";
+
+			/* untuk ratusan */
+			if ($angka[$i+2] != "0") {
+				if ($angka[$i+2] == "1") {
+					$kata1 = "seratus";
+				} else {
+					$kata1 = $kata[$angka[$i+2]] . " ratus";
+				}
+			}
+
+			/* untuk puluhan atau belasan */
+			if ($angka[$i+1] != "0") {
+				if ($angka[$i+1] == "1") {
+					if ($angka[$i] == "0") {
+						$kata2 = "sepuluh";
+					} elseif ($angka[$i] == "1") {
+						$kata2 = "sebelas";
+					} else {
+						$kata2 = $kata[$angka[$i]] . " belas";
+					}
+				} else {
+					$kata2 = $kata[$angka[$i+1]] . " puluh";
+				}
+			}
+
+			/* untuk satuan */
+			if ($angka[$i] != "0") {
+				if ($angka[$i+1] != "1") {
+					$kata3 = $kata[$angka[$i]];
+				}
+			}
+
+			/* pengujian angka apakah tidak nol semua,
+			lalu ditambahkan tingkat */
+			if (($angka[$i] != "0") OR ($angka[$i+1] != "0") OR
+			($angka[$i+2] != "0")) {
+				$subkalimat = "$kata1 $kata2 $kata3 " . $tingkat[$j] . " ";
+			}
+
+			/* gabungkan variabe sub kalimat (untuk satu blok 3 angka)
+			ke variabel kalimat */
+			$kalimat = $subkalimat . $kalimat;
+			$i = $i + 3;
+			$j = $j + 1;
+
+		}
+
+		/* mengganti satu ribu jadi seribu jika diperlukan */
+		if (($angka[5] == "0") AND ($angka[6] == "0")) {
+			$kalimat = str_replace("satu ribu","seribu",$kalimat);
+		}
+
+		return trim($kalimat. "");
+	}
+	
+	public static function money_to_text_english($number)
+	{
+		$numbers = array(
+			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+			'0', '0', '0', '0', '0', '0'
+		);
+		$words = array(
+			'', 'one', 'two', 'three', 'four', 'five',
+			'six', 'seven', 'eight', 'nine'
+		);
+		$tens = array(
+			'', '', 'twenty', 'thirty', 'forty', 'fifty',
+			'sixty', 'seventy', 'eighty', 'ninety'
+		);
+		$teens = array(
+			'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+			'sixteen', 'seventeen', 'eighteen', 'nineteen'
+		);
+		$levels = array('', 'thousand', 'million', 'billion', 'trillion');
+
+		$number_length = strlen($number);
+
+		// Check if the number is out of range
+		if ($number_length > 15) {
+			return "Out of Range";
+		}
+
+		// Extract the digits from the number and store them in an array
+		for ($i = 1; $i <= $number_length; $i++) {
+			$numbers[$i] = substr($number, - ($i), 1);
+		}
+
+		$i = 1;
+		$j = 0;
+		$sentence = "";
+
+		// Iterate through the numbers array
+		while ($i <= $number_length) {
+			$subsentence = "";
+			$word1 = "";
+			$word2 = "";
+			$word3 = "";
+
+			// Handle hundreds
+			if ($numbers[$i + 2] != "0") {
+				$word1 = $words[$numbers[$i + 2]] . " hundred";
+			}
+
+			// Handle tens or teens
+			if ($numbers[$i + 1] != "0") {
+				if ($numbers[$i + 1] == "1") {
+					$word2 = $teens[$numbers[$i]];
+				} else {
+					$word2 = $tens[$numbers[$i + 1]];
+					if ($numbers[$i] != "0") {
+						$word2 .= '';
+					}
+				}
+			}
+
+			// Handle ones
+			if ($numbers[$i] != "0" && $numbers[$i + 1] != "1") {
+				$word3 = $words[$numbers[$i]];
+			}
+
+			// Check if the number is not all zeros, then add the level
+			if ($numbers[$i] != "0" || $numbers[$i + 1] != "0" || $numbers[$i + 2] != "0") {
+				$subsentence = "$word1 $word2 $word3 " . $levels[$j] . " ";
+			}
+
+			// Concatenate the subsentence to the sentence
+			$sentence = $subsentence . $sentence;
+			$i = $i + 3;
+			$j = $j + 1;
+		}
+
+		// Replace "one thousand" with "a thousand" if necessary
+		$sentence = str_replace("one thousand", "a thousand", $sentence);
+
+		return trim($sentence);
 	}
 		
 	private static function & ci()

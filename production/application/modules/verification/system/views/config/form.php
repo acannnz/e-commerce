@@ -19,7 +19,7 @@ AkunIDPenampungReturMutasi
                 <h3 class="panel-title">PENDAPATAN</h3>
             </div>
             <div class="panel-body">
-				<h4 class="subtitle"><?php echo 'PT. APIK YASA USADHA'; ?></h4>
+				<!-- <h4 class="subtitle"><?php echo 'PT. APIK YASA USADHA'; ?></h4> -->
                 <div class="form-group">
 					<?php echo form_label('Akun Lawan Pendapatan (UMUM) *', '', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
 					<div class="col-sm-8 col-xs-12">
@@ -147,7 +147,7 @@ AkunIDPenampungReturMutasi
 					</div>
 				</div>
 				<hr/>
-				<h4 class="subtitle"><?php echo 'DOKTER SPESIALIS'; ?></h4>
+				<!-- <h4 class="subtitle"><?php echo 'DOKTER SPESIALIS'; ?></h4>
                 <div class="form-group">
 					<?php echo form_label('Akun Lawan Pendapatan (UMUM) *', '', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
 					<div class="col-sm-8 col-xs-12">
@@ -273,9 +273,9 @@ AkunIDPenampungReturMutasi
 							</div>
 						</div>
 					</div>
-				</div>
+				</div> -->
                 
-                <hr>
+                <!-- <hr>
 				<div class="form-group">
 					<?php echo form_label('Akun Pos Pembayaran Outstanding Potong Honor', '', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
 					<div class="col-sm-8 col-xs-12">
@@ -342,7 +342,7 @@ AkunIDPenampungReturMutasi
 							</div>
 						</div>
                     </div>
-            	</div>
+            	</div> -->
             </div>
         </div>
     </div>

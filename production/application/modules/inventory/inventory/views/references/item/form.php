@@ -159,7 +159,7 @@
                                             ]); ?>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                               <!-- <div class="form-group">
 									<?php echo form_label('Opsi', '', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
                                     <div class="col-sm-8 col-xs-12">
                                         <?php echo form_hidden('f[FormulariumUmum]', 0); ?>
@@ -184,7 +184,20 @@
                                                 'class' => 'checkbox'
                                             ]).' '.form_label('<b>Formularium JKN</b>', 'Formularium'); ?>
                                     </div>
-                                </div>
+                                </div> -->
+								<div class="form-group">
+									<?php echo form_label('Opsi', '', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
+									<div class="col-sm-8 col-xs-12">
+										<?php echo form_hidden('f[BarangKonsinyasi]', 0); ?>
+										<?php echo form_checkbox([
+											'id' => 'BarangKonsinyasi',
+											'name' => 'f[BarangKonsinyasi]',
+											'value' => 1,
+											'checked' => set_value('f[BarangKonsinyasi]', (bool) @$item->BarangKonsinyasi, TRUE),
+											'class' => 'checkbox'
+										]) . ' ' . form_label('<b>Barang Konsinyasi</b>', 'BarangKonsinyasi'); ?>
+									</div>
+								</div>
                             </div>
                     	</div>
                     </div>
@@ -250,7 +263,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-									<?php echo form_label('Harga Pokok *', 'Harga_Jual', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
+									<?php echo form_label('Harga Jual *', 'Harga_Jual', ['class' => 'col-sm-4 col-xs-12 control-label']) ?>
                                     <div class="col-sm-8 col-xs-12">
                                         <?php echo form_input('f[Harga_Jual]', set_value('f[Harga_Jual]', @$item->Harga_Jual, TRUE), [
                                                 'id' => 'Harga_Jual', 

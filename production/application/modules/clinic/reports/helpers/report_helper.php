@@ -19,22 +19,52 @@ final class report_helper
 		self::$user_auth = $_ci->simple_login->get_user();
 	}
 
-	public static function get_registration_patient_types( $date_start, $date_end, $patient_type, $section )
+	public static function get_registration_patient_types( $date_start, $date_end, $patient_type, $section, $jeniskelamin, $desa, $kelas, $patient_age )
 	{
+		// print_r($patient_age);exit;
 			$_ci = self::ci();
 			$_ci->load->model([
 				'registration_model',
 				'patient_type_model',
 				'patient_model',
-				'section_model'
+				'section_model',
+				'desa_model',
+				'class_model'
 			]);
+
+			$range = [
+				'1' => array(0,14),
+				'2' => array(15,24),
+				'3' => array(25,34),
+				'4' => array(35,44),
+				'5' => array(45,54),
+				'6' => array(55,64),
+				'7' => array(65,150),
+			];
 
 			if (!is_null($patient_type) && !empty($patient_type)){ 
 				$_ci->db->where("a.JenisKerjasamaID", $patient_type); 
 			}	
 			if (!is_null($section) && !empty($section)){ 
 				$_ci->db->where("a.SectionID", $section); 
+			}
+			if (!is_null($jeniskelamin) && !empty($jeniskelamin)){ 
+				$_ci->db->where("c.JenisKelamin", $jeniskelamin); 
+			}		
+			if (!is_null($desa) && !empty($desa)){ 
+				$_ci->db->where("e.DesaID", $desa); 
 			}	
+			if (!is_null($kelas) && !empty($kelas)){ 
+				$_ci->db->where("a.KdKelas", $kelas); 
+			}
+			if (!empty($patient_age)) {
+				$_ci->db->where("DATEDIFF(hour, c.TglLahir,GETDATE())/24 >", $range[$patient_age][0] * 365);
+				$_ci->db->where("DATEDIFF(hour, c.TglLahir,GETDATE())/24 <",  $range[$patient_age][1] * 365);
+			}
+
+			// print_r($range[5]);
+			// print_r($range[6]);
+			// exit;
 
 			$query = $_ci->db
 					->select(
@@ -42,21 +72,26 @@ final class report_helper
 						a.TglReg,
 						a.PenanggungNama,
 						b.JenisKerjasama,
-						c.NRM,
+						a.NRM,
 						c.NamaPasien,
 						c.JenisKelamin,
 						c.TglLahir,
-						d.SectionName
+						DATEDIFF(hour, c.TglLahir,GETDATE())/8766 AS Umur,
+						d.SectionName,
+						coalesce(e.DesaNama,'') as DesaNama,
+						f.NamaKelas
 						"
 					)
 					->from( "{$_ci->registration_model->table} a" )
 					->join( "{$_ci->patient_type_model->table} b", "a.JenisKerjasamaID = b.JenisKerjasamaID", "INNER" )
 					->join( "{$_ci->patient_model->table} c", "a.NRM = c.NRM", "INNER" )
 					->join( "{$_ci->section_model->table} d", "a.SectionID = d.SectionID", "INNER" )
+					->join( "vwregional e", "c.KodeRegional = e.DesaID", "LEFT" )
+					->join( "{$_ci->class_model->table} f", "a.KdKelas = f.KelasID", "INNER" )
 					->where([
 						"a.Batal" => 0,
-						"TglReg >=" => $date_start,
-						"TglReg <=" => $date_end,
+						"a.TglReg >=" => $date_start,
+						"a.TglReg <=" => $date_end,
 					])
 					->order_by('a.TglReg','ASC')
 					->get()
@@ -68,7 +103,7 @@ final class report_helper
 			{
 				foreach( $query->result() as $row )
 				{	
-					$collection[ $row->JenisKerjasama ][] = (object) [
+					$collection[ $row->NamaKelas ][] = (object) [
 						'NoReg' => $row->NoReg,
 						'TglReg' => date('d/m/Y', strtotime($row->TglReg)),
 						'PenanggungNama' => $row->PenanggungNama,
@@ -77,8 +112,12 @@ final class report_helper
 						'NamaPasien' => $row->NamaPasien,
 						'JenisKelamin' => ($row->JenisKelamin == 'M') ? 'Laki-Laki' : 'Perempuan',
 						'TglLahir' => $row->TglLahir,
-						'SectionName' => $row->SectionName
+						'SectionName' => $row->SectionName,
+						'Desa'	=> $row->DesaNama,
+						'NamaKelas' => $row->NamaKelas,
+						'Umur'	=> $row->Umur 
 					];
+					// print_r($collection);exit;
 				}
 				
 				return $collection;
@@ -86,6 +125,341 @@ final class report_helper
 
 			return FALSE;
 		
+	}
+
+	public static function get_used_drugs( $date_start, $date_end, $section_id, $kerjasama_id )
+	{
+		
+		$db = self::ci()->db;
+		
+		// exec FAR_Laporan_Penggunaan_Obat '2016-11-01','2016-11-30','SECT0002','3'
+		$query = "exec FAR_Laporan_Penggunaan_Obat '$date_start', '$date_end', '$section_id','$kerjasama_id'";
+		
+		$query = $db->query( $query );
+		if( $query->num_rows() )
+		{			
+			$collection = array();
+			foreach( $query->result() as $item )
+			{	
+				// Pengelompokan Opname Berdasarkan Section Name
+				$collection[ $item->SectionName ][] = $item;
+			}
+			
+			return $collection;
+		}		
+		
+		return FALSE;
+	}
+
+	public static function get_drug_history( $NoReg )
+	{
+		// print_r($NoReg);exit;
+		$_ci = self::ci();
+		
+		$db_select = <<<EOSQL
+			a.NoBukti, 
+			a.NoResep, 
+			a.Tanggal,
+			a.NRM,
+			a.NoReg,
+			b.NamaResepObat,
+			c.Nama_Supplier AS NamaDokter,
+			e.NamaPasien
+EOSQL;
+		
+		$query = $_ci->db->select($db_select)
+					->from("BILLFarmasi a")
+					->join("BILLFarmasiDetail b", "a.NoBukti = b.NoBukti", "LEFT OUTER JOIN")
+					->join("mSupplier c", "a.DokterID = c.Kode_Supplier", "LEFT OUTER JOIN")
+					->join("SIMtrRegistrasi d", "a.NoReg = d.NoReg", "INNER")
+					->join("mPasien e", "a.NRM = e.NRM", "LEFT OUTER JOIN")
+					->where([
+						"a.NoReg" => $NoReg,
+						
+					])
+					->get();
+
+
+		$collection = [];
+		foreach($query->result() as $row):
+			$collection[ $row->NamaPasien ][] = (object) [
+				'Tanggal' => $row->Tanggal,
+				'NoBukti' => $row->NoBukti,
+				'NoResep' => $row->NoResep,
+				'NamaResepObat' => $row->NamaResepObat,
+				'NamaDokter' => $row->NamaDokter
+			];
+		endforeach;
+
+		return $collection;
+	}
+
+	public static function get_drug_history_details( $NoBukti )
+	{
+		$select_table = <<<EOSQL
+				b.*,
+EOSQL;
+			
+		$result = self::ci()->db
+			->select( $select_table )
+			->from( "BILLFarmasi a" )
+			->join( "BILLFarmasiDetail b","a.NoBukti = b.NoBukti", "INNER")
+			->where([
+				'a.NoBukti' => $NoBukti,
+				'a.Batal' => 0,
+				'a.Retur' => 0,
+				'a.TipeTransaksi ' => null
+			])
+			->get()
+			;
+		
+		if( $result->num_rows() > 0 )
+		{
+			return $result->result();
+		}
+		
+		return FALSE;
+	}
+
+	public static function export_excel_get_used_drugs( $date_start, $date_end , $section_id, $kerjasama_id)
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
+
+		$section = $_ci->section_model->get_one($section_id);
+		$collection = self::get_used_drugs( $date_start, $date_end , $section_id, $kerjasama_id);	
+
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
+		$file_name = sprintf('%s periode %s s/d %s ', 'Laporan Penggunaan Obat', $date_start->format('d F Y'), $date_end->format('d F Y'));
+		
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( 'Laporan Penggunaan Obat' )
+				->setSubject( 'Laporan Penggunaan Obat')
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:I1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$tb_row = 3;
+		$i = 1;
+		if(!empty($collection)) : foreach ($collection as $key => $value) :
+			
+			$_sheet->mergeCells("A{$tb_row}:G{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", sprintf("%s : %s", 'Section ', $key )); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11 ]]);
+			$tb_row++;
+			
+			$_sheet->setCellValue("A{$tb_row}", 'No'); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("B{$tb_row}", 'Tanggal'); 
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("C{$tb_row}", 'Kode Obat'); 
+			$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("D{$tb_row}", 'Nama Obat'); 
+			$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("E{$tb_row}", 'HNA'); 
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("F{$tb_row}", 'Qty'); 
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("G{$tb_row}", 'CN On Faktur'); 
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("H{$tb_row}", 'CN Off Faktur'); 
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("I{$tb_row}", 'Total CN'); 
+			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$tb_row++;
+			
+			if(!empty($value)) : foreach ($value as $row) :
+					$_sheet->setCellValue("A{$tb_row}", $i++);
+					$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("B{$tb_row}", date('d-m-Y', strtotime(@$row->Tanggal)));
+					$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("C{$tb_row}", @$row->Kode_Barang);
+					$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("D{$tb_row}", @$row->Nama_Barang);
+					$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("E{$tb_row}", number_format(@$row->HNA,2));
+					$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+					$_sheet->setCellValue("F{$tb_row}", @$row->Jumlah);
+					$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("G{$tb_row}",  number_format(@$row->CNOnFaktur,2));
+					$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("H{$tb_row}", number_format(@$row->CNOffFaktur,2));
+					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("I{$tb_row}", number_format(@$row->CNOnFaktur + @$row->CNOffFaktur,2));
+					$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$tb_row++;
+			endforeach; endif;
+
+		endforeach; endif;
+		/*$spreadsheet->getActiveSheet()->getColumnDimension('A')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);*/
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'REKAP' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
+	public static function export_excel_get_drug_price( )
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
+
+		$collection = $_ci->db->query("EXEC ListHargaObat")->result();	
+		
+		$file_name = sprintf('%s ', 'Laporan Harga Obat Keseluruhan');
+		$file_date = sprintf('Tanggal : %s', date('d-m-Y'));
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( 'Laporan Harga Obat Keseluruhan' )
+				->setSubject( 'Laporan Harga Obat Keseluruhan')
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:G1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$_sheet->mergeCells("A2:G2");
+		$_sheet->setCellValue('A2', $file_date );
+		$_sheet->getStyle("A2")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A2")->getAlignment()->setWrapText(true);
+
+		$tb_row = 5;
+			
+		$_sheet->setCellValue("A{$tb_row}", 'No'); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("B{$tb_row}", 'Nama Obat'); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+		$_sheet->setCellValue("C{$tb_row}", 'Harga Pokok'); 
+		$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+		$_sheet->setCellValue("D{$tb_row}", 'Harga Umum'); 
+		$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+		$_sheet->setCellValue("E{$tb_row}", 'Harga IKS'); 
+		$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("F{$tb_row}", 'Harga BPJS'); 
+		$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("G{$tb_row}", 'Harga Executive'); 
+		$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$tb_row++;
+		
+		$i = 1;
+		if (!empty($collection)) : foreach ($collection as $row) :
+				$_sheet->setCellValue("A{$tb_row}", $i++);
+				$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->setCellValue("B{$tb_row}", @$row->Nama_Barang);
+				$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->setCellValue("C{$tb_row}", number_format(@$row->Harga_Jual_PPN,2));
+				$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$_sheet->setCellValue("D{$tb_row}", number_format(@$row->H_Jual_Umum,2));
+				$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$_sheet->setCellValue("E{$tb_row}",  number_format(@$row->H_Jual_IKS,2));
+				$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$_sheet->setCellValue("F{$tb_row}", number_format(@$row->H_Jual_BPJS,2));
+				$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$_sheet->setCellValue("G{$tb_row}", number_format(@$row->H_Jual_Executive,2));
+				$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$tb_row++;
+		endforeach; endif;
+
+		/*$spreadsheet->getActiveSheet()->getColumnDimension('A')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);*/
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'REKAP' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
 	}
 
 	public static function export_excel_registration_patient_types(  $date_start, $date_end, $patient_type, $section)
@@ -598,6 +972,183 @@ EOSQL;
 		return $collection;
 	}
 
+	public static function get_daily_cash_report_fo( $date_start, $date_end, $user_id, $shift)
+	{		
+		$query = self::ci()->db->query("exec SIM_Rpt_LaporanKasHarianFO '{$date_start}','{$date_end}','{$user_id}','{$shift}'");
+
+		$collection = ['data' => []];	
+		// Data Laporan Kas Harian FO
+		if( $query->num_rows() > 0 ):
+			foreach($query->result() as $row)
+			{
+				$collection['data'][] = (object) $row;
+			}
+
+			return $collection;
+
+		endif;
+
+		return FALSE;
+		
+	}
+
+	public static function export_excel_daily_cash_report_fo(  $date_start, $date_end, $user_id, $shift)
+	{
+		$_ci = self::ci();
+		$_ci->load->model([
+			'section_model'
+		]);
+
+		$collection = self::get_daily_cash_report_fo( $date_start, $date_end, $user_id, $shift);	
+
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
+		$file_name = sprintf('%s periode %s s/d %s ', 'Laporan Harian Kas FO', $date_start->format('d F Y'), $date_end->format('d F Y'));
+		
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( 'Laporan Harian Kas FO' )
+				->setSubject( 'Laporan Harian Kas FO' )
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:I1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$tb_row = 3;
+
+			$_sheet->setCellValue("A{$tb_row}", 'NO'); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("B{$tb_row}", 'NO BUKTI'); 
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("C{$tb_row}", 'NAMA USER'); 
+			$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("D{$tb_row}", 'NRM'); 
+			$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("E{$tb_row}", 'PASIEN'); 
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("F{$tb_row}", 'SALDO AWAL'); 
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("G{$tb_row}", 'PENERIMAAN'); 
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("H{$tb_row}", 'PENGELUARAN'); 
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("I{$tb_row}", 'SUMBER'); 
+			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$tb_row++;
+			
+			$_tot_saldo_awal = 0; $_tot_penerimaan = 0; $_tot_pengeluaran = 0; $no = 1; if(!empty($collection['data'])) : foreach ($collection['data'] as $row) : 
+			$_tot_saldo_awal += $row->Saldoawal;
+			$_tot_penerimaan += $row->Penerimaan;
+			$_tot_pengeluaran += $row->Pengeluaran;
+
+					$_sheet->setCellValue("A{$tb_row}", $no++);
+					$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("B{$tb_row}", @$row->NoBukti);
+					$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("C{$tb_row}", @$row->NamaUser);
+					$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("D{$tb_row}",  @$row->NRM);
+					$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("E{$tb_row}", @$row->NamaPasien);
+					$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("F{$tb_row}", @$row->Saldoawal);
+					$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("G{$tb_row}",  @$row->Penerimaan);
+					$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("H{$tb_row}", @$row->Pengeluaran);
+					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("I{$tb_row}", @$row->Tipe);
+					$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					
+					$_sheet->getStyle("F{$tb_row}:I{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+					$tb_row++;
+				endforeach;
+			endif;
+
+			$tb_row++;
+			$_sheet->mergeCells("A{$tb_row}:E{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", '');
+
+			$_sheet->setCellValue("F{$tb_row}", 'SALDO AWAL');
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+
+			$_sheet->setCellValue("G{$tb_row}", 'PENERIMAAN');
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+
+			$_sheet->setCellValue("H{$tb_row}", 'PENGELUARAN');
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+
+			$_sheet->setCellValue("I{$tb_row}", 'SALDO AKHIR');
+			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+
+			$tb_row++;
+			$_sheet->mergeCells("A{$tb_row}:E{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", '');
+
+
+			$_sheet->setCellValue("F{$tb_row}", $_tot_saldo_awal);
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->setCellValue("G{$tb_row}", $_tot_penerimaan);
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->setCellValue("H{$tb_row}", $_tot_pengeluaran);
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->setCellValue("I{$tb_row}", ($_tot_saldo_awal + $_tot_penerimaan) - $_tot_pengeluaran);
+			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->getStyle("F{$tb_row}:I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$tb_row++;
+
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'LAPORAN HARIAN KAS FO' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
 	public static function export_all_patient()
 	{
 		set_time_limit(0);
@@ -724,6 +1275,456 @@ EOSQL;
 		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
 		$writer->save('php://output');
 		exit;
+	}
+
+	public static function get_recap_transactions( $date_start, $date_end, $section_id, $shift_id, $user_id )
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
+		$section = $_ci->section_model->get_one($section_id);
+
+		$collection = ['data' => [], 'payment' => [], 'merchan' => []];
+		// collection data
+		$query = $_ci->db->query("exec FAR_Rpt_RekapTransaksi '{$date_start}','{$date_end}','{$section->SectionID}','{$shift_id}','{$user_id}'");
+		foreach( $query->result() as $row )
+		{	
+			$collection['data'][ $row->JenisKerjasama ][$row->NoBukti .' => '. $row->Keterangan][] = [
+				'JenisKerjasama' => $row->JenisKerjasama,
+				'Barang_ID' => $row->Barang_ID,
+				'NamaObat' => $row->Nama_Barang,
+				'Qty' => $row->JmlObat,
+				'Nilai' => $row->Nilai,
+				'HExt' => $row->HExt,
+				'Diskon' => $row->Disc,
+				'JasaResep' => $row->BiayaResep,
+				'NamaResepObat' => $row->NamaResepObat,
+			];
+		}
+		// Pasien dengan pembayaran Merchan		
+		$collection['merchan'] = $_ci->db->query("exec FAR_Rpt_RekapTransaksiMerchan '{$date_start}','{$date_end}','{$section->SectionID}', '{$shift_id}', '{$user_id}'")->result();
+		// Total Jenis Pembayaran
+		$collection['payment'] = $_ci->db->query("exec FAR_Rpt_RekapTransaksiPayment '{$date_start}','{$date_end}','{$section->SectionID}','{$shift_id}', '{$user_id}'")->row();
+		
+		return $collection;
+	}
+	
+	public static function export_excel_recap_transactions( $date_start, $date_end , $section_id, $shift_id, $user_id)
+	{
+		$_ci = self::ci();
+		
+		$collection = self::get_recap_transactions( $date_start, $date_end, $section_id, $shift_id, $user_id);	
+		$shift = $_ci->db->where("IDShift", $shift_id )->get("SIMmShift")->row();
+		$user = $_ci->db->where("User_ID", $user_id)->get("mUser")->row();	
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
+		$file_name = sprintf('%s periode %s s/d %s ', lang('reports:recap_transaction_label'), $date_start->format('d F Y'), $date_end->format('d F Y'));
+		
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( 'Laporan Rekap Pendapatan dengan Grup Jasa' )
+				->setSubject( 'Laporan Rekap Pendapatan dengan Grup Jasa' )
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:G1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+		//$_sheet->getRowDimension('1')->setRowHeight(30);
+
+		$_sheet->mergeCells("A3:G3");
+		$_sheet->setCellValue("A3", sprintf("%s : %s", 'User', (!empty(@$user->Nama_Asli)) ? @$user->Nama_Asli : 'Semua' )); 
+		$_sheet->getStyle("A3")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11 ]]);
+
+		$_sheet->mergeCells("A4:G4");
+		$_sheet->setCellValue("A4", sprintf("%s : %s", 'Shift', (!empty(@$shift->Deskripsi)) ? @$shift->Deskripsi : 'Semua' )); 
+		$_sheet->getStyle("A4")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11 ]]);
+
+		$tb_row = 6; $grandtotal = 0;
+		foreach ( $collection['data'] as $key => $transaction ):
+			
+			$_sheet->mergeCells("A{$tb_row}:G{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", $key); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11 ]]);
+			$tb_row++;
+			
+			$_sheet->setCellValue("A{$tb_row}", 'TRANSAKSI'); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("B{$tb_row}", 'TIPE PASIEN'); 
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("C{$tb_row}", 'ITEM'); 
+			$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("D{$tb_row}", 'QTY'); 
+			$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("E{$tb_row}", 'NILAI'); 
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("F{$tb_row}", 'JASA APOTEK'); 
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("G{$tb_row}", 'SUBTOTAL'); 
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("H{$tb_row}", 'DISKON'); 
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$tb_row++;
+			
+			$tb_start = $tb_row;
+			$total_subtotal = 0; $total_nilai = 0; $total_jasa_resep = 0; $diskon_total = 0;
+			foreach($transaction as $evidence_number => $items):
+				$tb_start_patient = $tb_row;
+				//$_sheet->setCellValue("A{$tb_row}", $evidence_number);
+				foreach($items as  $item):
+					$item = (object) $item;
+					$sub_total = $item->Qty * $item->Nilai + $item->JasaResep + $item->HExt; 
+					$total_subtotal += $sub_total;
+					$total_nilai += $item->Nilai;
+					$total_jasa_resep += $item->JasaResep;
+					$diskon = $item->Qty * $item->Nilai * $item->Diskon / 100;
+					$diskon_total += $diskon;
+
+					$_sheet->setCellValue("A{$tb_row}", $evidence_number);
+					//$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+					$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("B{$tb_row}", @$item->JenisKerjasama);
+					$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("C{$tb_row}", $item->NamaObat);
+					$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("D{$tb_row}", $item->Qty);
+					$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("E{$tb_row}", $item->Barang_ID != 0 ? $item->Nilai : $item->Nilai);
+					$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("F{$tb_row}", $item->Barang_ID != 0 ? $item->JasaResep : $item->JasaResep);
+					$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("G{$tb_row}",  "=(D{$tb_row} * E{$tb_row}) + F{$tb_row} + {$item->HExt}");
+					$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("H{$tb_row}", $item->Diskon > 0 ? "= {$item->Qty} * {$item->Nilai} * {$item->Diskon} / 100" : '');
+					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					
+					$_sheet->getStyle("E{$tb_row}:H{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+					$tb_row++;
+				endforeach;
+				$tb_row--;
+				//$_sheet->mergeCells("A{$tb_start_patient}:A{$tb_row}");
+				// $_sheet->setCellValue("H{$tb_start_patient}", "=SUM(G{$tb_start_patient}:G{$tb_row})");
+				// $_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+				// $_sheet->mergeCells("H{$tb_start_patient}:H{$tb_row}");
+				$tb_row++;
+			endforeach;
+			
+			$tb_sum_till = $tb_row - 1;
+			
+			$_sheet->mergeCells("A{$tb_row}:D{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", 'TOTAL');
+			$_sheet->getStyle("A{$tb_row}:D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
+			$_sheet->setCellValue("E{$tb_row}", "=SUM(E{$tb_start}:E{$tb_sum_till})");
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->setCellValue("F{$tb_row}", "=SUM(F{$tb_start}:F{$tb_sum_till})");
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->setCellValue("G{$tb_row}", "=SUM(G{$tb_start}:G{$tb_sum_till})");
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->setCellValue("H{$tb_row}", "=SUM(H{$tb_start}:H{$tb_sum_till})");
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$tb_row++;
+			$tb_row++;
+			
+			$grandtotal += $total_subtotal - $diskon_total;
+		endforeach;
+		$_sheet->mergeCells("A{$tb_row}:G{$tb_row}");
+		$_sheet->setCellValue("A{$tb_row}", 'GRANDTOTAL');
+		$_sheet->getStyle("A{$tb_row}:H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
+		$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ) );
+		$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$_sheet->setCellValue("H{$tb_row}", $grandtotal);
+		$tb_row += 2;
+		// TIPE PEMBAYARAN
+		$tb_row += 2;
+		$_sheet->mergeCells("A{$tb_row}:B{$tb_row}");
+		$_sheet->setCellValue("A{$tb_row}", "PEMBAYARAN"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'header' ) );
+		$tb_row++;
+		
+		$_sheet->setCellValue("A{$tb_row}", "Tipe Pembayaran"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("B{$tb_row}", "Nilai"); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$tb_row++;
+		
+		$_total_payment = 0;
+		foreach($collection['payment'] as $type => $val ):
+			$_sheet->setCellValue("A{$tb_row}", $type);
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+			$_sheet->setCellValue("B{$tb_row}", $val);
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_total_payment += $val;
+			$tb_row++;
+		endforeach;
+		$_sheet->setCellValue("A{$tb_row}", "Total"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
+		$_sheet->setCellValue("B{$tb_row}", $_total_payment); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ));
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		
+		// PASIEN DENGAN PEMBAYARAN MERCHAN
+		$tb_row += 3;
+		$_sheet->mergeCells("A{$tb_row}:B{$tb_row}");
+		$_sheet->setCellValue("A{$tb_row}", "PASIEN PEMBAYARAN MERCHAN"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'header' ) );
+		$tb_row++;
+		
+		$_sheet->setCellValue("A{$tb_row}", "Pasien"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$_sheet->setCellValue("B{$tb_row}", "Nilai"); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+		$tb_row++;
+		
+		$_total_payment = 0;
+		foreach($collection['merchan'] as $pay ):
+			$_sheet->setCellValue("A{$tb_row}", $pay->NamaPasien);
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody_merge' ) );
+			$_sheet->setCellValue("B{$tb_row}", $pay->Nilai);
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_total_payment += $pay->Nilai;
+			$tb_row++;
+		endforeach;
+		$_sheet->setCellValue("A{$tb_row}", "Total"); 
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+		$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
+		$_sheet->setCellValue("B{$tb_row}", $_total_payment); 
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'sum_value' ));
+		$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+		$tb_row++;		
+	
+		
+		/*$spreadsheet->getActiveSheet()->getColumnDimension('A')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);*/
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'REKAP' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
+	public static function get_recap_stocks( $date_start, $date_end, $Lokasi_ID )
+	{
+		
+		$db = self::ci()->db;
+		
+		// exec SIM_Rpt_RekapStok_FIFO '2016-11-01','2016-11-30',296
+		$query = "exec SIM_Rpt_RekapStok_FIFO '$date_start', '$date_end', $Lokasi_ID";
+		
+		$query = $db->query( $query );
+		if( $query->num_rows() )
+		{
+			// Ambil data barang sesuai section, untuk mencari Kelompok jenis barang.
+			$barang_section = self::get_barang_section($Lokasi_ID);
+			
+			$collection = array();
+			foreach( $query->result() as $item )
+			{	
+				// Pengelompokan Barang Berdasarkan Kelompok Jenis
+				$collection[ $barang_section[$item->KOde_Barang]->KelompokJenis ][] = $item;
+			}
+			
+			// Urutkan berdasarkan Kelompok Jenisnya
+			ksort($collection);
+			
+			return $collection;
+		}		
+		
+		return FALSE;
+	}
+	public static function export_excel_get_recap_stocks( $date_start, $date_end , $lokasi_id)
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
+
+		$section = $_ci->section_model->get_by(['Lokasi_ID' => $lokasi_id]);
+		$collection = self::get_recap_stocks( $date_start, $date_end, $lokasi_id);	
+
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start );
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end );
+		$file_name = sprintf('%s %s periode %s s/d %s ', lang('reports:recap_stock_label'), $section->SectionName, $date_start->format('d F Y'), $date_end->format('d F Y'));
+		
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+		
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+		
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator( config_item("company_name") )
+				->setLastModifiedBy(config_item("company_name"))
+				->setTitle( lang('reports:recap_stock_label') )
+				->setSubject( lang('reports:recap_stock_label') )
+				->setDescription( $file_name )
+				->setKeywords( $file_name)
+				;
+		
+		$_sheet = $spreadsheet->setActiveSheetIndex( 0 );
+		
+		// Default Style
+		
+		$spreadsheet->getDefaultStyle()->applyFromArray( self::_get_style( 'default' ) );
+		
+		$_sheet->mergeCells("A1:H1");
+		$_sheet->setCellValue('A1', $file_name );
+		$_sheet->getStyle("A1")->applyFromArray( self::_get_style( 'header' ) );
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$tb_row = 3;
+		$i = 1;
+		if(!empty($collection)) : foreach ($collection as $key => $value) :
+			
+			$_sheet->mergeCells("A{$tb_row}:G{$tb_row}");
+			$_sheet->setCellValue("A{$tb_row}", sprintf("%s : %s", lang("reports:group_label"), $key )); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11 ]]);
+			$tb_row++;
+			
+			$_sheet->setCellValue("A{$tb_row}", lang('reports:no_label')); 
+			$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("B{$tb_row}", lang('reports:code_label')); 
+			$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("C{$tb_row}", lang('reports:item_label')); 
+			$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("D{$tb_row}", lang('reports:unit_label')); 
+			$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("E{$tb_row}", lang('reports:beginning_balance_label')); 
+			$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("F{$tb_row}", lang('reports:in_label')); 
+			$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) ); 
+			$_sheet->setCellValue("G{$tb_row}", lang('reports:out_label')); 
+			$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("H{$tb_row}", lang('reports:ending_balance_label')); 
+			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$tb_row++;
+			
+			if(!empty($value)) : foreach ($value as $row) :
+					$_sheet->setCellValue("A{$tb_row}", $i++);
+					$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("B{$tb_row}", @$row->KOde_Barang);
+					$_sheet->getStyle("B{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("C{$tb_row}", @$row->Nama_Barang);
+					$_sheet->getStyle("C{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("D{$tb_row}", @$row->Satuan_Stok);
+					$_sheet->getStyle("D{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("E{$tb_row}", @$row->SA);
+					$_sheet->getStyle("E{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("F{$tb_row}", @$row->MASUK);
+					$_sheet->getStyle("F{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("G{$tb_row}",  @$row->KELUAR);
+					$_sheet->getStyle("G{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("H{$tb_row}",abs($row->SA + $row->MASUK - $row->KELUAR));
+					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$tb_row++;
+			endforeach; endif;
+
+		endforeach; endif;
+		/*$spreadsheet->getActiveSheet()->getColumnDimension('A')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+		$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);*/
+					
+		// Rename worksheet
+		$spreadsheet->getActiveSheet()->setTitle( 'REKAP' );
+		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+		
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$file_name.'.xls"');
+		header('Cache-Control: max-age=0');
+		
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+		
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
+	public static function get_barang_section( $Lokasi_ID )
+	{
+		
+		$db = self::ci()->db;
+		
+		$db_from = "mBarangLokasiNew a";
+		
+		$query = $db->select("b.*")
+					->from($db_from)
+					->join("mBarang b", "a.Barang_ID = b.Barang_ID", "LEFT OUTER")
+					->where(array("a.Lokasi_ID" => $Lokasi_ID))
+					->get()
+					;
+					
+		if( $query->num_rows() > 0 )
+		{	
+			$collection = array();		
+			foreach ($query->result() as $row )
+			{
+				$collection[$row->Kode_Barang] = $row;
+			}
+			
+			return $collection;
+		}		
+		
+		return FALSE;
 	}
 
 	private static function _get_style($key)

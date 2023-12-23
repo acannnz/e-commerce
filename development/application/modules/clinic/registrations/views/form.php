@@ -11,7 +11,7 @@
 				<ul id="tab-poly" class="nav nav-tabs nav-justified">
 					<li class="active"><a href="#poly-tab1" data-toggle="tab"><b><i class="fa fa-wheelchair"></i> Data Pasien</b></a></li>
 					<li><a href="#poly-tab2" data-toggle="tab"><b><i class="fa fa-users"></i> Data Penanggung</b></a></li>
-					<li><a href="#poly-tab3" data-toggle="tab"><b><i class="fa fa-heartbeat"></i> Tanda Vital</b></a></li>
+					<!-- <li><a href="#poly-tab3" data-toggle="tab"><b><i class="fa fa-heartbeat"></i> Tanda Vital</b></a></li> -->
 					<li><a href="#poly-tab4" data-toggle="tab"><b><i class="fa fa-stethoscope"></i> Data Kunjungan</b></a></li>
 				</ul>
 				<div class="tab-content">
@@ -60,7 +60,7 @@
 									<label class="col-md-3 control-label"><?php echo lang('registrations:mr_number_label') ?></label>
 									<label class="control-label">
 										<div class="checkbox" style="margin:0">
-											<input type="checkbox" id="PasienBaru" name="f[PasienBaru]" value="1" <?php echo @$item->PasienBaru ?>>
+											<input type="checkbox" id="PasienBaru" name="f[PasienBaru]" value="1" <?php echo @$item->PasienBaru == 1 ? "checked" : NULL ?>>
 											<label for="PasienBaru"><?php echo lang('registrations:new_patient_label') ?></label>
 										</div>
 									</label>
@@ -1027,7 +1027,7 @@
 			});
 
 			var table_data = $("#dt_registration_section").DataTable().rows().data();
-			table_data.each(function(v, i) {
+			table_data.each(function(v, i) { 
 				if (v.WaktuID == '') validTime = false;
 				dataPost.push({
 					name: 'destinations[' + i + '][SectionID]',
@@ -1048,6 +1048,10 @@
 				dataPost.push({
 					name: 'destinations[' + i + '][WaktuID]',
 					value: v.WaktuID
+				});
+				dataPost.push({
+					name: 'destinations[' + i + '][Waktu]',
+					value: v.Waktu
 				});
 				dataPost.push({
 					name: 'destinations[' + i + '][JenisKerjasamaID]',
@@ -1272,7 +1276,7 @@
 								if (type === 'display' && !val) {
 									return ''; // Mengembalikan string kosong jika val Waktu tidak ada
 								}
-								return val; // Mengembalikan val Waktu jika ada
+								return val.substr(10, 6); // Mengembalikan val Waktu jika ada
 							}
 						},
 						// {
@@ -1415,10 +1419,6 @@
 			$("#dt_registration_section").dt_registration_section();
 
 			var _form = $("form[name=\"form_registrations\"]");
-			// $('#Waktu').datetimepicker({
-			// 	// datepicker: false,
-			// 	format: 'H: mm'
-			// });
 
 			_form.on("submit", function(e) {
 				e.preventDefault();

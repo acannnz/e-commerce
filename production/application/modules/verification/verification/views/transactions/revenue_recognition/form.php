@@ -28,12 +28,26 @@ if (!defined('BASEPATH'))
 								]); ?>
 						</div>
                     </div>
+				</div> 
+				<div class="col-md-12" style="padding-top:10px;">
+            		<div class="form-group">
+						<?php echo form_label("No Bukti".' *', 'No_BuktiRJ', ['class' => 'control-label col-md-3']) ?>
+						<div class="col-md-7">
+							<!-- <input type="text" name="f[NoBuktiRJ]" id="NoBuktiRJ" value="" class="form-control"> -->
+							<?php echo form_input('f[NoBuktiRJ]', set_value('f[NoBuktiRJ]', FALSE), [
+									'id' => 'NoBuktiRJ', 
+									'placeholder' => '', 
+									'required' => 'required',
+									'class' => 'form-control'
+								]); ?>
+						</div>
+                    </div>
 				</div>
 			</div>
 			<hr />
 			<div class="row">
 				<div class="col-md-12">
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <?php echo form_label(lang('label:inpatient'), '', ['class' => 'control-label col-md-3']) ?>
 						<div class="col-md-7">						
 							<div class="progress" style="margin-top:10px">
@@ -43,7 +57,7 @@ if (!defined('BASEPATH'))
 						<div class="col-md-2">
 							<button name="btn_process" data-target="inpatient" class="btn btn-success btn-block" type="button"><?php echo lang('buttons:process')?></button>
 						</div>
-					</div>
+					</div> -->
 					<div class="form-group">
                     	<?php echo form_label(lang('label:outpatient'), '', ['class' => 'control-label col-md-3']) ?>
 						<div class="col-md-7">						
@@ -66,7 +80,7 @@ if (!defined('BASEPATH'))
 							<button name="btn_process" data-target="otc_drug" class="btn btn-success btn-block" type="button"><?php echo lang('buttons:process')?></button>
 						</div>
 					</div>
-					<div class="form-group">
+					<!-- <div class="form-group">
 						<?php echo form_label(lang('label:deposit'), '', ['class' => 'control-label col-md-3']) ?>
 						<div class="col-md-7">						
 							<div class="progress" style="margin-top:10px">
@@ -76,7 +90,7 @@ if (!defined('BASEPATH'))
 						<div class="col-md-2">
 							<button name="btn_process" data-target="deposit" class="btn btn-success btn-block" type="button"><?php echo lang('buttons:process')?></button>
 						</div>
-					</div>
+					</div> -->
 					<div class="form-group">
 						<?php echo form_label(lang('label:outstanding_disbursement'), '', ['class' => 'control-label col-md-3']) ?>
 						<div class="col-md-7">						
@@ -112,6 +126,8 @@ if (!defined('BASEPATH'))
 	
 		var _form = $( "form[name=\"form_revenue_recognition\"]" );
 		var _form_date = _form.find("input[name=\"f[Tanggal]\"]");
+		var _form_nobuktirj = _form.find("input[name=\"f[NoBuktiRJ]\"]");
+
 		var _btn_process = _form.find("button[name=\"btn_process\"]");
 		var _target, _progress;
 		var form_actions = {
@@ -122,7 +138,7 @@ if (!defined('BASEPATH'))
 							_btn_process.addClass('disabled');
 							
 							_target = $(this).data('target');
-							var params = {'date': _form_date.val(), 'case' : _target}; 
+							var params = {'date': _form_date.val(), 'case' : _target, 'NoBuktiRJ': _form_nobuktirj.val()}; 
 							form_actions.progress_bar_state( 2 )
 							form_actions.process( params );
 						});

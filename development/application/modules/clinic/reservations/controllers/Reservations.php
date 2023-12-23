@@ -138,31 +138,112 @@ class Reservations extends Admin_Controller
 				->build('reservations/form', $data);
 		}
 	}
-
+	
 	public function calender()
 	{
 
+		$patient_type = $this->patient_type_m->options_type();
+		$option_section = $this->reservation_m->get_option_section();
+		$option_time = $this->reservation_m->get_option_time();
+
+		$weekDay = array("MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU");
+		$item = array(
+			'NoReservasi' => reservation_helper::gen_reservation_number(),
+			'Tanggal' => date("Y-m-d"),
+			'Jam' => date("Y-m-d H:i:s"),
+			'User_ID' => $this->user_auth->User_ID,
+			'PasienBaru' => 0,
+			'Registrasi' => 0,
+			'Batal' => 0,
+			'Paid' => 0,
+			'TipeReservasi' => 'RESERVASI POLI',
+			'UntukHari' => $weekDay[date("w")],
+		);
+
+
+		if ($this->input->post()) {
+
+			$item = array_merge($item, $this->input->post());
+			$item['NoReservasi'] = reservation_helper::gen_reservation_number();
+			
+			$get_reservasi = $this->db->where(
+				['UntukDokterID' => $item['UntukDokterID']
+				, 'UntukTanggal' => $item['UntukTanggal']
+				, 'Waktu' => $item['Waktu']
+				])
+				->from('SIMtrReservasi')->count_all_results();
+			if ($get_reservasi == 1) {
+				response_json([
+					"status" => 'error',
+					"message" => 'Jam Ini Sudah Terisi Pasien!!',
+					"code" => 500
+				]);
+			}
+
+			$this->load->library('form_validation');
+			$this->form_validation->set_data($item);
+
+			if (!$this->form_validation->run()) {
+				$this->db->trans_begin();
+				$this->db->insert("SIMtrReservasi", $item);
+
+				if ($this->db->trans_status() === FALSE) {
+					$this->db->trans_rollback();
+					$message = [
+						"status" => 'error',
+						"message" => lang('global:created_failed'),
+						"code" => 500];
+				} else {
+					$this->db->trans_commit();
+					$message = [
+						"status" => 'success',
+						"message" => lang('global:created_successfully'),
+						"code" => 200,
+					];
+				}
+
+			} else {
+				make_flashdata(array(
+					'response_status' => 'error',
+					'message' => $this->form_validation->get_all_error_string()
+				));
+			}
+
+			response_json($message);
+
+		}
+
 		if ($this->input->is_ajax_request()) {
 			$data = array(
+				"item" => (object)$item,
 				"is_ajax_request" => TRUE,
 				"get_calender" => base_url("reservations/calender_collection"),
+				"get_reservation" => base_url("reservations/get_reservation"),
 				"lookup_doctor" => base_url("reservations/lookup_doctor"),
+				"lookup_patient" => base_url("reservations/lookup_patient"),
 				"is_modal" => TRUE,
+				'option_section' => $option_section,
+				"get_reservation_queue" => base_url("reservations/get_reservation_queue"),
 			);
 
 			$this->load->view(
 				'reservations/modal/create_edit',
-				array('form_child' => $this->load->view('reservations/form', $data, true))
+				array('form_child' => $this->load->view('reservations/form_calendar', $data, true))
 			);
 		} else {
 			$data = array(
 				"page" => $this->page . "_" . strtolower(__FUNCTION__),
+				"item" => (object)$item,
 				"form" => TRUE,
 				"get_calender" => base_url("reservations/calender_collection"),
+				"get_reservation" => base_url("reservations/get_reservation"),
 				"lookup_doctor" => base_url("reservations/lookup_doctor"),
+				"lookup_patient" => base_url("reservations/lookup_patient"),
 				"datatables" => TRUE,
+				'option_section' => $option_section,
+				"get_reservation_queue" => base_url("reservations/get_reservation_queue"),
 			);
-
+			// print_r($data);exit;
 			$this->template
 				->set("heading", 'Data Pasien Reservasi')
 				->set_breadcrumb('Calender Reservasi', base_url("reservations/calender"))
@@ -176,20 +257,31 @@ class Reservations extends Admin_Controller
 		if ($this->input->post()) {
 			$data = $this->input->post();
 			$collection = [];
-			$item = $this->db->where("UntukDokterID", $data['DokterID'])->get($this->reservation_m->table)->result();
+			$whare = array('UntukDokterID' => $data['DokterID'], 'Batal' => 0);
+			$item = $this->db->where($whare)->get($this->reservation_m->table)->result();
 
 
 			foreach ($item as $key => $value) {
 				$datetimeString = $value->Waktu;
 				$dateTime = new DateTime($datetimeString);
 				$timeString = $dateTime->format('H:i:s');
-
-				$v = [
-					'title' => $value->Nama,
-					'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
-					'color' => 'blue',
-					'description' => $value->Memo,
-				];
+				
+				if ($value->Registrasi == 1) {
+					$v = [
+						'title' => $value->Nama,
+						'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
+						'color' => 'green',
+						'description' => $value->Memo,
+					];
+				} else {
+					$v = [
+						'title' => $value->Nama,
+						'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
+						'color' => 'red',
+						'description' => $value->Memo,
+					];
+				}
+				
 
 				$collection[] = $v;
 			}
@@ -209,7 +301,8 @@ class Reservations extends Admin_Controller
 		}
 
 		$item = $this->db->where("NoReservasi", $NoReservasi)->get($this->reservation_m->table)->row();
-
+		// print_r($item->Waktu);
+		// exit;
 		$doctor = $this->db->where("Kode_Supplier", $item->UntukDokterID)->get("mSupplier")->row();
 		$option_section = $this->reservation_m->get_option_section();
 		$option_time = $this->reservation_m->get_option_time();
@@ -597,6 +690,21 @@ EOSQL;
 				"code" => 200,
 				"NoUrut" => reservation_helper::get_reservation_queue($params['UntukSectionID'], $params['UntukDokterID'], $params['UntukTanggal'], $params['Waktu'])
 			);
+			response_json($response);
+		}
+	}
+
+	public function get_reservation()
+	{
+		if ($this->input->is_ajax_request()) {
+			$item = $this->input->get('f');
+			$response = $this->db->where(
+				['UntukDokterID' => $item['UntukDokterID']
+				, 'UntukTanggal' => $item['UntukTanggal']
+				, 'Waktu' => $item['Waktu']
+				])
+				->from('SIMtrReservasi')->count_all_results();
+
 			response_json($response);
 		}
 	}

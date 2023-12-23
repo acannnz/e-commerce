@@ -73,13 +73,14 @@ class Print_out extends Admin_Controller
 		$file_name = "Detail";		
 		$this->load->helper( "export" );
 
-		export_helper::print_pdf_rincian_biaya( $html_content, $file_name, date("d-M-Y") , $margin_bottom = 3.0, $header = NULL, $margin_top = 3.0, $orientation = 'L');
+		export_helper::print_pdf( $html_content, $file_name, date("d-M-Y") , $margin_bottom = 3.0, $header = NULL, $margin_top = 3.0, $orientation = 'P');
 		exit(0);
 	}
 	
 	public function invoice( $NoBukti = NULL ){
 		$cashier = $this->db->where("NoBukti", $NoBukti)->get("SIMtrKasir")->row();
 		$registration = $this->db->where("NoReg", $cashier->NoReg)->get("SIMtrRegistrasi")->row();
+		//$patient = $this->db->where("NoReg", $cashier->NoReg)->get("mPasien")->row();
 
 		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$registration->NoReg}', 1)")->result();
 
@@ -105,24 +106,31 @@ class Print_out extends Admin_Controller
 			$sum = 0;
 			foreach($key as $r_row => $k_key){
 				
-				foreach($k_key as $l_row){
-					if($row == 'Obat')
-					{
-						$sum += currency_ceil($l_row->Nilai * $l_row->Qty) + $l_row->BiayaResep;
-					}else{
-						$sum += $l_row->Nilai * $l_row->Qty + $l_row->KelebihanPlafon;
-					}
+				foreach ($k_key as $l_row) {
+    if ($row == 'Obat / Medicine') {
+        $discountPercentage = $l_row->Disc; 
 
-				}
+        if ($discountPercentage > 0) {
+            $discountAmount = ($l_row->Nilai * $l_row->Qty * $discountPercentage) / 100; 
+            $sum += (($l_row->Nilai * $l_row->Qty) - $discountAmount) + $l_row->BiayaResep;
+        } else {
+            $sum += ($l_row->Nilai * $l_row->Qty) + $l_row->BiayaResep;
+        }
+    } else {
+        $sum += ($l_row->Nilai * $l_row->Qty) - $l_row->Disc + $l_row->KelebihanPlafon;
+    }
+}
 			}
 			$summarise[$row] = $sum;
+			//print_r($row);exit;
 			//$summarise['amount'][] = $sum;
 			//$summarise['groupservice'][] = $row;
 		}			
 		
 
 
-		$getdetailpasien = $this->db->select("NRM,NamaPasien,Alamat,JenisPasien,JenisKelamin")->where("NRM", $registration->NRM)->get( "mPasien" )->row();
+		$getdetailpasien = $this->db->select("NRM,NamaPasien,Alamat,JenisPasien,JenisKelamin,TglLahir,Phone,NoIdentitas,Email")->where("NRM", $registration->NRM)->get( "mPasien" )->row();
+		//print_r($getdetailpasien);exit;
 		$getdetailreg = $this->db->select("TglReg,NoReg,UmurThn")->where("NoReg", $registration->NoReg)->get( "SIMtrRegistrasi" )->row();
 		$getdoctor = $this->db->select("Nama_Supplier")->where("Kode_Supplier", $cashier->DokterID)->get("mSupplier")->row();		
 		
@@ -153,8 +161,12 @@ class Print_out extends Admin_Controller
 				$grandtotal_total += $summarise[$group_biaya];
 			endforeach;
 		endif;
+		
+		//print_r($collection);exit;
 		//TERBILANG
-		$money_to_format = general_payment_helper::money_to_text($grandtotal_total - $cashier->NilaiDiscount);
+		@$money_to_format = general_payment_helper::money_to_text($grandtotal_total - $cashier->NilaiDiscount + $cashier->AddCharge);
+		@$money_to_format_english = general_payment_helper::money_to_text_english($grandtotal_total - $cashier->NilaiDiscount + $cashier->AddCharge);
+		//print_r($cashier->AddCharge);exit;
 
 		$convert_date = substr($getdetailreg->TglReg,0,11);
 		$date = date('Y-M-d', strtotime(str_replace('-','/', $convert_date)));
@@ -174,15 +186,19 @@ class Print_out extends Admin_Controller
 					"detail_doctor" => $getdoctor,
 					"detail_cashier" => $cashier,
 					"detail_discount" => $new_discount,
-					"detail_money_to_text" => $money_to_format,
+					"detail_money_to_text" => @$money_to_format,
+					"detail_money_to_text_english" => @$money_to_format_english,
 					"detail_money" => $cashier->Nilai - $cashier->NilaiDiscount,
 					"type_payment" => $type_payment,
 					"date_reg" => $date,
 					"detail_summerise" => (object)$summarise,
 					"user" => $this->user_auth,
 				);
+				
+			//print_r($registration);exit;
 
 		$html_content =  $this->load->view( "general_payment/print/invoice", $data, TRUE ); 
+		//print_r($money_to_format);exit;
 		
 		$file_name = "Invoice {$NoBukti}";		
 		$this->load->helper( "export" );
@@ -222,7 +238,7 @@ class Print_out extends Admin_Controller
 			$data = array(
 				"item" => $item,
 				"spelled" => $spelled,
-				"for_payment" => "Biaya Perawatan Rawat Jalan di Klinik BMC",
+				"for_payment" => "Biaya Perawatan Rawat Jalan di Apotek PIP Renon",
 				"user" => $this->user_auth,
 			);
 
