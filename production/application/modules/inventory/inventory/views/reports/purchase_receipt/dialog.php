@@ -49,13 +49,34 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-3 control-label"><?php echo "Kelompok Jenis" ?></label>
+						<div class="col-md-9">
+							<select id="KelompokJenis" name="f[KelompokJenis]" class="form-control">
+								<?php foreach ($option_kelompok_jenis as $row) : ?>
+									<option value="<?php echo $row ?>"><?php echo $row ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label"><?php echo "Kategori" ?></label>
+						<div class="col-md-9">
+							<select id="Kategori_ID" name="f[Kategori_ID]" class="form-control select2">
+								<option value=""><?php echo lang('global:select-all') ?></option>
+								<?php foreach ($option_category as $row) : ?>
+									<option value="<?php echo $row->Kategori_ID ?>"><?php echo $row->Nama_Kategori ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-3 control-label"><?php echo 'Supplier' ?></label>
 						<div class="col-md-9">
 							<div class="input-group">
 								<input type="hidden" id="supplier" name="f[supplier_id]">
 								<input type="text" id="supplier_name" name="f[supplier_name]" class="form-control" readonly>
 								<span class="input-group-btn">
-									<a href="<?php echo @$lookup_supplier ?>" data-title="<?php echo 'Daftar Supplier' ?>" data-modal-lg="1" data-toggle="lookup-ajax-modal"  class="btn btn-default"><i class="fa fa-search"></i></a>
+									<a href="<?php echo @$lookup_supplier ?>" data-title="<?php echo 'Daftar Supplier' ?>" data-modal-lg="1" data-toggle="lookup-ajax-modal" class="btn btn-default"><i class="fa fa-search"></i></a>
 								</span>
 							</div>
 						</div>
@@ -65,7 +86,7 @@
 						<div class="col-md-9">
 							<select id="export_to" name="export_to" class="form-control">
 								<option value="excel">EXCEL</option>
-								<option value="pdf">PDF</option>
+								<!-- <option value="pdf">PDF</option> -->
 							</select>
 						</div>
 					</div>

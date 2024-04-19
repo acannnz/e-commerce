@@ -145,6 +145,7 @@ class Service_type extends ADMIN_Controller
 		
 		if ($item  && (1 == $this->input->post('confirm') ) )
 		{ 
+		print_r($item);exit;
 
 			$this->db->trans_begin();
 				

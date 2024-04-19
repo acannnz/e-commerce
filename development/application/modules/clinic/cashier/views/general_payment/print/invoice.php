@@ -294,13 +294,22 @@
                                     <td class="pad5 bold right far" colspan="5"><b><?php echo "CASH / BANK = " ?></b></td>
                                     <td class="pad5 bold right far"><b><?php echo " Rp. " . number_format($detail_cashier->NilaiPembayaranKKAwal) ?></b></td>
                                 </tr> -->
+                        <?php $addcharge1 = 0; $addcharge2 = 0; $total_charge = 0; $grand_total = 0; 
+                            foreach ($detail_cashier as $col ) : 
+                            $addcharge1 = $detail_cashier->NilaiPembayaranKKAwal * $detail_cashier->AddCharge_Persen / 100; 
+                            $addcharge2 = $detail_cashier->NilaiPembayaranKKAwal2 * $detail_cashier->AddCharge_Persen_2 / 100; 
+                            $total_charge = $addcharge1 + $addcharge2;
+                            $grand_total = $grandtotal2 + $total_charge;
+                            ?>
+                        <?php endforeach; ?>
                         <tr>
-                            <td class="pad5 bold right far" colspan="7" style="font-size: 25px;"><b>CARD CHARGE (<?php echo isset($detail_cashier) ? $detail_cashier->AddCharge_Persen . "%" : "0%"; ?>) = </b></td>
-                            <td class="pad5 bold right far" style="font-size: 25px;"><b><?php echo isset($detail_cashier) ? "Rp. " . number_format($detail_cashier->AddCharge) : "Rp. 0"; ?></b></td>
+                            <td class="pad5 bold right far" colspan="7" style="font-size: 25px;"><b>CARD CHARGE = </b></td>
+                            <td class="pad5 bold right far" style="font-size: 25px;"><b><?php echo isset($detail_cashier) ? "Rp. " . number_format($total_charge) : "Rp. 0"; ?></b></td>
                         </tr>
+                        
                         <tr>
                             <td class="pad5 bold right far" colspan="7" style="font-size: 25px;"><b><?php echo "GRAND TOTAL = " ?></b></td>
-                            <td class="pad5 bold right far" style="font-size: 25px;"><b><?php echo " Rp. " . number_format($grandtotal2) ?></b></td>
+                            <td class="pad5 bold right far" style="font-size: 25px;"><b><?php echo " Rp. " . number_format($grand_total) ?></b></td>
                         </tr>
                     </tfoot>
                 </table>

@@ -199,6 +199,8 @@
 	
 						var k_Amount = _form.find( "input[id=\"k_Amount\"]" );
 						var k_Total = _form.find( "input[id=\"k_Total\"]" );
+						var k_Amount_2 = _form.find( "input[id=\"k_Amount_2\"]" );
+						var k_Total_2 = _form.find( "input[id=\"k_Total_2\"]" );
 						var Sisa = _form.find( "input[id=\"Sisa\"]" );
 						var JumlahBayar = _form.find( "input[id=\"JumlahBayar\"]" );
 						var NilaiKembalian = _form.find( "input[id=\"NilaiKembalian\"]" );
@@ -232,9 +234,13 @@
 								element.value = element.value || 0;
 								if(element.value == 0 ) return;
 								is_credit_card = $(this).hasClass("credit-card"); 
+								is_credit_card_2 = $(this).hasClass("credit-card-2"); 
 								if ( is_credit_card ){
 									TaxCC_ = mask_number.currency_remove(k_Total.val()) - mask_number.currency_remove(k_Amount.val());
 									SubTotal_payment = mask_number.currency_remove(k_Amount.val());
+								} else if ( is_credit_card_2 ) {
+									TaxCC_ = mask_number.currency_remove(k_Total_2.val()) - mask_number.currency_remove(k_Amount_2.val());
+									SubTotal_payment = mask_number.currency_remove(k_Amount_2.val());
 								} else {
 									SubTotal_payment = mask_number.currency_remove(element.value);
 								}

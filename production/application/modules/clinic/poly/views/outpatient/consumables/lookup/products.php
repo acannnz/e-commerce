@@ -14,14 +14,18 @@
 					
 					try {					
 
-					var add_data = {
+						var add_data = {
 							"Barang_ID" : _response.Barang_ID,
 							"Kode_Barang" : _response.Kode_Barang,
 							"Nama_Barang" : _response.Nama_Barang,
 							"Satuan" : _response.Satuan,
 							"JmlObat" : 1,
+							"JmlPemakaian" : 1,
 							"Harga" : _response.Harga,
+							"HargaSatuan" : _response.HargaSatuan,
 							"Disc" : 0.00,
+							"Disc_Persen" : 0.00,
+							"KomisiDokter" : 0.00,
 							"JumlahTransaksi" : _response.Harga_Jual,
 							"Stok" :  _response.Qty_Stok,
 							"Dosis" : "",
@@ -38,7 +42,7 @@
 				}
 			}
 			//]]></script>
-            <?php echo Modules::run( "poly/products/lookup_product_section", true ) ?>
+            <?php echo Modules::run( "poly/products/lookup_product_section_bhp", true ) ?>
         </div>
         <div class="modal-footer">
         	<?php echo lang('patients:referrer_lookup_helper') ?>

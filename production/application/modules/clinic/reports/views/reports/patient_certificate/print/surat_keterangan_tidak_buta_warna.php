@@ -166,23 +166,23 @@
                             <td colspan="3" style="font-size: 14px; padding-top:10px;" class="text-right"><strong> No. : <?php echo str_replace("-", "/", @$item->NoReg) ?></strong></td>
                         </tr>
                         <tr>
-                            <td colspan="3" style="font-size: 12px; padding-top:20px;" class="text-right">PRAKTEK YAYASAN A A RACHMAT TABANAN</td>
+                            <td colspan="3" style="font-size: 12px; padding-top:20px;" class="text-right">KLINIK BALI SEHAT</td>
                         </tr>
-                        <tr>
+                        <!--tr>
                             <td colspan="3" style="font-size: 12px;" class="text-right">Apotek Adi Husada</td>
+                        </tr>-->
+                        <tr>
+                            <td colspan="3" style="font-size: 11,5px; padding-top:20px;" class="text-right">Culik, Abang, Karangasem Regency, Bali 80852</td>
                         </tr>
                         <tr>
-                            <td colspan="3" style="font-size: 11,5px; padding-top:20px;" class="text-right">Jl P Bawean No.2 Br Jagasatru, Kediri Tabanan Bali</td>
+                            <td colspan="3" style="font-size: 12px;" class="text-right">Telp 0812-3666-9566</td>
                         </tr>
-                        <tr>
-                            <td colspan="3" style="font-size: 12px;" class="text-right">Phone : 087863629488</td>
-                        </tr>
-                        <tr>
+                        <!--tr>
                             <td colspan="3" style="font-size: 12px;" class="text-right">Email : Ascornermedical@gmail.com</td>
                         </tr>
                         <tr>
                             <td colspan="3" style="font-size: 12px; padding-bottom:15px;" class="text-right">Instagram : praktekyayasana</td>
-                        </tr>
+                        </tr>-->
                         <!-- <tr class="border-body border-top">
                             <td colspan="" style="font-size: 12px; padding-left:10px; padding-top:8px;">BB &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: <?php echo number_format(@$item->Weight, 0, ".", ",")  ?> KG</td>
                             <td colspan="2" style="font-size: 12px; padding-top:8px;">TB &nbsp; &nbsp; &nbsp; : <?php echo number_format(@$item->Height, 0, ".", ",") ?> CM</td>
@@ -199,7 +199,7 @@
                             <td colspan="2" style="font-size: 12px; padding-top:4px; padding-bottom:8px;">Golda &nbsp;: <?php echo @$item->Golda ?></td>
                         </tr> -->
                         <tr>
-                            <td colspan="3" align="center" style="font-size: 12px; padding-top:35px; padding-left:25px;">Tabanan : <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
+                            <td colspan="3" align="center" style="font-size: 12px; padding-top:35px; padding-left:25px;">Karangasem : <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
                         </tr>
                         <!-- <tr>
                             <td colspan="3" align="center" style="font-size: 12px; padding-left:25px;">Dokter Pemeriksa</td>

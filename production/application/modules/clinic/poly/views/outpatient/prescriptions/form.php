@@ -204,7 +204,7 @@
 						displayText: function(item){ return item.Nama_Barang || 'Empty';},
 						afterSelect: function(_response) { 
 							try {					
-								var product_object = {
+								var product_object = { 	
 									"Barang_ID" : _response.Barang_ID,
 									"Disc_Persen" : 0.00,
 									"Dosis" : "",
@@ -337,6 +337,11 @@
 						$("#add_product").on("click", function(e){
 							e.preventDefault();
 							
+							if ($("#Stok").val() <= 0) {
+								$.alert_error('Stok Obat Kurang Dari 0,<br/> Silahkan Pilih Obat Yang Lain.');
+								return false;
+							}
+					
 							var data = $("#product_object").data("product");
 							console.log(data)
 							//cek jika obat sudah ada pada tabel detail
@@ -377,7 +382,7 @@
 							}
 
 							_datatable_actions.add_row( data );
-							$(".btn-clear").trigger('click');
+							// $(".btn-clear").trigger('click');
 							$('#Nama_Barang').focus();
 							
 						});
@@ -555,10 +560,10 @@
 						_datatable.row.add(data).draw(true);
 						_datatable_actions.calculate_balance();
 
-						$("#CheckTambahRacikan").attr("checked", false);
-						$("#NamaResepObat").val('');
-						$("#NamaResepObat").prop("readonly", true);
-						$("#BtnTambahRacikan").addClass("disabled");
+						// $("#CheckTambahRacikan").attr("checked", false);
+						// $("#NamaResepObat").val('');
+						// $("#NamaResepObat").prop("readonly", true);
+						// $("#BtnTambahRacikan").addClass("disabled");
 
 						
 					}
@@ -583,6 +588,8 @@
 								info: false,
 								autoWidth: false,
 								responsive: true,
+								scrollY: "90px",
+								scrollCollapse: true,
 								<?php if (!empty($collection)):?>
 								data: <?php print_r(json_encode(@$collection, JSON_NUMERIC_CHECK));?>,
 								<?php endif; ?>

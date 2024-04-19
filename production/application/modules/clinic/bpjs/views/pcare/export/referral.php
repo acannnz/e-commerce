@@ -3,17 +3,17 @@
     <meta charset="utf-8"/>
     <base href="<?php echo site_url() ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title><?php echo @$file_name;?></title>
+    <title><?php echo @$file_name ?></title>
     <link href="<?php echo base_url("themes/default/assets/css") ?>/reset.css" rel="stylesheet"/>
     <link href="<?php echo base_url("themes/default/assets/js/plugins/bootstrap/css") ?>/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
-<div class="container">
+<div class="">
     <div class="row" style="margin:0 !important;">
     	<div class="col-lg-12" style="margin:0 !important;">
         	<div class="row" style="margin:0 !important;">
                 <div class="col-xs-6" style="margin:0 !important;">
-                	<img src="<?php echo base_url( "resource/images/logos" )."/bpjs-kesehatan.jpg" ?>" height="55" />
+                	<img src="<?php echo base_url( "resource/images/logos/bpjs-kesehatan.jpg" ) ?>" height="55" />
                 </div>
                 <div class="col-xs-5" style="margin:0 !important;">
 					 <table class="table reports-table" style="margin-left:30px !important;">
@@ -95,7 +95,7 @@
 									<tr>
 										<td><p style="font-size:11px;"><?php echo "Di" ?></p></td>
 										<td>:</td>
-										<td><p style="font-size:11px;"><?php echo @$referral->providerRujukLanjut ?></p></td>
+										<td><p style="font-size:11px;"><?php echo @$referral->ppkRujuk->nmPPK ?></p></td>
 									</tr>
 								</tbody>
 							</table>
@@ -166,7 +166,9 @@
 										<td width="40%" colspan="4"><p style="font-size:11px;">&nbsp;</p></td>
 									</tr>
 									<tr>
-										<td colspan="4"><p style="font-size:8px;">&nbsp;</p></td>
+										<td><p style="font-size:8px;">&nbsp;</p></td>
+										<td></td>
+										<td colspan="2"></td>
 									</tr>
 									<tr>
 										<td><p style="font-size:11px;"><?php echo "Umur:" ?></p></td>
@@ -175,15 +177,20 @@
 										<td><p style="font-size:11px;"><?php echo DateTime::createFromFormat('d-m-Y', @$referral->tglLahir)->format('d-M-Y'); ?></p></td>
 									</tr>
 									<tr>
-										<td colspan="4"><p style="font-size:8px;">&nbsp;</p></td>
+										<td><p style="font-size:8px;">&nbsp;</p></td>
+										<td></td>
+										<td colspan="2"></td>
 									</tr>
 									<tr>
 										<td><p style="font-size:11px;"><?php echo "Status:" ?></p></td>
-										<td colspan="2"><p style="font-size:11px;"><?php echo sprintf("[%s] Utama/Tanggunan", @$referral->pisa) ?></p></td>
-										<td><?php echo sprintf("[%s] (L / P)", @$referral->sex) ?></td>
+										<td><p style="font-size:11px;"><?php echo @$referral->pisa ?></p></td>
+										<td ><p style="font-size:11px;"><?php echo "Utama/Tanggunan" ?></p></td>
+										<td><p style="font-size:11px;"><?php echo sprintf("<span style=\"border:1px #000 solid !important\">%s</span> (L / P)", @$referral->sex) ?></p></td>
 									</tr>
 									<tr>
-										<td colspan="4"><p style="font-size:8px;">&nbsp;</p></td>
+										<td><p style="font-size:8px;">&nbsp;</p></td>
+										<td></td>
+										<td colspan="2"></td>
 									</tr>
 									<tr>
 										<td><p style="font-size:11px;"><?php echo "Catatan:" ?></p></td>

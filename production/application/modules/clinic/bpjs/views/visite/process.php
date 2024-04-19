@@ -64,6 +64,7 @@
 	var visite = <?php print_r(json_encode($visite, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));?>;
 	var service = <?php print_r(json_encode($service, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));?>;
 	var drug = <?php print_r(json_encode($drug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));?>;
+
 	var state = {
 		addVisite : {status: (visite.NoKunjungan !== null && visite.NoKunjungan !== '') ? true : false, data: {noKunjungan: visite.NoKunjungan}},
 		saveVisite : {status: (visite.NoKunjungan !== null && visite.NoKunjungan !== '')},
@@ -74,7 +75,6 @@
 		serviceCollection: {data: []},
 		drugCollection: {data: []},
 	}
-	
 	var _form = $( "form[name=\"form_process_visite\"]" );
 	var _btn_process = _form.find("button[name=\"btn_process\"]");
 	var _target, _progress;
@@ -114,7 +114,7 @@
 					tglDaftar: visite.TglDaftar,
 					//kdPoli: visite.CheckoutState == 4 ? null : visite.KdPoli, // jika rujuk lanjut, maka null
 					kdPoli: visite.KdPoli, // jika rujuk lanjut, maka null
-					keluhan: null,
+					keluhan: visite.Symptom,
 					kdSadar: '01', //required
 					sistole: visite.Systolic, //required
 					diastole: visite.Diastolic, //required
@@ -122,7 +122,8 @@
 					tinggiBadan: visite.Height, //required
 					respRate: visite.RespiratoryRate, //required
 					heartRate: visite.HeartRate, //required
-					terapi: null,
+					lingkarPerut: visite.lingkarPerut, //required
+					terapi: visite.Therapi,
 					kdStatusPulang: visite.CheckoutState, //required
 					tglPulang: visite.TglDaftar,
 					kdDokter: visite.KdDokter,
@@ -130,7 +131,7 @@
 					kdDiag2: visite.icd[1] || null,
 					kdDiag3: visite.icd[2] || null,
 					kdPoliRujukInternal: null,
-					kdTacc: 0,
+					kdTacc: -1,
 					alasanTacc: null,
 				}
 				
@@ -143,14 +144,9 @@
 					
 					if(visite.CheckoutReferralCondition == 'spesialis'){
 						postData['rujukLanjut']['subSpesialis'] = {
-							kdSubSpesialis1: visite.CheckoutReferralSubSpecialist
+							kdSubSpesialis1: visite.CheckoutReferralSubSpecialist,
+							kdSarana : visite.CheckoutReferralAcomodation
 						}						
-						
-						if(visite.CheckoutReferralAcomodation != 0 && visite.CheckoutReferralAcomodation != '' && visite.CheckoutReferralAcomodation != null){
-							postData['rujukLanjut']['subSpesialis']['kdSarana'] = visite.CheckoutReferralAcomodation;
-						} else{
-							postData['rujukLanjut']['subSpesialis']['kdSarana'] = 9;
-						}
 					}
 					
 					if(visite.CheckoutReferralCondition == 'khusus'){
@@ -263,6 +259,8 @@
 				$.alert_success('Proses tambah Tindakan BPJS: '+ service[state.addService.index].JasaName);
 				$( "#service").css({'width': state.addService.progress +'%'});	
 						
+				console.log(state.addService.index);
+				console.log(service);
 				$.ajax({
 					url: "<?php echo $add_service_url ?>",
 					type: "POST",

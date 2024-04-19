@@ -324,7 +324,7 @@
 								render: function(val, type, row) {
 
 									if (row.Batal == 1) {
-										return "<strong class=\"text-danger\">Batal Periksa</strong>";
+										return "<strong class=\"text-danger\">Batal Registrasi</strong>";
 									} else if (row.Batal == 0 && (val == 'Sudah' || val == 'CO')) {
 										return "<strong class=\"text-success\">" + val + ' Periksa' + "</strong>";
 									} else if (row.Batal == 0 && val == 'Belum') {

@@ -33,7 +33,7 @@
 						<label class="control-label col-md-12">&nbsp;</label>
                         <div class="col-md-6">
                             <div class="checkbox">
-                                <input type="checkbox" id="IncludeJasa" name="IncludeJasa" value="1" <?php echo @$item->IncludeJasa == 1 ? "Checked" : NULL ?> class=""><label for="IncludeJasa">Ditagihkan</label>
+                                <input type="checkbox" id="Ditagihkan" name="Ditagihkan" value="1" <?php echo @$item->Ditagihkan == 1 ? "Checked" : NULL ?> class=""><label for="Ditagihkan">Ditagihkan</label>
                             </div>
                         </div>
                     </div>
@@ -280,7 +280,7 @@
 					var data_post = { };
 						data_post['f'] = {
 							NoReg : "<?php echo $item->NoReg ?>",
-							SectionAsalID : "<?php echo $item->SectionID ?>",
+							// SectionAsalID : "<?php echo $item->SectionID ?>",
 							SectionID : "<?php echo $item->SectionID ?>",
 							DokterID : $("#bhpDokterID").val(),
 							Paket : $("#Paket").val(),
@@ -293,8 +293,9 @@
 							PerusahaanID : $("#CompanyID").val(),
 							KomisiDokter : '0,00',
 							SectionInput : "<?php echo $item->SectionID ?>",
-							TipeTransaksi : "POP",
-							IncludeJasa : $("#IncludeJasa:checked").val() || 0,
+							// TipeTransaksi : "POP",
+							Ditagihkan : $("#Ditagihkan:checked").val() || 0,
+							Realisasi_Farmasi : 0,
 						};
 						
 						data_post['details'] = {};
@@ -305,20 +306,23 @@
 						var detail = {
 							Barang_ID : value.Barang_ID,
 							Satuan : value.Satuan,
-							JmlObat : value.JmlObat,
-							Disc : value.Disc,
+							Qty : value.JmlObat,
+							// JmlObat : 1,
+							// JmlPemakaian : 1,
+							Disc_Persen : value.Disc_Persen,
+							KomisiDokter : value.KomisiDokter,
 							Stok : value.Stok,
 							Plafon : 0,
+							HExt : "0.00",
 							JenisKerjasamaID : $("#JenisKerjasamaID").val(),
-							Nama_Barang : value.Nama_Barang,
-							Harga : value.Harga || 0,
+							HargaSatuan : value.HargaPersediaan || 0,
 							HargaOrig : value.HargaOrig || 0,
 							HargaPersediaan : value.HargaPersediaan || 0,
 						}
 						
 						data_post['details'][index] = detail;
 					});
-					
+					// console.log(data_post);
 					$.post($(this).attr("action"), data_post, function( response, status, xhr ){	
 									
 						if( "error" == response.status ){
@@ -331,7 +335,7 @@
 						
 						// Memasukan Data header reserp ke view tabel resep
 						// Tambahkan nama supplier (nama dokter)
-						data_post['f']['NoBukti'] = response.NoBukti;
+						data_post['f']['NoBuktiPOP'] = response.NoBukti;
 						data_post['f']['Nama_Supplier'] = $("#bhpDoctorName").val();
 						data_post['f']['Tanggal'] = '<?php echo date('Y-m-d H:i:s')?>';
 						data_post['f']['Jam'] = '<?php echo date('Y-m-d H:i:s')?>';

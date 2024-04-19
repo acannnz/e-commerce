@@ -22,7 +22,10 @@ class General_payment extends Admin_Controller
 		$this->load->model("patient_type_model");
 		$this->load->model("section_model");
 		$this->load->model("supplier_model");
-		
+		$this->load->model("poly_transaction_model");
+		$this->load->model("poly_transaction_detail_model");
+		$this->load->model("poly_transaction_pop_model");
+
 		$this->page = lang("general_payment:page");
 		$this->template->title( lang("general_payment:page") . ' - ' . $this->config->item('company_name') );
 		
@@ -49,6 +52,7 @@ class General_payment extends Admin_Controller
 	{
 		$item = general_payment_helper::get_item( $NoReg, 0 );
 		$item->NoBukti = general_payment_helper::gen_evidence_number();
+		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$item->NoReg}',1)")->result();
 
 
 		$datareg = $this->registration_data_model->get_one($NoReg);
@@ -85,7 +89,12 @@ class General_payment extends Admin_Controller
 			$additional = (object) $this->input->post("additional");
 			$discount = (array)$this->input->post("discount");				
 			$payments = $this->input->post("JenisBayar");
+			// print_r($transaction);exit;
 			
+			$this->db->set('ClosePayment', 1);
+			$this->db->where('NoReg', $item->NoReg);
+			$this->db->where('ObatBebas', 0);
+			$this->db->update('BillFarmasi');
 			
 			$this->load->library( 'form_validation' );
 			
@@ -132,12 +141,14 @@ class General_payment extends Admin_Controller
 			$data = array(
 					"page" => $this->page."_".strtolower(__FUNCTION__),
 					"item" => @$item,
+					"get_rincian" => @$get_rincian,
 					"form" => TRUE,
 					"datatables" => TRUE,
 					"update_process_payment" => base_url('cashier/general-payment/update_process_payment'),
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_form_credit_bon" => base_url("cashier/general-payments/payment/lookup_form_credit_bon"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoReg}"),
 				);
@@ -163,6 +174,7 @@ class General_payment extends Admin_Controller
 		}
 		
 		$cashier = $this->db->where("NoBukti", $NoBukti)->get("SIMtrKasir")->row();
+		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$cashier->NoReg}',1)")->result();
 		
 		if ( empty($cashier) )
 		{
@@ -175,7 +187,7 @@ class General_payment extends Admin_Controller
 		}
 
 		$item = (object) array_merge( (array) general_payment_helper::get_item( $cashier->NoReg ), (array) $cashier);
-
+		// print_r($item);exit;
 		if ($cashier->Audit == 1 || $cashier->Batal == 1)
 		{
 			if ( $this->input->is_ajax_request() )
@@ -193,7 +205,7 @@ class General_payment extends Admin_Controller
 		$item->total_cost = general_payment_helper::get_total_cost( $item->NoReg, 0 );			
 		// Data Detail Jasa yg digroup
 		$item->group_detail_cost = general_payment_helper::get_group_detail_cost( $item->NoReg, 0 );
-		
+		// print_r($item->total_cost);exit;
 		$dokter = $this->supplier_model->get_by(['Kode_Supplier' => $item->DokterID]);
 		if(!empty($dokter))
 		{
@@ -259,9 +271,11 @@ class General_payment extends Admin_Controller
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_cancel" => base_url("cashier/general-payment/cancel/{$NoBukti}"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoBukti}"),
 					"print_invoice" => base_url("cashier/general-payments/print/invoice/{$NoBukti}"),
+					"print_invoice_mini" => base_url("cashier/general-payment/print_invoice_mini/{$NoBukti}"),
 					"print_kwitansi" => base_url("cashier/general-payments/print/kwitansi/{$NoBukti}"),
 				);
 			
@@ -269,16 +283,19 @@ class General_payment extends Admin_Controller
 			$data = array(
 					"page" => $this->page."_".strtolower(__FUNCTION__),
 					"item" => $item,
+					"get_rincian" => @$get_rincian,
 					"form" => TRUE,
 					"datatables" => TRUE,
 					"is_edit" => TRUE,
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_form_credit_bon" => base_url("cashier/general-payments/payment/lookup_form_credit_bon"),
 					"lookup_cancel" => base_url("cashier/general-payment/cancel/{$NoBukti}"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoBukti}"),
 					"print_invoice" => base_url("cashier/general-payments/print/invoice/{$NoBukti}"),
+					"print_invoice_mini" => base_url("cashier/general-payment/print_invoice_mini/{$NoBukti}"),
 					"print_kwitansi" => base_url("cashier/general-payments/print/kwitansi/{$NoBukti}"),
 					"update_process_payment" => base_url('cashier/general-payment/update_process_payment'),
 				);
@@ -420,6 +437,11 @@ class General_payment extends Admin_Controller
 						$this->db->update("SIMtrRegistrasi", $registration, array("NoReg" => $item->NoReg));
 
 						$this->db->update("SIMtrDataRegPasien", $data_reg ,array("NoReg" => $item->NoReg));
+						
+						$this->db->set('ClosePayment', 0);
+						$this->db->where('NoReg', $item->NoReg);
+						$this->db->where('ObatBebas', 0);
+						$this->db->update('BillFarmasi');
 						
 						$this->db
 							->set("TotalKunjunganRawatJalan", "TotalKunjunganRawatJalan - 1", FALSE)
@@ -834,6 +856,128 @@ EOSQL;
 		$this->template
 			->build_json( $output );
     }	
+
+	public function print_invoice_mini($NoBukti)
+	{
+		$cashier = $this->db->where("NoBukti", $NoBukti)->get("SIMtrKasir")->row();
+		$registration = $this->db->where("NoReg", $cashier->NoReg)->get("SIMtrRegistrasi")->row();
+
+		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$registration->NoReg}', 1)")->result();
+
+		$collection = array();
+		foreach($get_rincian as $row){
+			$drug_component = $this->poly_transaction_detail_model->get_by(['NoBukti' => $row->NoBukti, 'JasaID' => $row->KodeJenisBiaya, 'KomponenID' => 'DT51']);
+			if(!empty($drug_component))
+			{
+				$row->Nilai = $row->Nilai - $drug_component->Harga;
+				$_drug = (object) ((array) $row);
+				$_drug->JenisBiaya = 'Obat';
+				$_drug->Nilai = $drug_component->Harga;
+				$collection[ $row->GroupJasa ]['Obat'][] = $_drug;
+			}	
+			$collection[ $row->GroupJasa ][$row->JenisBiaya][] = $row;
+		}
+		
+		$new_collection = array();
+		$sum = array();
+		$summarise = array();
+		
+		foreach($collection as $row => $key){
+			$sum = 0;
+			foreach($key as $r_row => $k_key){
+				
+				foreach($k_key as $l_row){
+					if($row == 'Obat')
+					{
+						$sum += currency_ceil($l_row->Nilai * $l_row->Qty) + $l_row->BiayaResep;
+					}else{
+						$sum += $l_row->Nilai * $l_row->Qty + $l_row->KelebihanPlafon;
+					}
+
+				}
+			}
+			$summarise[$row] = $sum;
+			//$summarise['amount'][] = $sum;
+			//$summarise['groupservice'][] = $row;
+		}			
+		
+
+
+		$getdetailpasien = $this->db->select("NRM,NamaPasien,Alamat,JenisPasien,JenisKelamin")->where("NRM", $registration->NRM)->get( "mPasien" )->row();
+		$getdetailreg = $this->db->select("TglReg,NoReg,UmurThn")->where("NoReg", $registration->NoReg)->get( "SIMtrRegistrasi" )->row();
+		$getdoctor = $this->db->select("Nama_Supplier")->where("Kode_Supplier", $cashier->DokterID)->get("mSupplier")->row();		
+		
+		//print_r($getkasir);exit;
+		
+		$getdetaildiscount = $this->db->query("
+												  select
+												  	a.NoBukti,
+													a.IDDiscount,
+													a.DokterID,
+													a.NilaiDiscount,
+													b.NamaDiscount
+												  from
+												  	SIMtrKasirDiscount a
+												  left join 
+												  	mDiscount b ON a.IDDiscount=b.IDDiscount
+												  where 
+												  	a.NoBukti = '{$NoBukti}'
+												  ")->result();
+		$new_discount = array();
+		foreach($getdetaildiscount as $r_row){
+			$new_discount[ $r_row->DokterID ][] = $r_row;
+		}
+
+		//GET GRANDTOTAL BIAYA
+		if(!empty($collection)): $grandtotal_total = 0;
+			foreach($collection as $group_biaya => $key): 
+				$grandtotal_total += $summarise[$group_biaya];
+			endforeach;
+		endif;
+		//TERBILANG
+		$money_to_format = general_payment_helper::money_to_text($grandtotal_total - $cashier->NilaiDiscount);
+
+		$convert_date = substr($getdetailreg->TglReg,0,11);
+		$date = date('Y-M-d', strtotime(str_replace('-','/', $convert_date)));
+		
+		$type_payment = $this->db->select("a.*, b.Description")
+								->from('SIMtrKasirDetail a')
+								->join('mJenisBayar b', 'a.IDBayar = b.IDBayar', 'INNER')
+								->where('NoBukti', $NoBukti)
+								->get()->result();
+		
+
+		$data = array(
+					"detail_patient"=> $getdetailpasien,
+					"detail_reg" => $registration,
+					"detail_data" => $collection,
+					"detail_gender" => ($getdetailpasien->JenisKelamin == 'M') ? 'Laki-Laki' : 'Perempuan',
+					"detail_doctor" => $getdoctor,
+					"detail_cashier" => $cashier,
+					"detail_discount" => $new_discount,
+					"detail_money_to_text" => $money_to_format,
+					"detail_money" => $cashier->Nilai - $cashier->NilaiDiscount,
+					"type_payment" => $type_payment,
+					"date_reg" => $date,
+					"detail_summerise" => (object)$summarise,
+					"user" => $this->user_auth,
+				);
+
+		$html_content =  $this->load->view( "general_payment/print/invoice_mini", $data, TRUE ); 
+		
+		$file_name = "Invoice {$NoBukti}";		
+		$this->load->helper( "export" );
+		
+		$data_print = chunk_split(base64_encode(export_helper::print_pdf_string($html_content, $file_name, $footer = NULL, $margin_bottom = NULL, $header = NULL, $margin_top = NULL, $orientation = 'P', $margin_left = 6, $margin_right = 5)));
+
+		$message =  [
+			"data_print" => $data_print,
+			"status" => 'success',
+			"message" => lang('global:updated_successfully'),
+			"code" => 200
+		];
+		response_json($message);
+	}
 }
 
 

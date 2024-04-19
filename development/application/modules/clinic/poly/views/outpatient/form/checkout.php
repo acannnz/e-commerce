@@ -134,7 +134,7 @@
 						var _input = $("<select style=\"width:100%\" class=\"form-control\">\n<option value=\"0\" selected>Initializing...</option>\n</select>");
 						this.empty().append(_input);
 
-						var _section_asal = "<?php echo $item->SectionID ?>";
+						var _section_asal = "<?php echo @$item->SectionID ?>";
 						var _value = data.Konsul_SectionID ? data.Konsul_SectionID : 0;
 						_input.load("<?php echo $section_dropdown ?>/" + _value + "/" + _section_asal, function(response, status, xhr) {
 							_input.trigger("focus")

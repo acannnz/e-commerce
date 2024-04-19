@@ -88,6 +88,30 @@ class Patient_model extends CI_Model
 			->get($this->table, $limit, $offset);		
 		return (TRUE == $to_array) ? $query->result_array() : $query->result();
 	}
+
+	public function get_usia($limit = NULL, $offset = 0, $where = NULL, $to_array = FALSE)
+	{
+		if (!is_null($where) && !empty($where)){ $this->db->where($where); }
+		
+		$query = $this->db
+			// ->order_by($this->index_key, 'ASC')
+			->select("UmurSaatInput")
+			->get($this->table, $limit, $offset);
+		// print_r($query);exit;		
+		return (TRUE == $to_array) ? $query->result_array() : $query->result();
+	}
+
+	public function get_desa($limit = NULL, $offset = 0, $where = NULL, $to_array = FALSE)
+	{
+		if (!is_null($where) && !empty($where)){ $this->db->where($where); }
+		
+		$query = $this->db
+			// ->order_by($this->index_key, 'ASC')
+			->select("DesaID")
+			->get($this->table, $limit, $offset);
+		// print_r($query);exit;		
+		return (TRUE == $to_array) ? $query->result_array() : $query->result();
+	}
 	
 	public function count_all($where = NULL)
 	{

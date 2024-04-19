@@ -72,7 +72,7 @@ $system_path = '../../../vendor/codeigniter/framework/system';
  *
  * NO TRAILING SLASH!
  */
-$application_folder = '../../../development/application';
+$application_folder = '../../../production/application';
 /*
  *---------------------------------------------------------------
  * VIEW FOLDER NAME

@@ -15,6 +15,14 @@ if (!defined('BASEPATH'))
 						'class' => 'form-control service_bpjs',
 						'readonly' => 'readonly',
 					]); ?>
+			<?php echo form_input([
+						'type' => 'hidden',
+						'name' => 'f[TarifBPJS]',
+						'value' => set_value('f[TarifBPJS]', TRUE),
+						'id' => 'TarifBPJS',
+						'class' => 'form-control service_bpjs',
+						'readonly' => 'readonly',
+					]); ?>
 					
 			<span class="input-group-btn">
 				<a href="javascript:;" data-action-url="<?php echo @$lookup_service_bpjs ?>" data-title="<?php echo sprintf('%s %s', lang('buttons:search'), lang('label:service_bpjs'))?>" data-act="ajax-modal" class="btn btn-default btn-md" ><i class="fa fa-search"></i></a>

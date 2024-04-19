@@ -207,10 +207,15 @@ final class registration_helper
 		$registration['User_ID'] = self::$user_auth->User_ID;
 		$registration['TglReg'] = date('Y-m-d');
 		$registration['JamReg'] = date('Y-m-d H:i:s');
+		$registration['Waktu'] = $destinations[0]['Waktu'];
 
 		$destination_data = $DataRegPasien = [];
 		$Nomor = 1;
 		foreach ($destinations as $k => $v) {
+			$datetimeString = $v['Waktu'];
+			$dateTime = new DateTime($datetimeString);
+			$timeString = $dateTime->format('H:i:s');
+			
 			$queue_where = (object) array("DokterID" => $v['DokterID'], "SectionID" => $v['SectionID'], "WaktuID" => $v['WaktuID'], "Tanggal" => date("Y-m-d"));
 			//$number_of_queues = self::get_number_of_queue( $queue_where );
 			//$queue = self::get_queue( $queue_where );
@@ -234,7 +239,7 @@ final class registration_helper
 				'Titip' => "0",
 				'DokterID' => $v['DokterID'],
 				'WaktuID' => $v['WaktuID'],
-				// 'Waktu' => $v['Waktu'],
+				'Waktu' => $timeString,
 				'NoAntri' => $queue,
 				'SudahPeriksa' => 0,
 				'RJ' => (int) @$registration['RawatJalan'],
@@ -246,11 +251,12 @@ final class registration_helper
 
 			// Update NoUrut Pada Registrasi Tujuan
 			unset($v['NoAntri']);
+			unset($v['Waktu']);
 			$v['NoUrut'] = $queue;
 			$v['NoReg'] = $NoReg;
 			$destination_data[$k] = $v;
 		}
-
+		// print_r($destination_data);exit;
 		$_ci->registration_model->create($registration);
 		$_ci->registration_data_model->mass_create($DataRegPasien);
 		$_ci->registration_destination_model->mass_create($destination_data);

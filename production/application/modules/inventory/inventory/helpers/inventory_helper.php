@@ -206,15 +206,15 @@ final class Inventory_helper
 		$_ci = self::ci();
 
 		$query =  $_ci->db->select("MAX({$_ci->item_category_model->index_key}) as max_code")
-						->where([
-							"LEN([{$_ci->item_category_model->index_key}]) =" => 4, 
-							"LEFT([{$_ci->item_category_model->index_key}], 1) =" => 'K'
-						])
+						// ->where([
+						// 	"LEN([{$_ci->item_category_model->index_key}]) =" => 4, 
+						// 	"LEFT([{$_ci->item_category_model->index_key}], 1) =" => 'K'
+						// ])
 						->get( "{$_ci->item_category_model->table}" )
 						->row();
 		if(!empty($query->max_code))
 		{				
-			$code = ++$query->max_code;
+			$code = sprintf("K%03d", ++$query->max_code);
 		} else {
 			$code = sprintf("K%03d", 1);
 		}

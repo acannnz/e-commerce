@@ -18,10 +18,12 @@
 							var add_data = {
 								"SectionID": _response.SectionID,
 								"SectionIDBPJS": _response.SectionIDBPJS,
-								"DokterID": "XX",
+								"DokterID": _response.Supplier_ID,
+								// "DokterID": "XX",
 								"WaktuID": 0,
 								"SectionName": _response.SectionName,
-								"Nama_Supplier": "None",
+								"Nama_Supplier": _response.Nama_Supplier,
+								// "Nama_Supplier": "None",
 								"Keterangan": "",
 								"NoAntri": 1,
 							};
@@ -32,7 +34,7 @@
 							$("body").removeClass("modal-open").removeAttr("style");
 
 							//index = $('#dt_registration_section tr:last').attr('id');
-							lookup_ajax_modal.show("<?php echo base_url("registrations/lookup_doctor_section") ?>")
+							<?php /*?>lookup_ajax_modal.show("<?php echo base_url("registrations/lookup_doctor_section") ?>")<?php */ ?>
 
 						} catch (e) {
 							console.log(e);

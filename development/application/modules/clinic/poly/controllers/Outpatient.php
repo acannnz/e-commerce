@@ -62,11 +62,11 @@ class Outpatient extends Admin_Controller
 		$prev_date = date('Y-m-d', strtotime(' -3 day'));
 		$note_patient = $this->db
 			->select(
-				"a.NRM, 
-								a.NamaPasien,
-								a.RiwayatAlergi,
-								a.CatatanPatient
-							"
+				"	a.NRM, 
+					a.NamaPasien,
+					a.RiwayatAlergi,
+					a.CatatanPatient  
+				"
 			)
 			->from("mPasien a")
 			->where('a.NRM', $NRM)
@@ -74,10 +74,10 @@ class Outpatient extends Admin_Controller
 			->result();
 		// print_r($note_patient);exit;
 		$data = array(
-			"collection_note_patient" => $note_patient
+			"collection_note_patient" => @$note_patient
 		);
 
-		$this->load->view('lookup/note_patient', $data);
+		$this->load->view('lookup/note_patient', @$data);
 	}
 
 	public function create($NoReg, $SectionID)
@@ -187,9 +187,9 @@ class Outpatient extends Admin_Controller
 		$item->Symptom = $examination->Symptom;
 		$item->Therapi = $examination->Therapi;
 
-		if ($item->StatusBayar == "Sudah Bayar" || $item->ProsesPayment == 1) {
-			redirect("{$this->nameroutes}/view/{$NoBukti}");
-		}
+		// if ($item->StatusBayar == "Sudah Bayar" || $item->ProsesPayment == 1) {
+		// 	redirect("{$this->nameroutes}/view/{$NoBukti}");
+		// }
 
 		if ($this->input->post()) {
 			$rj = $this->input->post("rj");

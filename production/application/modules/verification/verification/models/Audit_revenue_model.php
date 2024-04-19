@@ -102,7 +102,7 @@ class Audit_revenue_model extends CI_Model
 		$query = $this->db
 			->select('a.*, b.Akun_Name')
 			->from("{$this->table} a")
-			->join("{$db_bo->database}.dbo.Mst_Akun b", "a.AkunNo = b.Akun_No", "INNER")
+			->join("{$db_bo->database}.dbo.Mst_Akun b", "a.AkunNo = b.Akun_No", "LEFT")
 			->where($this->index_key, $key)
 			->get();	
 				

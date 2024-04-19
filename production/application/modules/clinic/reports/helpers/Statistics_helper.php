@@ -140,7 +140,11 @@ EOSQL;
 			->select( $db_select )
 			->from("SIMtrKasir a")
 			->join("SImmSection b", "a.SectionPerawatanID = b.SectionID", "INNER")
-			->where(['a.Tanggal >=' => $date->format('Y-01-01'), 'a.Tanggal <=' => $date->format('Y-12-31 23:59:59')])
+			->where([
+				'a.Tanggal >=' => $date->format('Y-01-01'), 
+				'a.Tanggal <=' => $date->format('Y-12-31 23:59:59'),
+				'a.Batal' => 0
+			])
 			->group_by("datepart(MONTH, a.Tanggal), b.SectionName")
 			->order_by("Bulan")
 			->get()
@@ -189,7 +193,11 @@ EOSQL;
 			->from("SIMtrKasir a")
 			->join("SIMtrRegistrasi b", "a.NoReg = b.NoReg", "INNER")
 			->join("SIMmJenisKerjasama c", "b.JenisKerjasamaID = c.JenisKerjasamaID", "INNER")
-			->where(['a.Tanggal >=' => $date->format('Y-m-01'), 'a.Tanggal <=' => $date->format('Y-m-t 23:59:59')])
+			->where([
+				'a.Tanggal >=' => $date->format('Y-m-01'), 
+				'a.Tanggal <=' => $date->format('Y-m-t 23:59:59'),
+				'a.Batal' => 0
+			])
 			->group_by("datepart(DAY,a.Tanggal), c.JenisKerjasama")
 			->order_by("Hari")
 			->get()
@@ -238,7 +246,11 @@ EOSQL;
 			->from("SIMtrKasir a")
 			->join("SIMtrRegistrasi b", "a.NoReg = b.NoReg", "INNER")
 			->join("SIMmJenisKerjasama c", "b.JenisKerjasamaID = c.JenisKerjasamaID", "INNER")
-			->where(['a.Tanggal >=' => $date->format('Y-01-01'), 'a.Tanggal <=' => $date->format('Y-12-31 23:59:59')])
+			->where([
+				'a.Tanggal >=' => $date->format('Y-01-01'), 
+				'a.Tanggal <=' => $date->format('Y-12-31 23:59:59'),
+				'a.Batal' => 0
+			])
 			->group_by("datepart(MONTH, a.Tanggal), c.JenisKerjasama")
 			->order_by("Bulan")
 			->get()

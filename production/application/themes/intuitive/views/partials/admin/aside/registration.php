@@ -29,11 +29,13 @@
     
     <li class="title"><?php echo lang("nav:servings") ?></li>
     <li<?php if(in_array(@$page, array("reservations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'reservations' ) ?>"><i class="fa fa-plus-square"></i> <?php echo lang("nav:reservation") ?></a></li>
+    <li<?php if(in_array(@$page, array("reservations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'reservations/calender' ) ?>"><i class="fa fa-square"></i> <?php echo lang("nav:reservation") ?> Calender</a></li>
     <li<?php if(in_array(@$page, array("registrations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'registrations' ) ?>"><i class="fa fa-user-plus"></i> <b><?php echo lang("nav:registration") ?></b></a></li>
 	<!-- <li<?php if(in_array(@$page, array("registrations"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'registrations/transfer_inpatient' ) ?>"><i class="fa fa-bed"></i> <?php echo lang("nav:transfer_inpatient") ?></a></li> -->
     <li<?php if(in_array(@$page, array("cashier"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'cashier/general-payment' ) ?>"><i class="fa fa-money"></i> <?php echo lang("nav:cashier") ?></a></li>
     
     <li class="title"><?php echo lang("nav:transaction") ?></li>
+	<li<?php if (in_array(@$page, array("drug_payment"))) {echo " class=\"active\"";} ?>><a href="<?php echo base_url('cashier/drug-payment') ?>"><i class="fa fa-circle-thin"></i> <?php echo lang("nav:drug_payment") ?> Bebas</a></li>
     <?php /*?><li<?php if(in_array(@$page, array("drug_payment"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'cashier/drug-payment' ) ?>"><i class="fa fa-circle-thin"></i> <?php echo lang("nav:drug_payment") ?></a></li><?php */?>
     <li<?php if(in_array(@$page, array("outstanding_payment"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'cashier/outstanding-payment' ) ?>"><i class="fa fa-circle-thin"></i> <?php echo 'Pembayaran Outstanding' ?></a></li>    
     <li<?php if(in_array(@$page, array("petty_cash"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'cashier/petty-cash' ) ?>"><i class="fa fa-circle-thin"></i> <?php echo lang("nav:petty_cash") ?></a></li>

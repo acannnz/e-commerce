@@ -188,7 +188,7 @@
                             <td colspan="2" style="font-size: 12px; padding-top:4px; padding-bottom:8px;">Golda &nbsp;: <?php echo @$item->Golda ?></td>
                         </tr>
                         <tr>
-                            <td colspan="3" align="center" style="font-size: 12px; padding-top:10px;">Bangli,  <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
+                            <td colspan="3" align="center" style="font-size: 12px; padding-top:10px;">Karangasem,  <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
                         </tr>
                         <!-- <tr>
                             <td colspan="3" style="font-size: 12px;">Dokter Pemeriksa</td>

@@ -135,6 +135,12 @@
 										<label for="BRITunai"><?php //echo lang("outstanding_payment:cash_label")?> BRI Tunai</label>
 									</div>
 								</div>
+								<div class="form-group">
+									<div class="radio">
+										<input type="radio" name="payment_type" id="Diskon" value="1" <?php echo ($item->Diskon) ? "checked" : NULL ?>>
+										<label for="Diskon"><?php //echo lang("outstanding_payment:cash_label")?> Diskon</label>
+									</div>
+								</div>
 							</div>
 							<div class="col-lg-7">
 								<div class="form-group">
@@ -322,6 +328,7 @@
 						"NilaiPembayaran" : $("#NilaiPembayaran").val(),
 						"Tunai" : $("#Tunai:checked").val() || 0,
 						"BRITunai" : $("#BRITunai:checked").val() || 0,
+						"Diskon" : $("#Diskon:checked").val() || 0,
 						"CC" : $("#CC:checked").val() || 0,
 					};
 

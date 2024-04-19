@@ -119,7 +119,8 @@ class Drug_payment extends Admin_Controller
 			{				
 				$this->db->trans_begin();
 					$this->db->insert("SIMtrPembayaranObatBebas", $item );				
-					$this->db->update("BILLFarmasi", array("ClosePayment" => 1), array("NoBukti" => $item->NoBuktiFarmasi) );					
+					$this->db->update("BILLFarmasi", array("ClosePayment" => 1), array("NoBukti" => $item->NoBuktiFarmasi) );	
+					$this->db->update("BILLFarmasi", array("Batal" => 0), array("NoBukti" => $item->NoBuktiFarmasi));					
 					$section = $this->db->where("SectionID", $location['section_id'])->get("SIMmSection")->row();
 					
 					// Insert User Aktivities
@@ -289,7 +290,9 @@ class Drug_payment extends Admin_Controller
 				
 				$this->db->trans_begin();
 					$this->db->update("SIMtrPembayaranObatBebas", array("Batal" => 1), array("NoBukti" => $item->NoBukti) );					
-					$this->db->update("BILLFarmasi", array("ClosePayment" => 0), array("NoBukti" => $item->NoBuktiFarmasi) );					
+					$this->db->update("BILLFarmasi", array("ClosePayment" => 0), array("NoBukti" => $item->NoBuktiFarmasi) );
+					// Batal BILLFarmasi tidak diaktifkan, biar bisa return realisasi obat
+					// $this->db->update("BILLFarmasi", array("Batal" => 1), array("NoBukti" => $item->NoBuktiFarmasi));					
 					$section = $this->db->where("SectionID", $location['section_id'])->get("SIMmSection")->row();
 					
 					// Insert User Aktivities
@@ -373,6 +376,8 @@ class Drug_payment extends Admin_Controller
 				"grand_total" => $grand_total,
 				"user" => $this->user_auth,
 			);
+			
+			//print_r($item);exit;
 
 			// PDF Content
 			//$html_content = $this->load->view( "drug_payment/print/billing", $data, TRUE );    
@@ -392,6 +397,7 @@ class Drug_payment extends Admin_Controller
 	public function dp_billing ( $NoFarmasi )
 	{
 		$item = drug_payment_helper::get_billing( $NoFarmasi );
+		//print_r($item);exit;
 		$detail = drug_payment_helper::get_billing_detail( $NoFarmasi );
 		$type_payment_used = drug_payment_helper::get_type_payment_used( $NoFarmasi );
 		
@@ -452,7 +458,7 @@ class Drug_payment extends Admin_Controller
 			
 			/* Name of shop */
 			$printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-			$printer->text($this->config->item("company_name")."\n");
+			$printer->text('APOTEK KARYA PRIMA'."\n");
 			$printer->selectPrintMode();
 			$printer->text(sprintf("%s, %s \n", $this->config->item( "company_address" ), $this->config->item( "company_city" ) ));
 			$printer->text(sprintf("%s, %s \n", lang( "drug_payment:phone_label" ) , ($this->config->item( "company_phone" ) ? $this->config->item( "company_phone" ) : "n/a") ));

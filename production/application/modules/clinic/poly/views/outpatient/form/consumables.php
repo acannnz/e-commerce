@@ -37,14 +37,14 @@
 						if ( this.index() > 0 ) {
 							try{
 								
-								form_ajax_modal.show("<?php echo $view_consumable ?>/"+ data.NoBukti)
+								form_ajax_modal.show("<?php echo $view_consumable ?>/"+ data.NoBuktiPOP)
 							} catch(ex){}
 						}
 
 					},
 				remove: function( params, fn, scope ){
 												
-						$.post( "<?php echo $delete_consumable ?>", { "NoBukti" : params.NoBukti }, function( response, status, xhr ){
+						$.post( "<?php echo $delete_consumable ?>", { "NoBuktiPOP" : params.NoBuktiPOP }, function( response, status, xhr ){
 						
 							if( "error" == response.status ){
 								$.alert_error(response.message);
@@ -94,14 +94,14 @@
 								<?php endif; ?>
 								columns: [
 										{ 
-											data: "NoBukti", 
+											data: "NoBuktiPOP", 
 											className: "actions text-center", 
 											render: function( val, type, row, meta ){
 													return String("<a href=\"javascript:;\" title=\"<?php echo lang( "buttons:remove" ) ?>\" class=\"btn btn-danger btn-remove\"><i class=\"fa fa-times\"></i></a>")
 												} 
 										},
 										{ 
-											data: "NoBukti", 
+											data: "NoBuktiPOP", 
 											className: "text-center", 
 										},
 										{ 
@@ -134,7 +134,7 @@
 											}
 										},
 										{ 
-											data: "IncludeJasa", className: "text-center",
+											data: "Ditagihkan", className: "text-center",
 											render: function( val ) {
 												if ( val == 1)
 												{
@@ -158,7 +158,7 @@
 										$( row ).on( "click", "a.btn-remove", function(e){
 												e.preventDefault();												
 												var elem = $( e.target );
-												
+												console.log(data);
 												if( confirm( "<?php echo lang('global:delete_confirm') ?>" ) ){
 													_datatable_actions.remove( data, function(){ _datatable.ajax.reload() }, row )
 												}
