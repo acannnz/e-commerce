@@ -67,7 +67,7 @@
 							info: true,
 							responsive: true,
 							ajax: {
-									url: "<?php echo base_url("cashier/general-payment/lookup_registration_collection") ?>",
+									url: "<?php echo base_url("reports/reports/lookup_registration_collection") ?>",
 									type: "POST",
 									data: function( params ){
 										params.date_from = $("#date_from").val();

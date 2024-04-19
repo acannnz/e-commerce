@@ -370,12 +370,12 @@ class Revenue_recognition extends ADMIN_Controller
 				
 		if ($this->input->post("date_from"))
 		{
-			$db_where['a.Tanggal >='] = $this->input->post("date_from");
+			$db_where['e.Tanggal >='] = $this->input->post("date_from");
 		}
 
 		if ($this->input->post("date_till"))
 		{
-			$db_where['a.Tanggal <='] = $this->input->post("date_till");
+			$db_where['e.Tanggal <='] = $this->input->post("date_till");
 		}
 				
 		// preparing default
@@ -401,6 +401,7 @@ class Revenue_recognition extends ADMIN_Controller
 			->join( "{$this->registration_model->table} b", "a.NoReg = b.NoReg", "LEFT OUTER" )
 			->join( "{$this->patient_model->table} c", "b.NRM = c.NRM", "LEFT OUTER" )
 			->join( "{$this->type_cooperation_model->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "{$this->cashier_model->table} e", "b.NoReg = e.NoReg", "LEFT OUTER" )
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
@@ -427,6 +428,7 @@ EOSQL;
 			->join( "{$this->registration_model->table} b", "a.NoReg = b.NoReg", "LEFT OUTER" )
 			->join( "{$this->patient_model->table} c", "b.NRM = c.NRM", "LEFT OUTER" )
 			->join( "{$this->type_cooperation_model->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "{$this->cashier_model->table} e", "b.NoReg = e.NoReg", "LEFT OUTER" )
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		

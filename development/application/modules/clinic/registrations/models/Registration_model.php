@@ -235,6 +235,32 @@ EOSQL;
 		return false;
 	}
 
+	public function get_patient_reservasi($NoReservasi)
+	{
+		// get result filtered
+		$db_select = <<<EOSQL
+			a.NoReservasi
+			,a.Nama AS NamaPasien
+			,a.PasienBaru
+			
+			
+EOSQL;
+
+		$this->db
+			->select($db_select)
+			->from("SIMtrReservasi a");
+
+		$query = $this->db
+			->where("a.NoReservasi", $NoReservasi)
+			->get();
+
+		if ($query->num_rows() > 0) {
+			return $query->row();
+		}
+
+		return false;
+	}
+
 	public function get_customer($where = NULL)
 	{
 		if (!$where) {
@@ -276,7 +302,8 @@ EOSQL;
 		$query = $this->db
 			->select($db_select)
 			->from("SimtrDataRegPasien a")
-			->join("{$this->supplier_m->table} b", "a.DokterID = b.Kode_Supplier", "LEFT OUTER")
+			// ->join("{$this->supplier_m->table} b", "a.DokterID = b.Kode_Supplier", "LEFT OUTER")
+			->join("{$this->supplier_m->table} b", "a.DokterID = b.Supplier_ID", "LEFT OUTER")
 			->join("{$this->supplier_specialist_m->table} e", "b.SpesialisID = e.SpesialisID", "LEFT OUTER")
 			->join("{$this->section_model->table} c", "a.SectionID = c.SectionID", "LEFT OUTER")
 			->join("{$this->time_m->table} d", "a.WaktuID = d.WaktuID", "LEFT OUTER")

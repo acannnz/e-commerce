@@ -30,7 +30,7 @@ class Details extends Admin_Controller
 				"Disc" => 0.00,
 				"BiayaResep" => (!empty(@$row->BiayaResep)) ? @$row->BiayaResep : 0.00,
 				"Total" => $row->Qty * $row->Harga_Satuan,
-				"HExt" => currency_ceil( $row->Qty * $row->Harga_Satuan ) - ($row->Qty * $row->Harga_Satuan),
+				"HExt" => ( $row->Qty * $row->Harga_Satuan ) - ($row->Qty * $row->Harga_Satuan),
 				"Stok" =>  $row->Stok,
 				"TglED" => "",
 				"Dosis" => $row->Dosis,

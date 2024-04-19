@@ -52,6 +52,7 @@ class General_payment extends Admin_Controller
 	{
 		$item = general_payment_helper::get_item( $NoReg, 0 );
 		$item->NoBukti = general_payment_helper::gen_evidence_number();
+		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$item->NoReg}',1)")->result();
 
 
 		$datareg = $this->registration_data_model->get_one($NoReg);
@@ -88,7 +89,12 @@ class General_payment extends Admin_Controller
 			$additional = (object) $this->input->post("additional");
 			$discount = (array)$this->input->post("discount");				
 			$payments = $this->input->post("JenisBayar");
+			// print_r($transaction);exit;
 			
+			$this->db->set('ClosePayment', 1);
+			$this->db->where('NoReg', $item->NoReg);
+			$this->db->where('ObatBebas', 0);
+			$this->db->update('BillFarmasi');
 			
 			$this->load->library( 'form_validation' );
 			
@@ -135,12 +141,14 @@ class General_payment extends Admin_Controller
 			$data = array(
 					"page" => $this->page."_".strtolower(__FUNCTION__),
 					"item" => @$item,
+					"get_rincian" => @$get_rincian,
 					"form" => TRUE,
 					"datatables" => TRUE,
 					"update_process_payment" => base_url('cashier/general-payment/update_process_payment'),
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_form_credit_bon" => base_url("cashier/general-payments/payment/lookup_form_credit_bon"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoReg}"),
 				);
@@ -166,6 +174,7 @@ class General_payment extends Admin_Controller
 		}
 		
 		$cashier = $this->db->where("NoBukti", $NoBukti)->get("SIMtrKasir")->row();
+		$get_rincian = $this->db->query("select * from GetDetailRincianBiaya('{$cashier->NoReg}',1)")->result();
 		
 		if ( empty($cashier) )
 		{
@@ -178,7 +187,7 @@ class General_payment extends Admin_Controller
 		}
 
 		$item = (object) array_merge( (array) general_payment_helper::get_item( $cashier->NoReg ), (array) $cashier);
-
+		// print_r($item);exit;
 		if ($cashier->Audit == 1 || $cashier->Batal == 1)
 		{
 			if ( $this->input->is_ajax_request() )
@@ -196,7 +205,7 @@ class General_payment extends Admin_Controller
 		$item->total_cost = general_payment_helper::get_total_cost( $item->NoReg, 0 );			
 		// Data Detail Jasa yg digroup
 		$item->group_detail_cost = general_payment_helper::get_group_detail_cost( $item->NoReg, 0 );
-		
+		// print_r($item->total_cost);exit;
 		$dokter = $this->supplier_model->get_by(['Kode_Supplier' => $item->DokterID]);
 		if(!empty($dokter))
 		{
@@ -262,6 +271,7 @@ class General_payment extends Admin_Controller
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_cancel" => base_url("cashier/general-payment/cancel/{$NoBukti}"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoBukti}"),
 					"print_invoice" => base_url("cashier/general-payments/print/invoice/{$NoBukti}"),
@@ -273,12 +283,14 @@ class General_payment extends Admin_Controller
 			$data = array(
 					"page" => $this->page."_".strtolower(__FUNCTION__),
 					"item" => $item,
+					"get_rincian" => @$get_rincian,
 					"form" => TRUE,
 					"datatables" => TRUE,
 					"is_edit" => TRUE,
 					"lookup_registration" => base_url("cashier/general-payment/lookup_registration"),
 					"lookup_supplier" => base_url("cashier/general-payment/lookup_supplier_cashier"),
 					"lookup_form_credit_card" => base_url("cashier/general-payments/payment/lookup_form_credit_card"),
+					"lookup_form_credit_card_2" => base_url("cashier/general-payments/payment/lookup_form_credit_card_2"),
 					"lookup_form_credit_bon" => base_url("cashier/general-payments/payment/lookup_form_credit_bon"),
 					"lookup_cancel" => base_url("cashier/general-payment/cancel/{$NoBukti}"),
 					"print_cost_breakdown" => base_url("cashier/general-payments/print/cost_breakdown/{$NoBukti}"),
@@ -425,6 +437,11 @@ class General_payment extends Admin_Controller
 						$this->db->update("SIMtrRegistrasi", $registration, array("NoReg" => $item->NoReg));
 
 						$this->db->update("SIMtrDataRegPasien", $data_reg ,array("NoReg" => $item->NoReg));
+						
+						$this->db->set('ClosePayment', 0);
+						$this->db->where('NoReg', $item->NoReg);
+						$this->db->where('ObatBebas', 0);
+						$this->db->update('BillFarmasi');
 						
 						$this->db
 							->set("TotalKunjunganRawatJalan", "TotalKunjunganRawatJalan - 1", FALSE)

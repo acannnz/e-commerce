@@ -452,6 +452,14 @@ class Products extends Admin_Controller
 		} 
 	}
 
+	public function lookup_product_section_bhp( $is_ajax_request=false )
+	{
+		if( $this->input->is_ajax_request() || $is_ajax_request == true )
+		{
+			$this->load->view( 'products/lookup/datatable_section_bhp' );
+		} 
+	}
+
 	public function lookup_product_all_section( $is_ajax_request=false )
 	{
 		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
@@ -502,6 +510,7 @@ class Products extends Admin_Controller
 			{
 				$this->datatable_product_all_collection();
 			} else {
+				// $this->datatable_product_all_collection();
 				$this->datatable_product_section_collection();
 			}			
 	
@@ -525,6 +534,151 @@ class Products extends Admin_Controller
 		{
 			$farmasi = $this->poly_m->get_row_data("SIMmSection", array("SectionID" => $this->input->post('SectionID')) );
 			$db_where['a.Lokasi_ID'] = $farmasi->Lokasi_ID;
+			//$db_where['b.KelompokJenis !='] = 'BHP';
+		}
+
+		if ($this->input->post('Farmasi_SectionID'))
+		{
+			$farmasi = $this->poly_m->get_row_data("SIMmSection", array("SectionID" => $this->input->post('Farmasi_SectionID')) );
+			$db_where['a.Lokasi_ID'] = $farmasi->Lokasi_ID;
+		}
+		
+		// preparing default
+		if( isset($search['value']) && ! empty($search['value']) )
+        {
+            $keywords = $this->db->escape_str( $search['value'] );
+						
+			$db_like[ $this->db->escape_str("a.Barang_ID") ] = $keywords;
+			$db_like[ $this->db->escape_str("b.Nama_Barang") ] = $keywords;
+
+        }
+		
+		// get total records
+		$this->db->from( $db_from )
+			->join( "mBarang b", "a.Barang_ID = b.Barang_ID", "LEFT OUTER" )
+			->join( "mSatuan c", "b.Stok_Satuan_ID = c.Satuan_ID", "LEFT OUTER" )
+			->join( "mKategori d", "b.Kategori_id = d.Kategori_ID", "LEFT OUTER" )
+			->join( "mSubKategori e", "b.SubKategori_id = e.SubKategori_ID", "LEFT OUTER" )
+		;
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		$records_total = $this->db->count_all_results();
+		
+		// get total filtered
+		$this->db
+			->from( $db_from )
+			->join( "mBarang b", "a.Barang_ID = b.Barang_ID", "LEFT OUTER" )
+			->join( "mSatuan c", "b.Stok_Satuan_ID = c.Satuan_ID", "LEFT OUTER" )
+			->join( "mKategori d", "b.Kategori_id = d.Kategori_ID", "LEFT OUTER" )
+			->join( "mSubKategori e", "b.SubKategori_id = e.SubKategori_ID", "LEFT OUTER" )
+			;
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
+		$records_filtered = $this->db->count_all_results();
+		
+		// get result filtered
+		$db_select = <<<EOSQL
+			a.Barang_ID,
+			b.Kode_Barang,
+			b.Nama_Barang,
+			a.Qty_Stok,
+			c.Nama_Satuan AS Satuan,
+			d.Nama_Kategori AS Kategori,
+			e.Nama_Sub_Kategori AS Sub_Kategori,
+			b.Harga_Jual,
+			b.Harga_Beli,
+			b.Stok_Satuan_ID,
+			b.Kategori_id,
+			b.SubKategori_id
+			
+EOSQL;
+
+		$this->db
+			->select( $db_select )
+			->from( $db_from )
+			->join( "mBarang b", "a.Barang_ID = b.Barang_ID", "LEFT OUTER" )
+			->join( "mSatuan c", "b.Stok_Satuan_ID = c.Satuan_ID", "LEFT OUTER" )
+			->join( "mKategori d", "b.Kategori_id = d.Kategori_ID", "LEFT OUTER" )
+			->join( "mSubKategori e", "b.SubKategori_id = e.SubKategori_ID", "LEFT OUTER" )
+			;
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
+		
+		// ordering
+        if( isset($order) )
+        {
+            $sort_column = $order[0]['column'];
+			$sort_dir = $order[0]['dir'];
+			
+			if( $columns[$sort_column]['orderable'] == 'true' )
+			{
+				$this->db
+					->order_by( $columns[intval($this->db->escape_str($sort_column))]['name'], $this->db->escape_str($sort_dir) );
+			}
+        }
+		
+		// paging
+		if( isset($start) && $length != '-1')
+        {
+            $this->db
+				->limit( $length, $start );
+        }
+		
+		// get
+		$result = $this->db
+					->get()
+					->result()
+					;
+		
+        // Output
+        $output = array(
+				'draw' => intval($draw),
+				'recordsTotal' => $records_total,
+				'recordsFiltered' => $records_filtered,
+				'data' => array()
+			);
+			
+        $JenisKerjasamaID = $this->input->post("JenisKerjasamaID");
+		$PasienKTP = $this->input->post("PasienKTP");
+        $SectionID = $this->input->post("SectionID");
+		$CustomerKerjasamaID = $this->input->post("CustomerKerjasamaID");
+
+        foreach($result as $row)
+        {
+			
+			$HargaGrading = $this->db->query("Select * from dbo.GetHargaObatNew_WithStok($JenisKerjasamaID, 'xx', $PasienKTP, $row->Barang_ID, $CustomerKerjasamaID, '$SectionID', 0)")->row();					
+			$row->HNA = $HargaGrading->HPP_Baru;
+			$row->HPP = $row->Harga_Beli;
+			$row->Harga = $HargaGrading->Harga_Baru;
+			$row->Jumlah = $HargaGrading->Harga_Baru;
+			$row->HargaOrig = $HargaGrading->Harga_Baru;
+			$row->HargaPersediaan =  $HargaGrading->HPP_Baru;
+			$row->Stok =  $HargaGrading->Stok;
+
+            $output['data'][] = $row;
+        }
+		
+		$this->template
+			->build_json( $output );
+    }
+
+	public function datatable_product_section_bhp_collection()
+    {
+        $start = $this->input->get_post('start', true);
+        $length = $this->input->get_post('length', true);
+        $order = $this->input->get_post('order', true);
+        $columns = $this->input->get_post('columns', true);
+        $search = $this->input->get_post('search', true);
+        $draw = $this->input->get_post('draw', true);
+		
+		$db_from = "mBarangLokasiNew a";
+		$db_where = array();
+		$db_like = array();
+		
+		if ($this->input->post('SectionID'))
+		{
+			$farmasi = $this->poly_m->get_row_data("SIMmSection", array("SectionID" => $this->input->post('SectionID')) );
+			$db_where['a.Lokasi_ID'] = 1426;
+			$db_where['b.KelompokJenis'] = 'BHP';
 		}
 
 		if ($this->input->post('Farmasi_SectionID'))

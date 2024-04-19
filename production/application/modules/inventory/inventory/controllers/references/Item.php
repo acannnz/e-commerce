@@ -266,6 +266,9 @@ class Item extends ADMIN_Controller
 		} else if (2 == $advanced_search['status'])
 		{
 			$db_where[$this->db->escape_str("{$t_main}.Aktif")] = 0;
+		} else if (4 == $advanced_search['status'])
+		{
+			$db_where[$this->db->escape_str("{$t_main}.BarangKonsinyasi")] = 1;
 		}
 		
 		if (0 != $advanced_search['location'])

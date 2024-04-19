@@ -18,12 +18,12 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-3">
+				<!-- <div class="col-md-3">
 					<div class="form-group">
 						<label class="control-label">&nbsp;</label>
 						<button id="reset" type="button" class="btn btn-info btn-block"><b><i class="fa fa-search"></i> <?php echo lang("buttons:search")?></b></button>
 					</div>
-				</div>
+				</div> -->
 			</div>
 			<?php echo form_close() ?>
 			<div class="row">

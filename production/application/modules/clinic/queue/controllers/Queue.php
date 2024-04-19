@@ -139,7 +139,7 @@ class Queue extends Admin_Controller
 		$option_section = $this->db
 						->where(array("StatusAktif" => 1))
 						->where_in("TipePelayanan", array("RJ", "PENUNJANG"))
-						->where_in("PoliKlinik", array("UMUM", "SPESIALIS","NONE"))
+						->where_in("PoliKlinik", array("UMUM", "SPESIALIS","NONE","UGD"))
 						->order_by("SectionID")
 						->get("SIMmSection")->result();
 
@@ -201,10 +201,12 @@ class Queue extends Admin_Controller
 		$this->load->view('queue/queue', $data);
 	}
 	//pemangilan antrian dengan nama pasien
-	public function queue_sscalling_new()
+	public function queue_calling_new()
 	{
 			$queue_active 	= (object) $this->input->post("patient");
+			
 			$item 			= poly_helper::get_outpatient($queue_active->NoReg, $queue_active->SectionID);
+
 			//JIKA POLI KIA KB
 			$sectionName = ($item->SectionID == 'SECT0017') ? 'POLI KIA-K B' : $item->SectionName;
 
@@ -212,9 +214,10 @@ class Queue extends Admin_Controller
 			$queue_description		= htmlspecialchars($queue_description);
 			$queue_description		= rawurlencode($queue_description);
 			$file_headers = @get_headers("https://translate.google.com");
-			
-			if($file_headers) {  //JIKA DAPAT MENGAMBIL DATA DARI GOOGLE TRANSLATE
+
+			if(1) {  //JIKA DAPAT MENGAMBIL DATA DARI GOOGLE TRANSLATE
 				$html = file_get_contents('https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&q='.$queue_description.'&tl=ID');
+				// print_r($html);exit;
 				$connected = true;
 			}
 			else {  //JIKA TIDAK DAPAT MENGAMBIL DATA DARI GOOGLE TRANSLATE
@@ -225,10 +228,10 @@ class Queue extends Admin_Controller
 					$mp3 = "queue_default_gigi.mp3";
 				}
 				elseif($item->SectionID == 'SEC007'){ //POLI UMUM
+					$mp3 = "queue_default_umum.mp3";
 				}
 				else{
-					$mp3 = "queue_default_umum.mp3";
-					// $mp3 = "queue_default_laboratorium.mp3";
+					$mp3 = "queue_default_laboratorium.mp3";
 				}
 				$html = file_get_contents(realpath(FCPATH . "../../resource/sound/{$mp3}"));
 				$connected = false;

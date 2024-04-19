@@ -21,7 +21,7 @@ class Reservations extends Admin_Controller
 		$this->load->model('common/supplier_m');
 	}
 
-	public function index()
+	public function index($UntukTanggal = NULL)
 	{
 		$data = array(
 			"option_section" => $this->reservation_m->get_option_section(),
@@ -29,6 +29,8 @@ class Reservations extends Admin_Controller
 			"form" => TRUE,
 			"datatables" => TRUE,
 			"option_doctor" => option_doctor(),
+			"UntukTanggal" => $UntukTanggal
+
 		);
 
 		$this->template
@@ -90,7 +92,7 @@ class Reservations extends Admin_Controller
 						'message' => lang('global:created_successfully')
 					));
 
-					redirect('reservations');
+					redirect('reservations/index/' . $item['UntukTanggal']);
 				} else {
 					make_flashdata(array(
 						'response_status' => 'error',
@@ -142,25 +144,83 @@ class Reservations extends Admin_Controller
 	public function calender()
 	{
 
+		$patient_type = $this->patient_type_m->options_type();
+		$option_section = $this->reservation_m->get_option_section();
+		$option_time = $this->reservation_m->get_option_time();
+
+		$weekDay = array("MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU");
+		$item = array(
+			'NoReservasi' => reservation_helper::gen_reservation_number(),
+			'Tanggal' => date("Y-m-d"),
+			'Jam' => date("Y-m-d H:i:s"),
+			'User_ID' => $this->user_auth->User_ID,
+			'PasienBaru' => 0,
+			'Registrasi' => 0,
+			'Batal' => 0,
+			'Paid' => 0,
+			'TipeReservasi' => 'RESERVASI POLI',
+			'UntukHari' => $weekDay[date("w")],
+		);
+
+
+		if ($this->input->post()) {
+
+			$item = array_merge($item, $this->input->post("f"));
+			$item['NoReservasi'] = reservation_helper::gen_reservation_number();
+			$item['UntukTanggal'] = $item['Tanggal'];
+			// print_r($item);exit;
+			$this->load->library('form_validation');
+			$this->form_validation->set_data($item);
+
+			if (!$this->form_validation->run()) {
+				if ($this->db->insert("SIMtrReservasi", $item)) {
+					make_flashdata(array(
+						'response_status' => 'success',
+						'message' => lang('global:created_successfully')
+					));
+
+					redirect('reservations/calender');
+				} else {
+					make_flashdata(array(
+						'response_status' => 'error',
+						'message' => lang('global:created_failed')
+					));
+				}
+			} else {
+				make_flashdata(array(
+					'response_status' => 'error',
+					'message' => $this->form_validation->get_all_error_string()
+				));
+			}
+		}
+
 		if ($this->input->is_ajax_request()) {
 			$data = array(
+				"item" => (object)$item,
 				"is_ajax_request" => TRUE,
 				"get_calender" => base_url("reservations/calender_collection"),
 				"lookup_doctor" => base_url("reservations/lookup_doctor"),
+				"lookup_patient" => base_url("reservations/lookup_patient"),
 				"is_modal" => TRUE,
+				'option_section' => $option_section,
+				"get_reservation_queue" => base_url("reservations/get_reservation_queue"),
 			);
 
 			$this->load->view(
 				'reservations/modal/create_edit',
-				array('form_child' => $this->load->view('reservations/form', $data, true))
+				array('form_child' => $this->load->view('reservations/form_calendar', $data, true))
 			);
 		} else {
 			$data = array(
 				"page" => $this->page . "_" . strtolower(__FUNCTION__),
+				"item" => (object)$item,
 				"form" => TRUE,
 				"get_calender" => base_url("reservations/calender_collection"),
 				"lookup_doctor" => base_url("reservations/lookup_doctor"),
+				"lookup_patient" => base_url("reservations/lookup_patient"),
 				"datatables" => TRUE,
+				'option_section' => $option_section,
+				"get_reservation_queue" => base_url("reservations/get_reservation_queue"),
 			);
 
 			$this->template
@@ -176,7 +236,8 @@ class Reservations extends Admin_Controller
 		if ($this->input->post()) {
 			$data = $this->input->post();
 			$collection = [];
-			$item = $this->db->where("UntukDokterID", $data['DokterID'])->get($this->reservation_m->table)->result();
+			$whare = array('UntukDokterID' => $data['DokterID'], 'Batal' => 0);
+			$item = $this->db->where($whare)->get($this->reservation_m->table)->result();
 
 
 			foreach ($item as $key => $value) {
@@ -184,12 +245,22 @@ class Reservations extends Admin_Controller
 				$dateTime = new DateTime($datetimeString);
 				$timeString = $dateTime->format('H:i:s');
 
-				$v = [
-					'title' => $value->Nama,
-					'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
-					'color' => 'blue',
-					'description' => $value->Memo,
-				];
+				if ($value->Registrasi == 1) {
+					$v = [
+						'title' => $value->Nama,
+						'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
+						'color' => 'green',
+						'description' => $value->Memo,
+					];
+				} else {
+					$v = [
+						'title' => $value->Nama,
+						'start' => date('Y-m-d', strtotime($value->UntukTanggal)) . 'T' . $timeString,
+						'color' => 'red',
+						'description' => $value->Memo,
+					];
+				}
+
 
 				$collection[] = $v;
 			}
@@ -209,7 +280,8 @@ class Reservations extends Admin_Controller
 		}
 
 		$item = $this->db->where("NoReservasi", $NoReservasi)->get($this->reservation_m->table)->row();
-
+		// print_r($item->Waktu);
+		// exit;
 		$doctor = $this->db->where("Kode_Supplier", $item->UntukDokterID)->get("mSupplier")->row();
 		$option_section = $this->reservation_m->get_option_section();
 		$option_time = $this->reservation_m->get_option_time();
@@ -457,6 +529,8 @@ class Reservations extends Admin_Controller
 
 		if ($this->input->post("show_cancel")) {
 			$db_or_where['a.Batal'] = $this->input->post("show_cancel");
+		} else {
+			$db_or_where['a.Batal'] = 0;
 		}
 
 		// preparing default

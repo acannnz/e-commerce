@@ -3,12 +3,14 @@
 <div class="modal-body">
     <script type="text/javascript">//<![CDATA[
     function lookupbox_row_selected( response ){
-        var _response = response ;//JSON.parse(response);
+        // var _response = response ;//JSON.parse(response);
+		var _response = JSON.parse(response);
+
         if( _response ){
             
             try {
-                console.log(_response);
-                $("#JasaIDBPJS").val( _response );
+                $("#JasaIDBPJS").val( _response.kdTindakan );
+                $("#TarifBPJS").val( _response.Tarif );
 				$("#ajaxModal").modal('hide');
             
             } catch (e){console.log();}
@@ -97,8 +99,10 @@
 											searchable: false,
 											width: "20px",
 											render: function ( val, type, row ){
+													var json = JSON.stringify( {kdTindakan: row.kdTindakan, Tarif: row.maxTarif} ).replace( /"/g, '\\"' );
+
 													//var json = JSON.stringify( row ).replace( /"/g, '\\"' );
-													return "<a href='javascript:try{lookupbox_row_selected(\"" + val + "\")}catch(e){}' title=\"<?php echo lang( "buttons:apply" ) ?>\" class=\"btn btn-primary btn-xs\"><i class=\"fa fa-check\"></i> <span><?php echo lang( "buttons:select" ) ?></span></a>";
+													return "<a href='javascript:try{lookupbox_row_selected(\"" + json + "\")}catch(e){}' title=\"<?php echo lang( "buttons:apply" ) ?>\" class=\"btn btn-primary btn-xs\"><i class=\"fa fa-check\"></i> <span><?php echo lang( "buttons:select" ) ?></span></a>";
 												}
 										},
 										{data: "kdTindakan"},

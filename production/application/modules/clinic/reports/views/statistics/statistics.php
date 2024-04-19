@@ -63,11 +63,31 @@
 			</div>
 		</div>
 		<div class="col-md-12">
-			<div id="monthly-section-visit"></div>
+			<div class="col-md-6">
+				<div class="table-responsive">
+					<div id="monthly-section-visit"></div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="table-responsive">
+					<div id="monthly-type-visit"></div>
+				</div>
+			</div>
 		</div>
-		<div class="col-md-12"><hr></div>
 		<div class="col-md-12">
-			<div id="monthly-type-visit"></div>
+			<hr>
+		</div>
+		<div class="col-md-12">
+			<div class="col-md-6">
+				<div class="table-responsive">
+					<div id="monthly-most-icd"></div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="table-responsive">
+
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -228,6 +248,43 @@
 			},
 			series: <?= json_encode($monthly_type_visit['series'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)?>,
 		});
+
+		$('#monthly-most-icd').highcharts({
+			chart: {
+				type: 'spline'
+			},
+			title: {
+				text: 'Statistik 10 Besar Penyakit'
+			},
+			subtitle: {
+				text: 'Kunjungan per Bulan'
+			},
+			xAxis: {
+				categories: <?php print_r(json_encode($monthly_type_visit['categories']))?>,
+			},
+			yAxis: {
+				min: 0,
+				title: {
+					text: 'Jumlah Kunjungan'
+				}
+			},
+			tooltip: {
+				headerFormat: '<span style="font-size:10px">Tanggal {point.key}</span><table>',
+				pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+					'<td style="padding:0"><b>{point.y:.0f} Pasien</b></td></tr>',
+				footerFormat: '</table>',
+				shared: true,
+				useHTML: true
+			},
+			plotOptions: {
+				column: {
+					pointPadding: 0.2,
+					borderWidth: 0
+				}
+			},
+			series: <?= json_encode($monthly_type_visit['series'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)?>,
+		});
+		
 		
 		$('#filter-year-area').hide();
 		$('#filter-type').on('change', function(ev) {

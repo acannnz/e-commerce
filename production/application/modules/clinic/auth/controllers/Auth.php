@@ -114,6 +114,12 @@ class Auth extends AUTH_Controller
 	
 	public function pharmacy()
     {
+		$checkSaldo = $this->db->where('Tanggal', date('Y-m-01'))->get('GD_trPostedBulanan')->row();
+		
+		if (empty($checkSaldo)) {
+			$this->db->query("EXEC CreateTutupBukuStokLewat");
+		}
+		
 		if ($this->input->post())
 		{
 			$this->session->set_userdata([ 'pharmacy' => [

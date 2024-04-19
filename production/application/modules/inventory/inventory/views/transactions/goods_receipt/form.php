@@ -88,6 +88,14 @@ if (!defined('BASEPATH'))
 									]); ?>
 							</div>
 						</div>
+						<div class="form-group">
+							<label class="control-label col-md-3">Opsi</label>
+								<div class="col-sm-8 col-xs-12">
+									<input type="hidden" name="f[Barang_Konsinyasi]" value="0">
+									<input type="checkbox" id="Barang_Konsinyasi" name="f[Barang_Konsinyasi]" value="1" <?php echo @$item->Barang_Konsinyasi ? 'checked' : NULL ?>>
+									<label><b>Barang Konsinyasi</b></label>
+								</div>
+						</div>
                     </div>
                     <div class="col-md-6">
 						<div class="form-group">

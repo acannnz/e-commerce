@@ -73,6 +73,17 @@ class Item_category_model extends CI_Model
 		return (int) ($this->db->count_all_results($this->table));
 	}
 	
+	public function dropdown_data($where = NULL)
+	{
+		if ($items = $this->get_all(NULL, 0, $where)) {
+			foreach ($items as $item) {
+				$option_data[$item->{$this->index_key}] = $item->Nama_Kategori;
+			}
+		}
+
+		return $option_data;
+	}
+	
 	public function to_list_data($db_where = NULL, $first_label = 'Select Data')
 	{	
 		$populate[''] = $first_label;

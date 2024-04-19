@@ -146,21 +146,21 @@
 						<a href="<?php echo @$lookup_cancel ?>" data-toggle="lookup-ajax-modal" class="btn btn-danger btn-block"><i class="fa fa-trash-o"></i> <?php echo lang("buttons:cancel") ?></a>
 					<?php endif; ?>
 				</div>
-				<div class="col-lg-2">
+				<div class="col-lg-3">
 					<?php if (@$is_edit && @$item->Batal == 0) : ?>
 						<a href="javascript:;" id="print_invoice_mini" class="btn btn-success btn-block"><i class="fa fa-print"></i> Print Invoice Mini</a>
 					<?php endif; ?>
 				</div>
-				<div class="col-lg-2">
+				<div class="col-lg-3">
 					<?php if (@$is_edit && @$item->Batal == 0) : ?>
 						<a href="<?php echo @$print_invoice ?>" id="print_invoice" class="btn btn-success btn-block" target="_blank"><i class="fa fa-print"></i> Print Invoice</a>
 					<?php endif; ?>
 				</div>
-				<div class="col-lg-2">
+				<!-- <div class="col-lg-2">
 					<?php if (@$is_edit && @$item->Batal == 0) : ?>
 						<a href="<?php echo @$print_kwitansi ?>" id="print_kwitansi" class="btn btn-success btn-block" target="_blank"><i class="fa fa-print"></i> Print Kwitansi</a>
 					<?php endif; ?>
-				</div>
+				</div> -->
 				<div class="col-lg-3">
 					<?php if (@$item->Audit == 0 && @$item->Batal == 0) { ?>
 						<button type="submit" class="btn btn-primary btn-block" <?php echo (@$is_edit) ? 'disabled' : null ?>><b><i class="fa fa-save"></i> <?php echo lang('buttons:submit') ?></b></button>
@@ -245,8 +245,8 @@
 
 				var pasienbon = $("#PasienBon:checked").val() || 0;
 				var Sisa = mask_number.currency_remove($("#Sisa").val());
-				if (Sisa > 0 && !pasienbon) {
-					alert('Masih terdapat Sisa pembayaran!!');
+				if (Sisa != 0 && !pasienbon) {
+					alert('Jumlah Pembayaran Belum Sesuai Dengan Tagihan!!');
 					return false;
 				}
 
@@ -344,25 +344,26 @@
 						$.alert_error(response.message);
 						return false
 					}
-
+					console.log(response.NoBukti);
 					$.alert_success(response.message);
 					uninishedTrans = true;
 
 					if ($.isFunction(fn)) {
+						dataPost.NoBukti = response.NoBukti
 						fn(dataPost);
 					} else {
-						_form_actions.afterPost();
+						_form_actions.afterPost(response.NoBukti);
 					}
 
 				});
 			},
-			afterPost: function(){
-					setTimeout(function(){
-						var nobukti = $("#NoBukti").val(); 
-						var newUrl = "<?php echo base_url('cashier/general-payment/edit'); ?>/" + nobukti;
-						window.location.href = newUrl;
-					}, 300 );    
-				}
+			afterPost: function(dataPost) {
+				setTimeout(function() {
+					// var nobukti = $("#NoBukti").val();
+					var newUrl = "<?php echo base_url('cashier/general-payment/edit'); ?>/" + dataPost.NoBukti;
+					window.location.href = newUrl;
+				}, 300);
+			}
 		}
 
 		$(document).ready(function(e) {
@@ -390,7 +391,7 @@
 				data_post = {
 					"NoBukti": $("#NoBukti").val()
 				}
-				console.log('<?= @$print_invoice_mini ?>');
+
 				$.post('<?= @$print_invoice_mini ?>', data_post, function(response, status, xhr) {
 					if ("error" == response.status) {
 						$.alert_error(response.status);

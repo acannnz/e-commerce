@@ -242,7 +242,8 @@ EOSQL;
 		$query = $this->db
 					->select( $db_select )
 					->from("SimtrRegistrasiTujuan a")
-					->join( "{$this->supplier_model->table} b", "a.DokterID = b.Kode_Supplier", "LEFT OUTER" )
+					//->join( "{$this->supplier_model->table} b", "a.DokterID = b.Kode_Supplier", "LEFT OUTER" )
+					->join( "{$this->supplier_model->table} b", "a.DokterID = b.Supplier_ID", "LEFT OUTER" )
 					->join( "{$this->supplier_specialist_m->table} e", "b.SpesialisID = e.SpesialisID", "LEFT OUTER" )
 					->join( "{$this->section_model->table} c", "a.SectionID = c.SectionID", "LEFT OUTER" )
 					->join( "{$this->time_m->table} d", "a.WaktuID = d.WaktuID", "LEFT OUTER" )

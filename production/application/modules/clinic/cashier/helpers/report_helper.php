@@ -57,9 +57,10 @@ final class report_helper
 	public static function get_income_recap( $date_start, $date_end, $tipe_pasien, $section_id, $doctor_id )
 	{		
 		$query = self::ci()->db->query("exec KlinikBMC_RekapTransaksiKasir '{$date_start}','{$date_end}','{$tipe_pasien}','{$section_id}','{$doctor_id}'");
-		$obat_bebas = self::ci()->db->select("a.Tanggal,a.NoBukti, a.Total, b.NoBukti as NoBuktiPembayaran")
+		$obat_bebas = self::ci()->db->select("a.Tanggal,a.NoBukti, a.Total, b.NoBukti as NoBuktiPembayaran, c.NilaiDiscount")
 							->from("BillFarmasi a")
 							->join("SIMtrPembayaranObatBebas b","a.NoBukti = b.NoBuktiFarmasi","INNER")
+							->join("SIMtrKasir c","a.NoReg = c.NoReg","LEFT OUTER")
 							->where([
 								"a.ObatBebas" => 1,
 								"a.Batal" => 0,
@@ -73,9 +74,10 @@ final class report_helper
 
 		// response_json($obat_bebas->result());exit;
 
-		$resep_luar = self::ci()->db->select("a.Tanggal,a.NoBukti, a.Total, b.NoBukti as NoBuktiPembayaran")
+		$resep_luar = self::ci()->db->select("a.Tanggal,a.NoBukti, a.Total, b.NoBukti as NoBuktiPembayaran, c.NilaiDiscount")
 							->from("BillFarmasi a")
 							->join("SIMtrPembayaranObatBebas b","a.NoBukti = b.NoBuktiFarmasi","INNER")
+							->join("SIMtrKasir c","a.NoReg = c.NoReg","LEFT OUTER")
 							->where([
 								"a.ResepLuar" => 1,
 								"a.Batal" => 0,
@@ -186,16 +188,19 @@ final class report_helper
 			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$_sheet->setCellValue("I{$tb_row}", 'OBAT'); 
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
-			$_sheet->setCellValue("J{$tb_row}", 'TOTAL'); 
+			$_sheet->setCellValue("J{$tb_row}", 'Diskon'); 
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("K{$tb_row}", 'TOTAL'); 
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$tb_row++;
 			
-			$total_pemeriksaan = 0; $total_tindakan = 0; $total_obat = 0; $grandtotal = 0; $no = 1;
+			$total_pemeriksaan = 0; $total_tindakan = 0; $total_obat = 0; $total_diskon = 0; $grandtotal = 0; $no = 1;
 			if(!empty($value)) : foreach ($value as $row):
-					$total 	= @$row->Tindakan + @$row->Obat;
+					$total 	= @$row->Tindakan + @$row->Obat - @$row->NilaiDiscount;
 					$total_tindakan += @$row->Tindakan; 
 					$total_pemeriksaan += @$row->Dokter; 
 					$total_obat += @$row->Obat; 
+					$total_diskon += @$row->NilaiDiscount;
 					$grandtotal += $total;
 
 					$_sheet->setCellValue("A{$tb_row}", $no++);
@@ -216,10 +221,12 @@ final class report_helper
 					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 					$_sheet->setCellValue("I{$tb_row}", @$row->Obat);
 					$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
-					$_sheet->setCellValue("J{$tb_row}", @$total);
+					$_sheet->setCellValue("J{$tb_row}", @$row->NilaiDiscount);
 					$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("K{$tb_row}", @$total);
+					$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 					
-					$_sheet->getStyle("G{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+					$_sheet->getStyle("G{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 					$tb_row++;
 				endforeach;
 			endif;
@@ -239,11 +246,15 @@ final class report_helper
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 
-			$_sheet->setCellValue("J{$tb_row}", $grandtotal);
+			$_sheet->setCellValue("J{$tb_row}", $total_diskon);
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 
-			$_sheet->getStyle("A{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("K{$tb_row}", $grandtotal);
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->getStyle("A{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
 			$tb_row++;
 			$tb_row++;
@@ -275,13 +286,18 @@ final class report_helper
 			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$_sheet->setCellValue("I{$tb_row}", 'OBAT'); 
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
-			$_sheet->setCellValue("J{$tb_row}", 'TOTAL'); 
+			$_sheet->setCellValue("J{$tb_row}", 'Diskon'); 
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("K{$tb_row}", 'TOTAL'); 
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$tb_row++;
 			
-			$GrandTotalObat = 0; $no = 1;
-			if(!empty($collection['obat'])) : foreach ($collection['obat'] as $row):
+			$GrandTotalObat = 0; $GrandTotalDisc = 0; $GrandTotal = 0; $Total = 0; $no = 1;
+			if(!empty($collection['obat'])) : foreach ($collection['obat'] as $row): 
 					$GrandTotalObat += @$row->Total;
+					$GrandTotalDisc += @$row->NilaiDiscount;
+					$Total = @$row->Total - @$row->NilaiDiscount;
+					$GrandTotal += $Total;
 
 					$_sheet->setCellValue("A{$tb_row}", $no++);
 					$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
@@ -301,10 +317,12 @@ final class report_helper
 					$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 					$_sheet->setCellValue("I{$tb_row}", @$row->Total);
 					$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
-					$_sheet->setCellValue("J{$tb_row}", @$row->Total);
+					$_sheet->setCellValue("J{$tb_row}", @$row->NilaiDiscount);
 					$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+					$_sheet->setCellValue("K{$tb_row}", @$Total);
+					$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 					
-					$_sheet->getStyle("H{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+					$_sheet->getStyle("H{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 					$tb_row++;
 				endforeach;
 			endif;
@@ -324,11 +342,15 @@ final class report_helper
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 
-			$_sheet->setCellValue("J{$tb_row}", $GrandTotalObat);
+			$_sheet->setCellValue("J{$tb_row}", $GrandTotalDisc);
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 
-			$_sheet->getStyle("A{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("K{$tb_row}", $GrandTotal);
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+			$_sheet->getStyle("A{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
 			$tb_row++;
 			$tb_row++;
@@ -358,13 +380,18 @@ final class report_helper
 			$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$_sheet->setCellValue("I{$tb_row}", 'OBAT'); 
 			$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
-			$_sheet->setCellValue("J{$tb_row}", 'TOTAL'); 
+			$_sheet->setCellValue("J{$tb_row}", 'Diskon'); 
 			$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+			$_sheet->setCellValue("K{$tb_row}", 'TOTAL'); 
+			$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 			$tb_row++;
 				
-				$GrandTotalResepLuar = 0; $no = 1;
+				$GrandTotalResepLuar = 0; $GrandTotalDisc = 0; $GrandTotal = 0; $Total = 0; $no = 1;
 				if(!empty($collection['resep_luar'])) : foreach ($collection['resep_luar'] as $row):
 						$GrandTotalResepLuar += @$row->Total;
+						$GrandTotalDisc += @$row->NilaiDiscount;
+						$Total = @$row->Total - @$row->NilaiDiscount;
+						$GrandTotal += $Total;
 	
 						$_sheet->setCellValue("A{$tb_row}", $no++);
 						$_sheet->getStyle("A{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
@@ -384,10 +411,12 @@ final class report_helper
 						$_sheet->getStyle("H{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 						$_sheet->setCellValue("I{$tb_row}", @$row->Total);
 						$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
-						$_sheet->setCellValue("J{$tb_row}", @$row->Total);
+						$_sheet->setCellValue("J{$tb_row}", @$row->NilaiDiscount);
 						$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+						$_sheet->setCellValue("K{$tb_row}", @$Total);
+						$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 						
-						$_sheet->getStyle("H{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+						$_sheet->getStyle("H{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 						$tb_row++;
 					endforeach;
 				endif;
@@ -407,11 +436,15 @@ final class report_helper
 				$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 				$_sheet->getStyle("I{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 	
-				$_sheet->setCellValue("J{$tb_row}", $GrandTotalResepLuar);
+				$_sheet->setCellValue("J{$tb_row}", $GrandTotalDisc);
 				$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
 				$_sheet->getStyle("J{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
+
+				$_sheet->setCellValue("K{$tb_row}", $GrandTotal);
+				$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'currency' ) );
+				$_sheet->getStyle("K{$tb_row}")->applyFromArray( self::_get_style( 'tbody' ) );
 	
-				$_sheet->getStyle("A{$tb_row}:J{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
+				$_sheet->getStyle("A{$tb_row}:K{$tb_row}")->applyFromArray( self::_get_style( 'thead' ) );
 				$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 10 ]]);
 				$tb_row++;
 			

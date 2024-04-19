@@ -89,7 +89,7 @@ class General_payment extends Admin_Controller
 			$additional = (object) $this->input->post("additional");
 			$discount = (array)$this->input->post("discount");				
 			$payments = $this->input->post("JenisBayar");
-			// print_r($payments);exit;
+			// print_r($transaction);exit;
 			
 			$this->db->set('ClosePayment', 1);
 			$this->db->where('NoReg', $item->NoReg);

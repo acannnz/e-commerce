@@ -18,16 +18,27 @@ if (!defined('BASEPATH'))
 				<div class="row">
 					<div class="col-md-12">
 						<div class="form-group">
-							<label class="col-md-1 control-label"><?php echo lang('search:for_date_from_label') ?></label>
-							<div class="col-md-2">
+							<label class="col-md-2 control-label"><?php echo lang('search:for_date_from_label') ?></label>
+							<div class="col-md-3">
 								<input type="text" id="for_date_from" class="form-control searchable datepicker" value="<?php echo date("Y-m-d")?>" />
 							</div>
 							<label class="col-md-1 control-label text-center"><?php echo lang('search:for_date_till_label') ?></label>
-							<div class="col-md-2">
+							<div class="col-md-3">
 								<input type="text" id="for_date_till" class="form-control searchable datepicker" value="<?php echo date("Y-m-d") ?>" />
 							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-2 control-label"><?php echo lang('label:doctor_name') ?></label>
+							<div class="col-md-3">
+								<select id="DokterID" class="form-control">
+									<option value="">-- Tidak Ada --</option>
+									<?php foreach($option_doctor as $k => $v): ?>
+									<option value="<?php echo $k ?>"><?php echo $v ?></option>
+									<?php endforeach;?>
+								</select>
+							</div>
 							<label class="col-md-1 control-label text-center"><?php echo lang('search:group_label') ?></label>
-							<div class="col-md-2">
+							<div class="col-md-3">
 								<select id="group" class="form-control">
 									<option value=""><?php echo lang('global:select-all'); ?></option>
 									<option value="RAWAT JALAN">Rawat Jalan</option>
@@ -56,6 +67,7 @@ if (!defined('BASEPATH'))
 										<th><?php echo lang('label:no_invoice') ?></th>
 										<th><?php echo lang('label:nrm') ?></th>
 										<th><?php echo lang('label:patient_name') ?></th>
+										<th><?php echo 'Nama Dokter' ?></th>
 										<th><?php echo lang('label:state') ?></th>
 										<th style="width:65px;text-align:center;"><i class="fa fa-cog"></i></th>
 									</tr>
@@ -70,6 +82,7 @@ if (!defined('BASEPATH'))
 										<th><?php echo lang('label:no_invoice') ?></th>
 										<th><?php echo lang('label:nrm') ?></th>
 										<th><?php echo lang('label:patient_name') ?></th>
+										<th><?php echo 'Nama Dokter' ?></th>
 										<th><?php echo lang('label:state') ?></th>
 										<th style="width:65px;text-align:center;"><i class="fa fa-cog"></i></th>
 									</tr>
@@ -110,7 +123,7 @@ if (!defined('BASEPATH'))
 									params.date_from = $("#for_date_from").val();
 									params.date_till = $("#for_date_till").val();
 									params.group = $("#group").val();
-									
+									params.DokterID = $("#DokterID").val();
 								}
 							},
 						fnDrawCallback: function( settings ){ $( window ).trigger( "resize" ); },
@@ -144,6 +157,9 @@ if (!defined('BASEPATH'))
 									},
 									{ 
 										data: "NamaPasien", 
+									},	
+									{ 
+										data: "Nama_Supplier", 
 									},										
 									{ 
 										data: "Batal", 
@@ -174,7 +190,7 @@ if (!defined('BASEPATH'))
 														buttons += '<button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>';
 														buttons += '<ul class="dropdown-menu">';
 															buttons += '<li><a href="<?php echo base_url("{$nameroutes}/update") ?>/' + val + '" title="<?php echo lang('heading:revenue_recognition_view'); ?>" class="btn btn-primary btn-xs"><?php echo lang('buttons:view')?></a><li>';
-															buttons += '<li><a href="<?php echo base_url("{$nameroutes}/cancel_audit") ?>/' + val + '" title="<?php echo lang( "buttons:cancel" ) ?>" class="btn-remove"><i class="fa fa-times"></i> <?php echo lang('buttons:cancel')?></a></li>';
+															buttons += '<li><a href="<?php echo base_url("{$nameroutes}/cancel_audit") ?>/' + val + '\" data-act=\"ajax-modal\" title="<?php echo lang( "buttons:cancel" ) ?>" class=\"btn-remove\"><i class="fa fa-times"></i> <?php echo lang('buttons:cancel')?></a></li>';
 														buttons += '</ul>';
 													buttons += '</div>';
 												return buttons;

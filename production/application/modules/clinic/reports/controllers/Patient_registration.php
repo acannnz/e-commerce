@@ -13,7 +13,10 @@ class Patient_registration extends ADMIN_Controller
 		$this->simple_login->check_user_role('reports');
 		$this->load->model([
 			"patient_type_model",
-			"section_model"
+			"section_model",
+			"patient_model",
+			"desa_model",
+			"class_model"
 		]);
 
 		$this->page = 'Laporan';
@@ -39,8 +42,11 @@ class Patient_registration extends ADMIN_Controller
 				"form" => true,
 				"url_export" => base_url("reports/patient_registration/export"),
 				"tipe_pasien" => $this->patient_type_model->get_all(),
-				"section" => $this->section_model->get_all(null, 0, ['TipePelayanan' => 'RJ'])
+				"section" => $this->section_model->get_all(null, 0, ['TipePelayanan' => 'RJ']),
+				"kelas" => $this->class_model->get_all(),
+				"desa" => $this->desa_model->get_all()
 			);
+			// print_r($data);exit;
 			
 		if( $this->input->is_ajax_request() || $is_ajax )
 		{
@@ -82,15 +88,18 @@ class Patient_registration extends ADMIN_Controller
 		if ($this->input->post())
 		{
 			$post_data = (object) $this->input->post("f");
+			// print_r($post_data);exit;
 			$section = $this->section_model->get_one( $post_data->section );
-			$collection = report_helper::get_registration_patient_types($post_data->date_start, $post_data->date_end, $post_data->tipe_pasien, $post_data->section );	
-			
+			// $kelas = $this->class_model->get_one($post_data->kelas);
+			$collection = report_helper::get_registration_patient_types($post_data->date_start, $post_data->date_end, $post_data->tipe_pasien, $post_data->section, $post_data->jeniskelamin, $post_data->desa, $post_data->kelas, $post_data->patient_age );	
+			// print_r($collection);exit;
 			$data = array(
 						"post_data" => $post_data,	
 						"collection" => $collection,
-						"section" => $section
+						"section" => $section,
+						// "kelas" => $kelas
 					);
-			
+			// print_r($data);exit;
 			$html_content =  $this->load->view( "reports/reports/patient_registration/export/pdf", $data, TRUE ); 
 			$footer = 'Laporan Registrasi Pasien'."&nbsp; : &nbsp;".date("d M Y")."&nbsp;".date("H:i:s");
 			

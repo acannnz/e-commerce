@@ -24,9 +24,9 @@
 					<label class="control-label"><?php echo lang('reservations:for_date_from_label') ?></label>
 					<div class="input-group">
 						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-						<input type="text" id="for_date_from" class="form-control searchable datepicker" value="<?php echo date("Y-m-d") ?>" />
+						<input type="text" id="for_date_from" class="form-control searchable datepicker" value="<?php echo @$UntukTanggal ? @$UntukTanggal : date("Y-m-d") ?>" />
 						<span class="input-group-addon"><i class="fa fa-long-arrow-right"></i></span>
-						<input type="text" id="for_date_till" class="form-control searchable datepicker" value="<?php echo date("Y-m-d") ?>" />
+						<input type="text" id="for_date_till" class="form-control searchable datepicker" value="<?php echo @$UntukTanggal ? @$UntukTanggal : date("Y-m-d") ?>" />
 					</div>
 				</div>
 			</div>

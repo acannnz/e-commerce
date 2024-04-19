@@ -529,6 +529,7 @@ class Goods_receipt extends ADMIN_Controller
 		$this->data['dropdown_section'] = $this->section_model->for_dropdown_far();
 		$this->data['lookup_purchase_order'] = 'lookup_purchase_order';
 		$this->data['item_lookup'] = base_url("$this->nameroutes/lookup_item");
+		$this->data['item_lookup_konsinyasi'] = base_url("$this->nameroutes/lookup_item_konsinyasi");
 		$this->data['supplier_lookup'] = base_url("$this->nameroutes/lookup_supplier");
 		
 		$this->template
@@ -1342,6 +1343,15 @@ EOSQL;
 		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
 		{
 			$this->load->view( 'transactions/goods_receipt/lookup/lookup_item' );
+		}
+	}
+	
+	public function lookup_item_konsinyasi( $is_ajax_request=false )
+	{
+		
+		if( $this->input->is_ajax_request() || $is_ajax_request !== false )
+		{
+			$this->load->view( 'transactions/goods_receipt/lookup/lookup_item_konsinyasi' );
 		}
 	}
 }

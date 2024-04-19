@@ -195,6 +195,12 @@ class Reservation_m extends Public_Model
 		return $data;
 	}
 	
+	public function get_one($key, $to_array = FALSE)
+	{
+		$this->db->where($this->primary_key, $key);
+		$query = $this->db->get($this->table, 1);
+		return (TRUE == $to_array) ? $query->row_array() : $query->row();
+	}
 	
 	public function get_option_patient_type ()
 	{
@@ -357,5 +363,11 @@ class Reservation_m extends Public_Model
 		}
 		
 		return false;
+	}
+
+	public function update($data, $key)
+	{
+		$this->db->where($this->primary_key, $key);
+		return $this->db->update($this->table, $data);
 	}
 }

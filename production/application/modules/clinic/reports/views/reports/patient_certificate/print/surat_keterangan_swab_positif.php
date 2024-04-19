@@ -98,13 +98,11 @@
             <table class="table_head font">
                 <tbody>
                     <tr class="border-body border-top">
-                        <td align="center" colspan="" style="font-size: 24px; padding-left:10px; padding-right:10px; padding-top:2px;">PRAKTEK YAYASAN A A RACHMAT TABANAN</td>
+                        <td align="center" colspan="" style="font-size: 24px; padding-left:10px; padding-right:10px; padding-top:2px;">KLINIK BALI SEHAT</td>
                     </tr>
                     <tr class="border-body">
-                        <td align="center" colspan="" style="font-size: 12px;  padding-left:10px; padding-top:12px; background-color:#a0a0a0; color:White;">APOTEK ADI HUSADA / Jl P Bawean No.2 Br Jagasatru, Kediri Tabanan Bali
-                            Phone : 087863629488
-                            Email : Ascornermedical@gmail.com
-                            Instagram : praktekyayasana</td>
+                        <td align="center" colspan="" style="font-size: 12px;  padding-left:10px; padding-top:12px; background-color:#a0a0a0; color:White;">Culik, Abang, Karangasem Regency, Bali 80852
+                            Telp 0812-3666-9566</td>
                     </tr>
                     <tr class="border-body border-bottom">
                         <td align="center" colspan="" style="font-size: 12px; padding-left:10px; padding-bottom:12px; background-color:#a0a0a0; color:white;"></td>
@@ -202,7 +200,7 @@
                 <tr>
                     <td></td>
                     <td rowspan="6" align="right"><img class="barcode" style="width: 26%; padding-top:30px; padding-left:150px;"  src="<?= base_url() . '../../themes/intuitive/assets/img/swab.png' ?>" alt=""></td>
-                    <td align="center" style="font-size:14px; width: 225px;">Tabanan, <?= date('d-m-Y', strtotime($item->TglReg)); ?></td>
+                    <td align="center" style="font-size:14px; width: 225px;">Karangasem, <?= date('d-m-Y', strtotime($item->TglReg)); ?></td>
                     <td></td>
                 </tr>
                 <tr>

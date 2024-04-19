@@ -112,9 +112,9 @@ class Print_out extends Admin_Controller
 
         if ($discountPercentage > 0) {
             $discountAmount = ($l_row->Nilai * $l_row->Qty * $discountPercentage) / 100; 
-            $sum += currency_ceil(($l_row->Nilai * $l_row->Qty) - $discountAmount) + $l_row->BiayaResep;
+            $sum += (($l_row->Nilai * $l_row->Qty) - $discountAmount) + $l_row->BiayaResep;
         } else {
-            $sum += currency_ceil($l_row->Nilai * $l_row->Qty) + $l_row->BiayaResep;
+            $sum += ($l_row->Nilai * $l_row->Qty) + $l_row->BiayaResep;
         }
     } else {
         $sum += ($l_row->Nilai * $l_row->Qty) - $l_row->Disc + $l_row->KelebihanPlafon;

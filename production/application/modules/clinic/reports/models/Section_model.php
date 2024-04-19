@@ -79,9 +79,14 @@ class Section_model extends CI_Model
 		return (TRUE == $to_array) ? $query->row_array() : $query->row();
 	}
 	
-	public function get_all($limit = NULL, $offset = 0, $where = NULL, $to_array = FALSE)
+	public function get_all($limit = NULL, $offset = 0, $where = NULL, $where_in = NULL, $to_array = FALSE)
 	{
-		if (!is_null($where) && !empty($where)){ $this->db->where($where); }
+		if (!is_null($where) && !empty($where)){ 
+			$this->db->where($where); 
+		}
+		if(!is_null($where_in) && !empty($where_in)){
+			$this->db->where_in('TipePelayanan', ['RJ','FARMASI','GUDANG']);
+		}
 		
 		$query = $this->db
 			->order_by($this->index_key, 'ASC')

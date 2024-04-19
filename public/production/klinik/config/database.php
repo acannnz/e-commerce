@@ -64,7 +64,7 @@ $query_builder = TRUE;
 
 $db['FO'] = array(
 	'dsn' => '',
-	'hostname' => '202.157.185.241',
+	'hostname' => '(local)',
 	'port' => '1433',
 	'username' => 'sa',
 	'password' => 'qwerty678.',
@@ -116,7 +116,7 @@ $db['BO_2'] = array(
 	'hostname' => '(local)',
 	'port' => '1433',
 	'username' => 'sa',
-	'password' => '',
+	'password' => 'qwerty678.',
 	'database' => 'BO_PIP',
 	'initial' => 'BO_2',
 	'dbdriver' => 'sqlsrv',

@@ -298,6 +298,7 @@
 							var elem = $(e.target);
 
 							form_ajax_modal.show("<?php echo $view_service ?>/" + index + "/" + data.JasaID);
+							_datatable_actions.calculate_balance();
 						})
 					}
 				});

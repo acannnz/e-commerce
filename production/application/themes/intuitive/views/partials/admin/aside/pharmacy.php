@@ -28,7 +28,7 @@
     </li>
     <li class="title"><?php echo lang("nav:transaction") ?></li>
     <li<?php if(in_array(@$page, array("selling"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'pharmacy' ) ?>"><i class="fa fa-file-text-o"></i> <span><?php echo lang("nav:drug_realization") ?></span></a></li>
-    <li<?php if(in_array(@$page, array("drug_payment"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'pharmacy/drug-payment' ) ?>"><i class="fa fa-shopping-cart"></i> <span><?php echo lang("nav:drug_payment") ?></span></a></li>
+    <?php /*?><li<?php if(in_array(@$page, array("drug_payment"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'pharmacy/drug-payment' ) ?>"><i class="fa fa-shopping-cart"></i> <span><?php echo lang("nav:drug_payment") ?></span></a></li><?php */?>
 	<li<?php if(in_array(@$page, array("retur"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'pharmacy/retur' ) ?>"><i class="fa fa-reply-all"></i> <span><?php echo lang("nav:return_drug_realization") ?></span></a></li>
     <?php if(config_item('use_clerk') == 'TRUE'): ?>
         <li<?php if(in_array(@$page, array("clerk"))){echo " class=\"active\"";} ?>><a href="<?php echo base_url( 'clerk' ) ?>"><i class="fa fa-fax"></i> <span><?php echo 'Clerk' ?></span></a></li>

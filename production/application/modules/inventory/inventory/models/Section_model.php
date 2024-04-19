@@ -150,5 +150,27 @@ class Section_model extends CI_Model
 		return $result;
 	}
 
+	public function for_dropdown_far( $all_section = FALSE )
+	{
+		if ( $all_section == FALSE)
+		{
+			$this->db->where('SectionID','SECT0002');
+		}
+		
+		$this->db->select('*')
+			->from($this->table)
+			->order_by('SectionName', 'DESC')
+			;
+
+		$query = $this->db->get();
+	
+		$result = array();
+		foreach($query->result() as $row){
+			$result[$row->Lokasi_ID] = $row->SectionName;
+		}
+		
+		return $result;
+	}
+
 }
 

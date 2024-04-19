@@ -63,7 +63,7 @@ final class Verification_helper
 	}
 	
 	// Rawat Inap
-	public static function audit_inpatient( $date )
+	public static function audit_inpatient( $date, $NoBuktiRJ )
 	{
 		$_ci = self::$_ci;	
 		self::$_trans_date = $date;
@@ -74,7 +74,7 @@ final class Verification_helper
 		];
 
 		$_ci->db->trans_begin();
-		
+			
 			$collection = self::_get_examination_trans( self::$_trans_date, 1 );
 			
 			if ( !empty( $collection ))	: foreach( $collection as $row ) :
@@ -127,11 +127,11 @@ final class Verification_helper
 	}
 	
 	// Rawat Jalan
-	public static function audit_outpatient( $date )
+	public static function audit_outpatient( $date, $NoBuktiRJ )
 	{
 		$_ci = self::$_ci;
 		self::$_trans_date = $date;
-		
+		// print_r($date);exit;
 		$_response = [
 			'state' => 1, 
 			'message' => lang('message:revenue_recognition_successfully')
@@ -139,8 +139,8 @@ final class Verification_helper
 		
 		$_ci->db->trans_begin();
 		
-			$collection = self::_get_examination_trans( self::$_trans_date, 0 );
-			
+			$collection = self::_get_examination_trans( self::$_trans_date, 0, $NoBuktiRJ );
+			// print_r($collection);exit;
 			if ( !empty( $collection ))	: foreach( $collection as $row ) :
 
 				$_prepare_audit = [
@@ -164,7 +164,7 @@ final class Verification_helper
 					'NIK' => $row->NIK,
 					'KodeDokter' => $row->DokterBonID,
 				];
-				
+				// print_r($_prepare_audit);exit;
 				/*
 					State Of Progress:
 					0 -> error : All data must be ROLLBACK
@@ -176,7 +176,7 @@ final class Verification_helper
 				self::$_is_multi_payment = FALSE;
 				self::$_split_component = []; // Clear self::$_split_component before process.
 				self::$_split_payment = []; // Clear self::$_split_payment before process.
-				$_response = config_item('multi_bo') == 'TRUE' 
+				$_response = config_item('multi_bo') == 'FALSE' 
 							? self::_audit_examination_with_split( $_prepare_audit )
 							: self::_audit_examination( $_prepare_audit );
 				switch ( $_response['state'] )
@@ -187,7 +187,7 @@ final class Verification_helper
 					case 2: 
 						break 2;
 				}
-			
+				// print_r($_response);exit;
 				if(!empty(self::$_split_component) || self::$_is_split ){
 					
 					$_response = self::_audit_split_examination( $_prepare_audit, $_response['evidence_number'] );
@@ -213,19 +213,57 @@ final class Verification_helper
 		(date) $date -> Tgl pembayaran pada transaksi kasir
 		(int) $inpatient -> status rawat inap pada kasir ( 1 = Rawat inap, 0 = Rawat jalan )
 	*/
-	private static function _get_examination_trans( $date, $inpatient )
+	private static function _get_examination_trans( $date, $inpatient, $NoBuktiRJ )
 	{
 		$_ci = self::$_ci;
-
+		// print_r($NoBuktiRJ);exit;
 		$date = DateTime::createFromFormat('Y-m-d', $date)->setTime(0,0);
 		$date->modify('+1 day');
 		$date->modify('+8 hour');
-		
-		$_ci->db->where([
+		// print_r($date);exit;
+		if ($NoBuktiRJ == '') {
+			$_ci->db->where([
+					'a.Jam <=' => $date->format('Y-m-d H:i:s'),
+					'a.Batal' => 0,
+					'a.Audit' => 0,
+					'b.RawatInap' => $inpatient
+				]);
+				
+			$db_select = "
+				a.Tanggal,
+				a.Jam,
+				a.NoBukti,
+				a.NoReg,
+				b.NRM,
+				b.NamaPasien_Reg AS NamaPasien,
+				c.Poliklinik,
+				c.SectionName,
+				b.PasienAsuransi,
+				b.JenisKerjasamaID,
+				b.KodePerusahaan AS Kode_Customer,
+				a.Copay,
+				sup.Nama_Customer as Nama_Supplier,
+				peg.Nama_Customer as NamaPegawai,
+				a.NIK,	 	
+				peg.Nama_Customer,
+				a.DokterBonID
+			";
+			
+			$query = $_ci->db->select( $db_select )
+							->from("{$_ci->cashier_model->table} a")
+							->join("{$_ci->registration_model->table} b", "a.NoReg = b.NoReg", "INNER")
+							->join("{$_ci->section_model->table} c", "a.SectionPerawatanID = c.SectionID", "INNER")
+							->join("{$_ci->customer_model->table} sup", "a.DokterBonID = sup.Kode_Customer", "LEFT OUTER")
+							->join("{$_ci->customer_model->table} peg", "a.NIK = peg.Kode_Customer", "LEFT OUTER")
+							->get()
+							;
+		} else {
+			$_ci->db->where([
 				'a.Jam <=' => $date->format('Y-m-d H:i:s'),
 				'a.Batal' => 0,
 				'a.Audit' => 0,
 				'b.RawatInap' => $inpatient,
+				'a.NoBukti'=> $NoBuktiRJ
 			]);
 			
 		$db_select = "
@@ -243,7 +281,7 @@ final class Verification_helper
 			a.Copay,
 			sup.Nama_Customer as Nama_Supplier,
 			peg.Nama_Customer as NamaPegawai,
-			a.NIK,
+			a.NIK,	 	
 			peg.Nama_Customer,
 			a.DokterBonID
 		";
@@ -256,6 +294,7 @@ final class Verification_helper
 						->join("{$_ci->customer_model->table} peg", "a.NIK = peg.Kode_Customer", "LEFT OUTER")
 						->get()
 						;
+		}
 		
 		return $query->result();		
 	}
@@ -290,6 +329,7 @@ final class Verification_helper
 	{
 		$_ci = self::$_ci;
 		extract($arguments);
+		// print_r($arguments);exit;
 		
 		$AkunNo_BonDokter = "1010303005";
 		$CurNilaiPPNAkum = 0;
@@ -447,13 +487,13 @@ final class Verification_helper
 				")
 				->from(" Verifikator('{$NoInvoice}', 0) ver ")
 				->join("{$_ci->cost_component_model->table} cos", "ver.KomponenID = cos.KomponenBiayaID" )
-				->where(['Kelompok' => 'RINCIAN BIAYA', 'ver.KelompokPostingan' => 'GROUP JASA'])
+				->where(['Kelompok' => 'RINCIAN BIAYA', 'ver.KelompokPostingan' => 'KOMPONEN'])
 				->group_by(["cos.AkunNoRI", "cos.AkunNORJ", "cos.AkunNOUGD", "GroupVerifikator"])
 				->get_compiled_select();				
 		
 		if( $_union_collection = $_ci->db->query(" {$_union_service_group} UNION {$_union_cost_component} ")->result() ):
 			foreach ( $_union_collection as $row ):
-				
+				// print_r($row);exit;
 				$CurNilaiAkumJasa = 0;
 				$CurHarga = round($row->Harga, 0);
                 $CurHargaOrig = round($row->HargaOrig, 0);
@@ -511,10 +551,10 @@ final class Verification_helper
 				];
 				$_ci->audit_revenue_model->create( $_insert_audit_revenue );
 				
-				$_sub_ver_service = $_ci->db->select("No_Bukti, Nama_Jasa, JmlPemakaian, Harga, Nomor, Disc")
+				$_sub_ver_service = $_ci->db->select("No_Bukti, Nama_Jasa, JmlPemakaian, Harga, Nomor, Disc, HargaOrig")
 					->from(" Verifikator_NEW_WITH_KOMPONEN('{$NoInvoice}', 0)")
 					->where(['Akun_No' => $StrAkun])
-					->group_by(["No_Bukti", "Nama_Jasa", "JmlPemakaian", "Harga", "Nomor", "Disc"])
+					->group_by(["No_Bukti", "Nama_Jasa", "JmlPemakaian", "Harga", "Nomor", "Disc", "HargaOrig"])
 					->get_compiled_select();
 		
 				$_ver_service = $_ci->db->select("
@@ -524,7 +564,7 @@ final class Verification_helper
 					->from("( {$_sub_ver_service} ) AS ver ")
 					->group_by(["ver.Nama_jasa" ])
 					->get();
-					
+				
 				if( $_ver_service->num_rows() > 0): 
 					foreach( $_ver_service->result() as $val ):
 					
@@ -551,7 +591,7 @@ final class Verification_helper
 							->where(["HargaKomponen >" => 0, "Akun_No" => $StrAkun, "Nama_Jasa" => $val->Nama_Jasa])
 							->group_by(["Komponen" ])
 							->get();
-
+						
 						if( $_ver_service_component->num_rows() > 0 ):
 							foreach($_ver_service_component->result() as $com): // $com  == component
 								
@@ -570,9 +610,9 @@ final class Verification_helper
 							
 							endforeach;
 						endif;
-						
-						if( ($CurNilaiJasaDetail - $CurNilaiJasa) > 100):
-							self::_cancel_audit( $NoBukti, $NoInvoice );
+						// print_r($CurNilaiJasaDetail);exit;
+						if( ($CurNilaiJasaDetail - $CurNilaiJasa) > 100): 
+							self::_cancel_audit( $NoBukti, $NoInvoice ); 
 							return [
 								'state' => 2, 
 								'message' => sprintf(lang('message:audit_service_audit_component_not_match'), $NoInvoice, $val->Nama_Jasa)
@@ -614,7 +654,7 @@ final class Verification_helper
 							endforeach;
 						endif;
 						
-						if( ($CurNilaiJasaDetail - $CurNilaiJasa) > 100):
+						if( ($CurNilaiJasaDetail - $CurNilaiJasa) > 100): 
 							self::_cancel_audit( $NoBukti, $NoInvoice );
 							return [
 								'state' => 2, 
@@ -1209,6 +1249,7 @@ final class Verification_helper
 								"AkunNo" => $cad->Akun_No,
 								"NoBukti" => $NoBukti,
 							];
+							// print_r($_insert_audit_journal_payment);exit;
 							$_ci->audit_journal_payment_model->create( $_insert_audit_journal_payment );
 							
 							$_insert_audit_journal_payment = [
@@ -1461,12 +1502,12 @@ final class Verification_helper
 	{
 		$_ci = self::$_ci;
 		extract($arguments);
-		
+		// print_r($arguments);exit;
 		// Account Prefix Untuk Group Jasa, Jika Polikinik Spesialis maka Gunakan Akun_2 (Rekening Ke 2)
 		$_account_suffix = '';
 		$_db_suffix = 'BO_1';
 		if( $PoliKlinik == 'SPESIALIS' ){
-			$_account_suffix = '_2';		
+			$_account_suffix = '';		
 			$_db_suffix = 'BO_1';
 		}
 				
@@ -1535,11 +1576,11 @@ final class Verification_helper
 			
 		endif;
 		
-		if ( $RawatInap ):
-			$IntCustomerID = (@$IntCustomerID_Penanggung_RI !== 0 || !empty($IntCustomerID_Penanggung_RI) ) ? $IntCustomerID_Penanggung_RI : @$IntCustomerID;
-		else:
-			$IntCustomerID = (@$IntCustomerID_Penanggung !== 0 || !empty($IntCustomerID_Penanggung)) ? $IntCustomerID_Penanggung : @$IntCustomerID;
-		endif;
+		// if ( $RawatInap ):
+		// 	$IntCustomerID = (@$IntCustomerID_Penanggung_RI !== 0 || !empty($IntCustomerID_Penanggung_RI) ) ? $IntCustomerID_Penanggung_RI : @$IntCustomerID;
+		// else:
+		// 	$IntCustomerID = (@$IntCustomerID_Penanggung !== 0 || !empty($IntCustomerID_Penanggung)) ? $IntCustomerID_Penanggung : @$IntCustomerID;
+		// endif;
 
 		$NoBukti = self::gen_audit_number();
 		
@@ -1686,26 +1727,26 @@ final class Verification_helper
 					case 'RI':
 						$StrAkun = $row->AkunNoRI;
 					break;
-					default:
+					// default:
 					
-						if( $RawatInap ):
-							$StrAkun = $row->AkunNoRI;
-						else:
+					// 	if( $RawatInap ):
+					// 		$StrAkun = $row->AkunNoRI;
+					// 	else:
 						
-							if( $RawatInap ):
-								$StrAkun = $row->AkunNoRI;
-							else:
+					// 		if( $RawatInap ):
+					// 			$StrAkun = $row->AkunNoRI;
+					// 		else:
 							
-								if( substr($SectionName, 0, 3) == 'UGD' ):
-									$StrAkun = $row->AkunNOUGD;
-								elseif( $PoliKlinik = "ON CALL" ):
-									$StrAkun = $row->AkunNOOnCall;
-								else:
-									$StrAkun = $row->AkunNORJ;
-								endif;
-							endif;
-						endif;
-					break;
+					// 			if( substr($SectionName, 0, 3) == 'UGD' ):
+					// 				$StrAkun = $row->AkunNOUGD;
+					// 			elseif( $PoliKlinik = "ON CALL" ):
+					// 				$StrAkun = $row->AkunNOOnCall;
+					// 			else:
+					// 				$StrAkun = $row->AkunNORJ;
+					// 			endif;
+					// 		endif;
+					// 	endif;
+					// break;
 				endswitch;
 				
 				$NoBuktiJurnal = sprintf("%s#%s#", $NoInvoice, "PEND");
@@ -1729,6 +1770,7 @@ final class Verification_helper
 					"AkunNo" => $StrAkun,
 					"NoBukti" => $NoBukti,
 				];
+				// print_r($_insert_audit_revenue);exit;
 				$_ci->audit_revenue_model->create( $_insert_audit_revenue );
 				
 				if(self::$_is_split)
@@ -2608,13 +2650,13 @@ final class Verification_helper
 																			->join("Mst_Akun b", "a.Akun_ID_Tujuan = b.Akun_ID", "LEFT OUTER")
 																			->where('ID', $cc->IDBank)
 																			->get()->row();
-											if(empty($_get_merchan_account->Akun_No)){
-												self::_cancel_audit( $NoBukti, $NoInvoice );
-												return [
-													'state' => 2, 
-													'message' => sprintf("%s dengan bank %s, Rekening COA nya belum diSetup. Silahkan Setup di Admin", $StrKeterangan, $_get_merchan_account->NamaBank )
-												];
-											}
+											// if(empty($_get_merchan_account->Akun_No)){
+											// 	self::_cancel_audit( $NoBukti, $NoInvoice );
+											// 	return [
+											// 		'state' => 2, 
+											// 		'message' => sprintf("%s dengan bank %s, Rekening COA nya belum diSetup. Silahkan Setup di Admin", $StrKeterangan, $_get_merchan_account->NamaBank )
+											// 	];
+											// }
 											$StrNoBuktiJurnal = sprintf("%s#%s#%s#%s#", $NoInvoice, 'BYR', $cad->IDBayar, $cc->IDBank);
 											
 											$_insert_audit_journal_payment = [ 
@@ -3919,12 +3961,12 @@ final class Verification_helper
 	public static function _audit_honor( $pStrNoBukti, $pStrNoInvoice )
 	{
 		$_ci = self::$_ci;
-		$db_suffix = (config_item('multi_bo') == 'TRUE') ? 'BO_2' : 'BO_1';
+		$db_suffix = (config_item('multi_bo') == 'FALSE') ? 'BO_2' : 'BO_1';
 		
 		$result = $_ci->db->order_by("JenisHonor, DokterID")
 					->get("HOnor_Verifikator('{$pStrNoInvoice}')")
 					->result();
-					
+			
 		if(!empty($result)):
 			$dStrDokterID = NULL;
 			$dIntCOunterDokter = 1;
@@ -3981,6 +4023,7 @@ final class Verification_helper
 								->where('TypeHutang_ID', $dIntTypeHutang)
 								->get('AP_mTypeHutang')
 								->row();
+								
 				$dIntAkunHutang = !empty($_get_type) ? $_get_type->Akun_ID : 0;
 				
 				if( @$dStrDokterID == $row->DokterID):
@@ -5093,7 +5136,7 @@ final class Verification_helper
 	private static function _cancel_audit( $NoBukti, $NoInvoice )
 	{
 		$_ci = self::$_ci;
-		
+		// print_r($NoBukti);exit;
 		$_ci->audit_model->update(['Batal' => 1], $NoBukti);
 		$_ci->cashier_model->update(['Audit' => 0], $NoInvoice);
 		$_ci->bill_pharmacy_model->update(['IncomeAudit' => 0], $NoInvoice);
@@ -5106,7 +5149,7 @@ final class Verification_helper
 	
 	public static function cancel_audit( $item, $item_split = NULL )
 	{
-		
+		// print_r($item);exit;
 		$_ci = self::$_ci;
 		$_ci->BO_1 = $_ci->load->database('BO_1', TRUE);	
 		
@@ -5136,7 +5179,7 @@ final class Verification_helper
 		$section = (object)['PoliKlinik' => 'UMUM'];
 		if(!empty($_get_section))
 			$section = $_ci->section_model->get_one( @$_get_section->SectionID );
-		
+			
 		if(config_item('multi_bo') === 1):		
 			if( in_array($section->PoliKlinik, ['UMUM','UGD', 'NONE'] ))
 			{
@@ -5158,7 +5201,7 @@ final class Verification_helper
 		$_ci->BO_1->trans_begin();
 		
 		if(config_item('multi_bo') === 1)
-		$_ci->BO_2->trans_begin();
+		$_ci->BO_1->trans_begin();
 			
 			$_ci->audit_model->update(['Batal' => 1], $item->NoBukti);
 			$_ci->cashier_model->update(['Audit' => 0], $item->NoInvoice);
@@ -5167,8 +5210,8 @@ final class Verification_helper
 			$_ci->outstanding_payment_model->update(['Audit' => 0], $item->NoInvoice);
 			$_ci->otc_drug_model->update(['Audit' => 0], $item->NoInvoice);
 			
-			$_ci->{$_db_suffix}->where('No_Faktur', $item->NoInvoice)->delete('AR_trFakturDetail');
-			$_ci->{$_db_suffix}->where('No_Faktur', $item->NoInvoice)->delete('AR_trFaktur');
+			$_ci->BO_1->where('No_Faktur', $item->NoInvoice)->delete('AR_trFakturDetail');
+			$_ci->BO_1->where('No_Faktur', $item->NoInvoice)->delete('AR_trFaktur');
 			
 			$activities_description = sprintf( "CANCEL INCOME: # %s # %s # %s ", $item->NRM, $item->NoReg, $item->NoBukti );
 			insert_user_activity( $activities_description, $item->NoBukti, 'INCOME' );
@@ -5182,8 +5225,8 @@ final class Verification_helper
 				$_ci->outstanding_payment_model->update(['Audit' => 0], $item_split->NoInvoice);
 				$_ci->otc_drug_model->update(['Audit' => 0], $item_split->NoInvoice);
 				
-				$_ci->{$_db_suffix_split}->where('No_Faktur', $item_split->NoInvoice)->delete('AR_trFakturDetail');
-				$_ci->{$_db_suffix_split}->where('No_Faktur', $item_split->NoInvoice)->delete('AR_trFaktur');
+				$_ci->BO_1->where('No_Faktur', $item_split->NoInvoice)->delete('AR_trFakturDetail');
+				$_ci->BO_1->where('No_Faktur', $item_split->NoInvoice)->delete('AR_trFaktur');
 				
 				$activities_description = sprintf( "CANCEL INCOME: # %s # %s # %s ", $item_split->NRM, $item_split->NoReg, $item_split->NoBukti );
 				insert_user_activity( $activities_description, $item_split->NoBukti, 'INCOME' );

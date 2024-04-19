@@ -64,7 +64,7 @@
                 <th>Jenis Kelamin</th>
                 <th>Alamat</th>
                 <th>Tipe</th>
-                <th>Status</th>
+                <th>Section</th>
                 <th></th>
             </tr>
         </thead>
@@ -175,7 +175,7 @@
 									{ data: "Alamat"},
 									{ data: "JenisKerjasama"},
 									{ 
-										data: "Status",
+										data: "SectionName",
 										className: "text-center",
 										render: function ( val, type, row ){
 											return '<b>'+ val +'</b>';
@@ -207,6 +207,14 @@
 		$( document ).ready(function(e) {
             	$( "#dt-cashier-open" ).DataTable_cashier_o();
 				search_datatable_o.init();
+				
+				// Fungsi untuk merefresh form
+			function refreshForm() {
+				$("#dt-cashier-open").DataTable().ajax.reload();
+			}
+
+			// Atur interval refresh setiap 10 detik (10000 ms)
+			setInterval(refreshForm, 10000);
 				
 			});
 	})( jQuery );

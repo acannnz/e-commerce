@@ -423,6 +423,28 @@ EOSQL;
 		return false;
 	}
 
+	public function get_pharmacy_data_bhp( $where = NULL )
+	{
+
+		if( !empty( $where ) && is_array( $where ))
+		{
+			$this->db->where( $where );
+		}
+
+		$query = $this->db
+					->select("a.*, b.Nama_Supplier")
+					->from("SIMtrPOP a")
+					->join("mSupplier b", "a.DokterID = b.Kode_Supplier", "LEFT OUTER")
+					->get();
+		
+		if ( $query->num_rows() > 0 )
+		{
+			return $query->row();
+		}
+		
+		return false;
+	}
+
 	public function get_last_stock_warehouse_card( $where = NULL )
 	{
 
@@ -458,6 +480,30 @@ EOSQL;
 					->join("mBarang b", "a.Barang_ID = b.Barang_ID", "LEFT OUTER")
 					->join("SIMmDosisObat c", "a.Dosis = c.Dosis", "LEFT OUTER")
 					->where( "a.NoBukti", @$NoBukti )
+					->get()
+					;
+		
+		if ( $query->num_rows() > 0 )
+		{
+			return $query->result();
+		}
+		
+		return array();
+	}
+
+	public function get_bhp_detail( $NoBuktiPOP = NULL )
+	{
+		
+		if ( !$NoBuktiPOP )
+		{
+			return [];
+		}
+
+		$query = $this->db
+					->select("a.*, b.Kode_Barang, b.Nama_Barang")
+					->from("SIMtrDetailPOP a")
+					->join("mBarang b", "a.Barang_Id = b.Barang_ID", "LEFT OUTER")
+					->where( "a.NoBuktiPOP", @$NoBuktiPOP )
 					->get()
 					;
 		
@@ -524,6 +570,43 @@ EOSQL;
 		return false;
 	}
 
+	public function get_prescription_data_bhp( $NoBuktiPOP = NULL )
+	{
+		$query = $this->db
+					->select("
+						a.*, 
+						a.KerjasamaID,
+						b.NRM, 
+						c.NamaPasien,
+						a.PerusahaanID AS KodePerusahaan,
+						f.Nama_Customer,
+						c.Alamat,
+						c.TglLahir,
+						b.UmurThn,
+						b.UmurBln,
+						b.UmurHr,
+						b.NoReg,
+						d.SectionID,
+						e.Nama_Supplier
+					")
+					->from("SIMtrPOP a")
+					->join("SIMtrRegistrasi b", "a.NoReg = b.NoReg", "LEFT OUTER")
+					->join("mPasien c", "b.NRM = c.NRM", "LEFT OUTER")
+					->join("SIMmSection d", "a.SectionID = d.SectionID", "LEFT OUTER")
+					->join("mSupplier e", "a.DokterID = e.Kode_Supplier", "LEFT OUTER")
+					->join("mCustomer f", "a.PerusahaanID = f.Kode_Customer", "LEFT OUTER")
+					->where("a.NoBuktiPOP", $NoBuktiPOP)
+					->get()
+					;
+		
+		if ( $query->num_rows() > 0 )
+		{
+			return $query->row();
+		}
+		
+		return false;
+	}
+
 	public function get_prescription_detail( $NoResep = NULL, $item = array() )
 	{
 		$query = $this->db
@@ -551,6 +634,48 @@ EOSQL;
 					$HargaGrading = $this->db->query("Select * from dbo.GetHargaObatNew_WithStok({$item->JenisKerjasamaID}, 'xx', {$item->KTP}, {$row->Barang_ID}, ". (int) @$item->CustomerKerjasamaID.", '". config_item('section_id') ."', 0)")->row();					
 					$row->HNA = $HargaGrading->HPP_Baru;
 					$row->HPP = $row->Harga_Satuan;
+					$row->Harga = $HargaGrading->Harga_Baru;
+					$row->HargaOrig = $HargaGrading->Harga_Baru;
+					$row->HargaPersediaan =  $HargaGrading->HPP_Baru;
+				}	
+				$collection[] = $row;
+			}
+
+			return $collection;
+		}
+
+		
+		return false;
+	}
+
+	public function get_prescription_detail_bhp( $NoBuktiPOP = NULL, $item = array() )
+	{
+		// print_r($item);exit;
+		$query = $this->db
+					->select("a.*, b.Nama_Barang, b.Kode_Barang","b.BiayaResep")
+					->from( "SIMtrDetailPOP a" )
+					->join("mBarang b", "a.Barang_Id = b.Barang_ID", "LEFT OUTER")
+					->where("a.NoBuktiPOP", $NoBuktiPOP )
+					->get()
+					;
+		
+		if ( $query->num_rows() > 0 )
+		{
+			$collection = array();
+			foreach($query->result() as $row)
+			{
+				if ( in_array($row->Satuan, array("RESEP", "RACIKAN")) )
+				{
+					$row->HNA = $row->HargaSatuan;
+					$row->HPP = $row->HargaSatuan;
+					$row->Harga = $row->HargaSatuan;
+					$row->HargaOrig = $row->HargaSatuan;
+					$row->HargaPersediaan =  $row->HargaSatuan;
+				} else   {
+					# Params = JenisKerjasamaID, KelasID, KTP, Barang_ID, CustomerKerjasamaID, SectionID, JenisBarangID
+					$HargaGrading = $this->db->query("Select * from dbo.GetHargaObatNew_WithStok({$item->KerjasamaID}, 'xx', {$item->KTP}, {$row->Barang_Id}, ". (int) @$item->CustomerKerjasamaID.", '". config_item('section_id') ."', 0)")->row();					
+					$row->HNA = $HargaGrading->HPP_Baru;
+					$row->HPP = $row->HargaSatuan;
 					$row->Harga = $HargaGrading->Harga_Baru;
 					$row->HargaOrig = $HargaGrading->Harga_Baru;
 					$row->HargaPersediaan =  $HargaGrading->HPP_Baru;

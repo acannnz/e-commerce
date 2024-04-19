@@ -29,6 +29,94 @@ final class patient_helper
 			: ['status'=>'success', 'upload_data' => $_ci->upload->data()];
 	}
 
+	public static function create_patient( $item )
+	{
+		// self::init();
+		$_ci = self::ci();
+		
+		$_ci->db->trans_begin();
+				
+			$NRM = $item->NRM;	
+			$JenisPasien = $_ci->patient_type_model->get_one($item->JenisKerjasamaID);
+			$item->CustomerKerjasamaID = (int) @$item->CustomerKerjasamaID;
+			// print_r($item);exit;			
+			// Jika Pasien adalah Anggota Kerjasama Baru
+			if($_ci->input->post("f")){
+				if(empty($item->NoAnggota)){
+					$_ci->db->trans_rollback();
+					return [
+						"status" => 'error',
+						"message" => 'Nomor Kartu Anggota Kerjasama belum terisi',
+						"code" => 500
+					];
+				}
+				// print_r('asasas');exit;
+				if($_ci->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota, "NRM" => $NRM, "CustomerKerjasamaID" => $item->CustomerKerjasamaID]))
+				{
+					$cooperation_card = [
+						"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+						"NRM" => $NRM,
+						"Nama" => $item->NamaPasien,
+						"Active" => 1,
+						"Klp" => @$item->Klp,
+						"TglLahir" => $item->TglLahir,
+						"Alamat" => $item->Alamat,
+						"Phone" => $item->Phone,
+						"Gender" => $item->JenisKelamin,
+					];
+					// print_r('qwqwqwqwqw');exit;
+					$_ci->cooperation_member_model->update( $cooperation_card, $item->NoAnggota);	
+				} else {
+					
+					if($_ci->cooperation_member_model->count_all(['NoAnggota' => $item->NoAnggota]))
+					{
+						$_ci->db->trans_rollback();
+						return [
+							"status" => 'error',
+							"message" => "Nomor Kartu {$item->NoAnggota} sudah pernah terdaftar disistem, tidak dapat menyimpan sebagai Anggota baru",
+							"code" => 500
+						];
+					}
+					
+					$cooperation_card = [
+						"CustomerKerjasamaID" => $item->CustomerKerjasamaID,
+						"NRM" => $NRM,
+						"NoAnggota" => $item->NoAnggota,
+						"Nama" => $item->NamaPasien,
+						"Active" => 1,
+						"Klp" => @$item->Klp,
+						"TglLahir" => $item->TglLahir,
+						"Alamat" => $item->Alamat,
+						"Phone" => $item->Phone,
+						"Gender" => $item->JenisKelamin,
+					];
+					// print_r($cooperation_card);exit;
+					$_ci->cooperation_member_model->create( $cooperation_card );				
+				}
+			}
+			
+			$_ci->patient_m->create( $item );							
+			
+
+		if ($_ci->db->trans_status() === FALSE)
+		{
+			$_ci->db->trans_rollback();
+			return [
+				"status" => 'error',
+				"message" => lang('global:created_failed'),
+				"code" => 500
+			];
+		}
+		//$_ci->db->trans_rollback();
+		$_ci->db->trans_commit();
+		return [
+			"NRM" => $NRM,
+			"status" => 'success',
+			"message" => lang('global:created_successfully'),
+			"code" => 200
+		];
+	}
+
 
 	public static function process_item_image()
 	{
@@ -702,7 +790,7 @@ EOSQL;
 			$mr_number = '00.00.01';
 		}
 		
-		return (string) $mr_number;
+		return (string) $mr_number++;
 	}
 	
 	private static function & ci()
