@@ -156,7 +156,7 @@
             <table>
                 <tbody>
                     <tr>
-                        <td colspan="3" align="center" style="font-size: 12px;">Bangli,  <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
+                        <td colspan="3" align="center" style="font-size: 12px;">Karangasem,  <?php echo date("d F Y", strtotime(substr(@$item->TglReg, 0, 10))) ?></td>
                     </tr>
                     <!-- <tr>
                         <td colspan="3" style="font-size: 12px; padding-left:25px;">Dokter Pemeriksa</td>

@@ -37,6 +37,9 @@ if (!isset($active_menu)){ $active_menu = ''; }
                     	<li>
 							<a href="<?php echo site_url('verification/transactions/revenue_recognition'); ?>"><i class="fa fa-exchange" aria-hidden="true"></i> <span><?php echo lang('nav:revenue_recognition')?></span></a>
                         </li>
+                        <li>
+							<a href="<?php echo site_url('verification/transactions/revenue_recognition/view'); ?>"><i class="fa fa-eye" aria-hidden="true"></i> <span><?php echo "View Pengakuan Pendapatan"?></span></a>
+                        </li>
                         <li class="nav-parent">
                         	<a href=""><i class="fa fa-random" aria-hidden="true"></i> <span><?php echo 'Posting'; ?></span></a>
                             <ul class="children">

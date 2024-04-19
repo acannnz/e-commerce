@@ -91,7 +91,7 @@
 						//scrollCollapse: true,
 						//scrollY: "200px",
 						ajax: {
-								url: "<?php echo base_url("registrations/patients/lookup_collection") ?>",
+								url: "<?php echo base_url("reservations/patients/lookup_collection") ?>",
 								type: "POST",
 								data: function( params ){}
 							},

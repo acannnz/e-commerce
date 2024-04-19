@@ -21,7 +21,7 @@
 				</div>   
 				<div class="form-group">
 					<label class="col-md-3 control-label"><?php echo 'Tipe Pasien' ?></label>
-					<div class="col-md-9">
+					<div class="col-md-3">
 						<select id="tipe_pasien" name="f[tipe_pasien]" class="form-control">
 							<option value="">-- Semua --</option>
 							<?php foreach($tipe_pasien as $row):?>
@@ -29,10 +29,8 @@
 							<?php endforeach;?>
 						</select>
 					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-md-3 control-label"><?php echo 'Section' ?></label>
-					<div class="col-md-9">
+					<label class="col-md-3 control-label text-center"><?php echo 'Section' ?></label>
+					<div class="col-md-3">
 						<select id="section" name="f[section]" class="form-control">
 							<option value="">-- Semua --</option>
 							<?php foreach($section as $row):?>
@@ -42,13 +40,56 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-md-3 control-label"><?php echo 'Export Ke'?></label>
-					<div class="col-md-9">
-						<select id="export_to" name="export_to" class="form-control">
-							<option value="excel">EXCEL</option>
-							<option value="pdf">PDF</option>
+					<label class="col-md-3 control-label"><?php echo 'Desa' ?></label>
+					<div class="col-md-3">
+						<select id="desa" name="f[desa]" class="form-control">
+							<option value="">-- Semua --</option>
+							<?php foreach ($desa as $row):?>
+							<option value="<?php echo $row->DesaID ?>"><?php echo $row->DesaNama ?></option>
+							<?php endforeach; ?>
 						</select>
 					</div>
+					<label class="col-md-3 control-label text-center"><?php echo 'Kelas' ?></label>
+					<div class="col-md-3">
+						<select id="kelas" name="f[kelas]" class="form-control">
+							<option value="">-- Semua --</option>
+							<?php foreach ($kelas as $row):?>
+							<option value="<?php echo $row->KelasID ?>"><?php echo $row->NamaKelas ?></option>
+							<?php endforeach; ?>
+						</select> 
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label"><?php echo 'Jenis Kelamin' ?></label>
+					<div class="col-md-3">
+						<select id="jeniskelamin" name="f[jeniskelamin]" class="form-control">
+							<option value="">-- Semua --</option>
+							<option value="M">Laki - Laki</option>
+							<option value="F">Perempuan</option>
+						</select>
+					</div>
+					<label class="col-md-3 control-label text-center"><?php echo 'Export Ke'?></label>
+					<div class="col-md-3">
+						<select id="export_to" name="export_to" class="form-control">
+							<option value="pdf">PDF</option>
+							<!-- <option value="excel">EXCEL</option> -->
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Umur</label>
+					<div class="col-md-3">
+						<select id="patient_age" name="f[patient_age]" class="form-control">
+							<option value="">-- Semua --</option>
+							<option value="1">< 15 Tahun</option>
+							<option value="2">15 - 24 Tahun</option>
+							<option value="3">25 - 34 Tahun</option>
+							<option value="4">35 - 44 Tahun</option>
+							<option value="5">45 - 54 Tahun</option>
+							<option value="6">55 - 64 Tahun</option>
+							<option value="7">> 65 Tahun</option>
+						</select>
+					</div>					
 				</div>
 				<div class="form-group text-right">
 					<div class="col-md-12">

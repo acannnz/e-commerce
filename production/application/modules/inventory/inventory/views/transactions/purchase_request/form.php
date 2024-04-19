@@ -137,16 +137,7 @@ if (!defined('BASEPATH'))
 									]); ?>
 							</div>
 						</div>
-						<div class="form-group">
-							<?php echo form_label('&nbsp', 'input_keterangan', ['class' => 'control-label col-md-3']) ?>
-							<div class="col-md-9">
-								<label for="Pembelian_Asset">
-										<input type="checkbox" name="f[Pembelian_Asset]" class="checkbox checkth" id="Pembelian_Asset" value="1" <?php echo ($item->Pembelian_Asset) ? 'checked' : NULL?>>
-										<?php echo lang('label:asset_purchase')?>
-									</label>
-							</div>
-
-						</div>
+						
                     </div>
                 </div>
                 <hr/>

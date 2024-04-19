@@ -16,12 +16,16 @@
 	RewriteCond %{HTTP_HOST} ^apotek-pipbali.mettaservices.com
 	RewriteRule ^(.*)$ public/production/klinik/$1 [L]
 
-	RewriteCond %{HTTP_HOST} ^apotek.pipbali.com
+	# =========== DEV ==============
+	RewriteCond %{HTTP_HOST} ^dev-apotek-pipbali.mettaservices.com
+	RewriteRule ^(.*)$ public/development/dev/$1 [L]
+
+	RewriteCond %{HTTP_HOST} ^apotek.pipbali.coms
 	RewriteRule ^(.*)$ public/production/klinik/$1 [L]	
 
-	RewriteCond %{HTTP_HOST} ^(.*)$
+	# RewriteCond %{HTTP_HOST} ^(.*)$
 	# RewriteCond %{HTTP_HOST} ^localhost
-	RewriteRule ^(.*)$ public/production/klinik/$1 [L]	
+	# RewriteRule ^(.*)$ public/production/klinik/$1 [L]	
 
 </IfModule>
 

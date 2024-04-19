@@ -138,6 +138,7 @@ class Data_open extends Admin_Controller
 			a.TglReg,
 			a.JamReg,
 			a.NRM,
+			b.JenisKelamin,
 			b.NamaPasien,
 			b.Alamat,
 			d.JenisKerjasama,
@@ -147,7 +148,8 @@ class Data_open extends Admin_Controller
 			a.PxKeluar_PlgPaksa,
 			a.PxKeluar_Pulang,
 			a.PxMeninggal,
-			a.Status
+			a.Status,
+			e.SectionName
 EOSQL;
 
 		$this->db
@@ -156,6 +158,7 @@ EOSQL;
 			->join( "mPasien b", "a.NRM = b.NRM", "LEFT OUTER" )
 			->join( "mCustomer c", "a.KodePerusahaan = c.Kode_Customer", "LEFT OUTER" )
 			->join( "SIMmJenisKerjasama d", "a.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "SIMmSection e", "a.SectionID = e.SectionID", "LEFT OUTER" )
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		

@@ -20,7 +20,7 @@ class Consumables extends Admin_Controller
 	public function index( $NoReg, $SectionID )
 	{
 		$data = [
-			'collection' => $this->poly_m->get_child_data( "BILLFarmasi", ["NoReg" => $NoReg, "SectionAsalID" => $SectionID, "Retur" => 0, "TipeTransaksi" => "POP"] ),
+			'collection' => $this->poly_m->get_child_data( "SIMtrPOP", ["Batal" => 0,"NoReg" => $NoReg] ),
 			'nameroutes' => $this->nameroutes,
 			'create_consumable' => base_url("{$this->nameroutes}/item_create/{$NoReg}/$SectionID"),
 			'delete_consumable' => base_url("{$this->nameroutes}/item_delete"),
@@ -57,14 +57,15 @@ class Consumables extends Admin_Controller
 	public function item_create($NoReg, $SectionID)
 	{
 		$item = poly_helper::get_outpatient($NoReg, $SectionID);
-		$item->NoBukti = poly_helper::gen_bhp_number();
-		$item->IncludeJasa = 1;
-			
+		$item->NoBukti = poly_helper::gen_bhp_poly_number();
+		$item->Ditagihkan = 1;
+		
 		if( $this->input->post() ) 
 		{
 			$bhp = $this->input->post("f");
-			$bhp['NoBukti'] = $item->NoBukti;
+			$bhp['NoBuktiPOP'] = $item->NoBukti;
 			$detail = $this->input->post("details");
+			
 			if(empty($detail))
 			{
 				$response = [
@@ -82,32 +83,32 @@ class Consumables extends Admin_Controller
 				$this->db->trans_begin();
 					$bhp['Tanggal'] = date('Y-m-d');
 					$bhp['Jam'] = date('Y-m-d H:i:s');
-					$bhp['UserID'] = $this->user_auth->User_ID;
+					$bhp['User_ID'] = $this->user_auth->User_ID;
 					
-					$this->db->insert("BILLFarmasi", $bhp );				
+					$this->db->insert("SIMtrPOP", $bhp );				
 
-					$section = $this->section_model->get_one($SectionID);
-					foreach( $detail as $k => $v )
+					foreach( $detail as $k => $v ) 
 					{
-						$v['NoBukti'] = $bhp['NoBukti'];
-						$this->db->insert("BILLFarmasiDetail", $v );
+						$v['NoBuktiPOP'] = $bhp['NoBuktiPOP'];
+						// print_r($v);exit;
+						$this->db->insert("SIMtrDetailPOP", $v );
 						
 						# Pengurangan Stock
-						$_insert_fifo = [
-							'location_id' => $section->Lokasi_ID, 
-							'item_id' => $v["Barang_ID"],  
-							'item_unit_code' => $v["Satuan"],  
-							'qty' => $v["JmlObat"], 
-							'price' => $v["Harga"],  
-							'conversion' => 1,  
-							'evidence_number' => $bhp['NoBukti'],  
-							'trans_type_id' => 564,
-							'in_out_state' => 0,
-							'trans_date' => date('Y-m-d'),  
-							'exp_date' => NULL,  
-							'item_type_id' => 0, 
-						];
-						poly_helper::insert_warehouse_fifo( $_insert_fifo );
+						// $_insert_fifo = [
+						// 	'location_id' => $section, 
+						// 	'item_id' => $v["Barang_ID"],  
+						// 	'item_unit_code' => $v["Satuan"],  
+						// 	'qty' => $v["Qty"], 
+						// 	'price' => $v["HargaPersediaan"],  
+						// 	'conversion' => 1,  
+						// 	'evidence_number' => $item->NoBukti,  
+						// 	'trans_type_id' => 564,
+						// 	'in_out_state' => 0,
+						// 	'trans_date' => date('Y-m-d'),  
+						// 	'exp_date' => NULL,  
+						// 	'item_type_id' => 0, 
+						// ];
+						// poly_helper::insert_warehouse_fifo( $_insert_fifo );
 					}
 										
 				if ($this->db->trans_status() === FALSE)
@@ -123,7 +124,7 @@ class Consumables extends Admin_Controller
 				{
 					$this->db->trans_commit();
 					$response = [
-						"NoBukti" => $bhp['NoBukti'],
+						"NoBukti" => $bhp['NoBuktiPOP'],
 						"status" => 'success',
 						"message" => lang('global:created_successfully'),
 						"code" => 200
@@ -164,9 +165,9 @@ class Consumables extends Admin_Controller
 		
 		if( $this->input->post() ) 
 		{
-			
-			$NoBukti = $this->input->post("NoBukti");
-			
+
+			$NoBukti = $this->input->post("NoBuktiPOP");
+
 			$this->load->library( 'form_validation' );
 			/*$this->item->addData( $this->input->post("f") );
 			$this->form_validation->set_rules( $this->get_model()->rules['insert'] );
@@ -175,19 +176,19 @@ class Consumables extends Admin_Controller
 			{
 				$this->db->trans_begin();
 					
-					$this->db->update("BILLFarmasi", ["Retur" => 1, "Batal" => 1], ["NoBukti" => @$NoBukti]);
-					$detail = $this->db->where( ["NoBukti" => @$NoBukti] )->get("BILLFarmasiDetail")->result();
-					$item = $this->db->where('NoBukti', $NoBukti)->get('BILLFarmasi')->row();
-					
-					$section = $this->section_model->get_one($item->SectionID);
-					foreach( $detail as $v )
+					$this->db->update("SIMtrPOP", ["Batal" => 1], ["NoBuktiPOP" => @$NoBukti]);
+					$detailPOP = $this->db->where( ["NoBuktiPOP" => @$NoBukti] )->get("SIMtrDetailPOP")->result();
+					$itemPOP = $this->db->where('NoBuktiPOP', $NoBukti)->get('SIMtrPOP')->row();
+					// print_r($itemPOP);exit;
+					$section = $this->section_model->get_one($itemPOP->SectionID);
+					foreach( $detailPOP as $v )
 					{
 						$_insert_warehouse_fifo = [
 							'location_id' => $section->Lokasi_ID, 
-							'item_id' => $v->Barang_ID,  
+							'item_id' => $v->Barang_Id,  
 							'item_unit_code' => $v->Satuan,  
-							'qty' => $v->JmlObat, 
-							'price' => $v->Harga,  
+							'qty' => $v->Qty, 
+							'price' => $v->HargaOrig,  
 							'conversion' => 1,  
 							'evidence_number' => $NoBukti.'-R',  
 							'trans_type_id' => 562,
@@ -209,7 +210,7 @@ class Consumables extends Admin_Controller
 						"code" => 500
 					];
 				}
-				//$this->db->trans_rollback();
+				// $this->db->trans_rollback();
 				$this->db->trans_commit();
 				$response = [
 					"status" => 'success',
@@ -234,9 +235,9 @@ class Consumables extends Admin_Controller
 		if( $this->input->is_ajax_request() )
 		{
 			
-			$item = $this->poly_m->get_row_data("BILLFarmasi", array("NoBukti"  => $NoBukti));
+			$item = $this->poly_m->get_row_data("SIMtrPOP", array("NoBuktiPOP"  => $NoBukti));
 			$doctor = $this->poly_m->get_row_data("mSupplier", array("Kode_Supplier"  => $item->DokterID));
-			$collection = $this->poly_m->get_consumable_detail_data( array("NoBukti"  => $NoBukti));
+			$collection = $this->poly_m->get_consumable_detail_data( array("NoBuktiPOP"  => $NoBukti));
 			$section = $this->section_model->get_one($item->SectionID);
 			$option_pharmacy = $this->poly_m->get_options("SIMmSection", array("KelompokSection"  => "FARMASI", "GroupSection" => "4"));
 			$lookup_supplier = base_url("{$this->nameroutes}/lookup_supplier");

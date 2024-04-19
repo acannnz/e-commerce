@@ -94,7 +94,7 @@ final class general_payment_report_helper
 		// $_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
 		// $th_col++;
 		
-		$_sheet->setCellValue("{$th_col}4", 'Pendapatan');
+		$_sheet->setCellValue("{$th_col}4", 'Total Nilai');
 		$_sheet->getStyle("{$th_col}4")->applyFromArray( self::_get_style( 'thead' ) );
 		$th_col++;
 		

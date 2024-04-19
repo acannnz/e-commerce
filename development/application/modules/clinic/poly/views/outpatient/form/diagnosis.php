@@ -20,7 +20,12 @@
     </div>
 </div>
 <div class="row form-group">
-	<a href="<?php echo @$lookup_icd ?>" id="add_icd" data-toggle="lookup-ajax-modal" class="btn btn-primary btn-block"><b><i class="fa fa-plus"></i> Tambah Diagnosis</b></a>
+<!-- id="add_icd"  -->
+	<?php if (date("Y-m-d") != $date) : ?>
+		<a href="<?php echo @$lookup_icd ?>" id="add_icd" data-toggle="lookup-ajax-modal" class="btn btn-primary btn-block"><b><i class="fa fa-plus"></i> Tambah Diagnosis</b></a>
+	<?php else : ?>
+		<a href="<?php echo @$lookup_icd ?>" data-toggle="lookup-ajax-modal" class="btn btn-primary btn-block"><b><i class="fa fa-plus"></i> Tambah Diagnosis</b></a> 
+	<?php endif; ?>
 </div>
 
 

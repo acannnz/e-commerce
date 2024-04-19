@@ -91,9 +91,9 @@
 										data: "Alamat", 
 										orderable: true, 
 										searchable: true,
-										render: function ( val ){
-											return val.substr(0,30);
-										},
+										// render: function ( val ){
+										// 	return val.substr(0,30);
+										// },
 									},
 									{ data: "SectionName", orderable: true, searchable: true},
 									{ data: "Nama_Supplier", orderable: true, searchable: true},

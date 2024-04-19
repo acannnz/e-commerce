@@ -171,7 +171,7 @@
                                                     <td class="pad5"><?php echo $y_row->SectionName ?></td>
                                                     <td class="pad5"><?php echo $y_row->DokterName ?></td>
                                                 </tr>
-                                            <?php $sub_total = $sub_total + currency_ceil(($y_row->Nilai * $y_row->Qty - $y_row->Disc + $y_row->BiayaResep) * (1 - ($y_row->Disc / 100)));
+                                            <?php $sub_total = $sub_total + (($y_row->Nilai * $y_row->Qty - $y_row->Disc + $y_row->BiayaResep) * (1 - ($y_row->Disc / 100)) + $y_row->HExt);
                                             endforeach; ?>
                                             <tr class="border">
                                                 <td class="right pad5 bold" colspan="8"><strong><?php echo "Sub Total Kategori Biaya ($k_row) :" ?></strong></td>

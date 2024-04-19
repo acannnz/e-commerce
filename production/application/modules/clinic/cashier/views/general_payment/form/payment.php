@@ -35,7 +35,7 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-md-5 control-label">Tax Kartu Kredit</label>
+			<label class="col-md-5 control-label">ADD CHARGE</label>
 			<div class="col-md-7">
 				<strong><input type="text" id="TaxCC" name="TaxCC" value="0" placeholder="" class="form-control text-right" readonly></strong>
 			</div>
@@ -112,6 +112,24 @@
 					<span class="input-group-btn">
 						<a href="<?php echo @$lookup_form_credit_card ?>" id="merchan" data-toggle="form-ajax-modal" class="btn btn-default" ><i class="fa fa-search"></i></a>
 						<a href="javascript:;" class="btn btn-default btn-clear" data-target=".credit-card" ><i class="fa fa-times"></i></a>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-lg-5 control-label">KARTU KREDIT/DEBIT</label>
+			<div class="col-lg-7">
+				<input type="hidden" id="k_BankID_2" name="k[BankID_2]" value="<?php echo  @$item->IDBank_2 ?>" placeholder="" class="credit-card-2">
+				<input type="hidden" id="k_BankName_2" name="k[BankName_2]" value="" placeholder="" class="credit-card-2">
+				<input type="hidden" id="k_CardNo_2" name="k[CardNo_2]" value="<?php echo  @$item->NoKartu_2 ?>" placeholder="" class="credit-card-2">
+				<input type="hidden" id="k_Amount_2" name="k[amoun_2]" value="<?php echo  $collection[8] ?>" placeholder="" class="credit-card-2">
+				<input type="hidden" id="k_Charge_2" name="k[charge_2]" value="<?php echo  !empty($item->AddCharge_Persen_2) ? $item->AddCharge_Persen_2 : 0.00 ?>" placeholder="" class="credit-card-2">
+				<input type="hidden" id="k_Total_2" name="k[total_2]" value="<?php echo  !empty($collection[8]) ? number_format($collection[8] + ($collection[8] * $item->AddCharge_Persen_2 / 100), 2, '.', ',') : 0.00; ?>" placeholder="" class="credit-card-2">
+				<div class="input-group">
+					<strong><input  type="text" id="Kartu_2" name="Kartu_2" value="<?php echo  !empty($collection[8]) ? number_format($collection[8], 2, '.', ',') : 0.00; ?>" placeholder="" class="form-control text-success text-right payment-type credit-card-2 mask-number" readonly></strong>
+					<span class="input-group-btn">
+						<a href="<?php echo @$lookup_form_credit_card_2 ?>" id="merchan_2" data-toggle="form-ajax-modal" class="btn btn-default" ><i class="fa fa-search"></i></a>
+						<a href="javascript:;" class="btn btn-default btn-clear" data-target=".credit-card-2" ><i class="fa fa-times"></i></a>
 					</span>
 				</div>
 			</div>
@@ -201,19 +219,25 @@ var payment_actions = {
 			var Pembayaran = _form.find( "input[id=\"Pembayaran\"]" );
 			var k_Amount = _form.find( "input[id=\"k_Amount\"]" );
 			var k_Total = _form.find( "input[id=\"k_Total\"]" );
+			var k_Amount_2 = _form.find( "input[id=\"k_Amount_2\"]" );
+			var k_Total_2 = _form.find( "input[id=\"k_Total_2\"]" );
 			var Tunai = _form.find( "input[id=\"Tunai\"]" );
 			var Sisa = _form.find( "input[id=\"Sisa\"]" );
 			var JumlahBayar = _form.find( "input[id=\"JumlahBayar\"]" );
 			var NilaiKembalian = _form.find( "input[id=\"NilaiKembalian\"]" );
-			var Total = 0 , Sisa_ = 0, TaxCC_ = 0;
+			var Total = 0 , Sisa_ = 0, TaxCC_ = 0, TaxCC2_ = 0;
 			
 			$(".payment-type").each(function(index, element) {
 				element.value = element.value || 0;
 				if(element.value == 0 ) return;
 				is_credit_card = $(this).hasClass("credit-card"); 
+				is_credit_card_2 = $(this).hasClass("credit-card-2"); 
 				if ( is_credit_card ){
 					TaxCC_ = mask_number.currency_remove(k_Total.val()) - mask_number.currency_remove(k_Amount.val());
 					SubTotal_payment = mask_number.currency_remove(k_Amount.val());
+				} else if ( is_credit_card_2 ) {
+					TaxCC2_ = mask_number.currency_remove(k_Total_2.val()) - mask_number.currency_remove(k_Amount_2.val());
+					SubTotal_payment = mask_number.currency_remove(k_Amount_2.val());
 				} else {
 					SubTotal_payment = mask_number.currency_remove(element.value);
 				}
@@ -221,29 +245,35 @@ var payment_actions = {
 				console.log("SubTotal_payment : ", SubTotal_payment);
 				Total = Total + SubTotal_payment;				
 			});
-			console.log("Total : ", Total);
+			// console.log("Total : ", Total);
+			// console.log("is_credit_card : ", is_credit_card);
+			// console.log("is_credit_card_2 : ", is_credit_card_2);
+			// console.log("Add Charge : ", TaxCC_ + TaxCC2_);
 			
 			var SubTotal_ = mask_number.currency_remove(SubTotal.val());
-			var GrandTotal_ = SubTotal_ + TaxCC_;
-			TaxCC.val( mask_number.currency_add(TaxCC_));					
+			var GrandTotal_TaxCC_ = TaxCC_ + TaxCC2_;
+			var GrandTotal_ = SubTotal_ + GrandTotal_TaxCC_;
+			TaxCC.val( mask_number.currency_add(GrandTotal_TaxCC_));					
 			GrandTotal.val( mask_number.currency_add(GrandTotal_));	
 
 			var JumlahBayar_ = mask_number.currency_remove(JumlahBayar.val()) || 0;
-			var Pembayaran_ = Total + JumlahBayar_ + TaxCC_;
+			var Pembayaran_ = Total + JumlahBayar_ + GrandTotal_TaxCC_;
 			Pembayaran_ = Pembayaran_ > GrandTotal_ ? GrandTotal_ : Pembayaran_;
 			Pembayaran.val(mask_number.currency_add( Pembayaran_ ));
 			
 			var Sisa_ = GrandTotal_ - Pembayaran_;
 			Sisa.val( mask_number.currency_add(Sisa_));
-			
+
 			NilaiKembalian.val(0.00);
-			var NilaiKembalian_ = JumlahBayar_ - (GrandTotal_ - TaxCC_ - Total) || 0;
+			var NilaiKembalian_ = JumlahBayar_ - (GrandTotal_ - GrandTotal_TaxCC_ - Total) || 0;
 			if( JumlahBayar_ > 0 && NilaiKembalian_ > 0 && JumlahBayar_ > NilaiKembalian_){
 				NilaiKembalian.val(mask_number.currency_add(NilaiKembalian_));
 			}
 			
 			NilaiKembalian_  = mask_number.currency_remove(NilaiKembalian.val());
 			Tunai.val(mask_number.currency_add(JumlahBayar_ - NilaiKembalian_));
+
+			
 		},
 		on_edit_calculate_payment : function(){
 			var _form = $( "form[name=\"form_general_payment\"]" );
@@ -251,6 +281,7 @@ var payment_actions = {
 			var GrandTotal = _form.find( "input[id=\"GrandTotal\"]" );
 			var Pembayaran = _form.find( "input[id=\"Pembayaran\"]" );
 			var k_Amount = _form.find( "input[id=\"k_Amount\"]" );
+			var k_Amount_2 = _form.find( "input[id=\"k_Amount_2\"]" );
 			var Tunai = _form.find( "input[id=\"Tunai\"]" );
 			var Sisa = _form.find( "input[id=\"Sisa\"]" );
 			var JumlahBayar = _form.find( "input[id=\"JumlahBayar\"]" );
@@ -260,8 +291,11 @@ var payment_actions = {
 			$(".payment-type").each(function(index, element) {
 				element.value = element.value || 0;
 				is_credit_card = $(this).hasClass("credit-card"); 
+				is_credit_card_2 = $(this).hasClass("credit-card-2"); 
 				if ( is_credit_card ){
 					SubTotal = mask_number.currency_remove(element.value);
+				} else if ( is_credit_card_2 ) {
+					SubTotal = mask_number.currency_remove( element.value);
 				} else {
 					SubTotal = mask_number.currency_remove( element.value);
 				}

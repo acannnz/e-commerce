@@ -49,17 +49,28 @@ class Reports extends ADMIN_Controller
 
 		$db_where = [];
 		$db_like = [];
-
+		
+		$range = [
+			'0' => array(10,15),
+			'1' => array(15,20),
+			'2' => array(20,25),
+			'3' => array(25,30),
+			'4' => array(30,35),
+			'5' => array(35,40),
+		];
+		
 		$db_where['a.Batal'] = 0;
 		$db_where['a.Tanggal >='] = $this->input->get_post('date_from', true);
 		$db_where['a.Tanggal <='] = $this->input->get_post('date_till', true);
-
+		// print_r($patient_age);
+		// exit;
 		if (!empty($rujukan)) {
 			$db_where['j.PxKeluar_Dirujuk'] = $rujukan;
 		}
-
+		
 		if (!empty($patient_age)) {
-			$db_where['DATEDIFF(hour, e.TglLahir,GETDATE())/24 <='] = $patient_age * 365;
+			$db_where['DATEDIFF(hour, e.TglLahir,GETDATE())/24 >'] = $range[$patient_age][0] * 365;
+			$db_where['DATEDIFF(hour, e.TglLahir,GETDATE())/24 <'] = $range[$patient_age][1] * 365;
 		}
 
 
@@ -151,6 +162,111 @@ EOSQL;
 		$this->template
 			->build_json($output);
 	}
+
+// 	public function drug_history()
+// 	{
+// 		$data = [
+// 			'nameroutes' => $this->nameroutes,
+// 			'form' => TRUE,
+// 			'datatables' => TRUE,
+// 			'datatables_export' => TRUE,
+// 			'datepicker' => TRUE,
+// 			'navigation_minimized' => TRUE,
+// 		];
+
+// 		$this->template
+// 			->build('reports/reports/drug_history/datatable', $data);
+// 	}
+
+// 	public function drug_history_collection()
+// 	{
+// 		$start = $this->input->get_post('start', true);
+// 		$length = $this->input->get_post('length', true);
+// 		$order = $this->input->get_post('order', true);
+// 		$columns = $this->input->get_post('columns', true);
+// 		$search = $this->input->get_post('search', true);
+// 		$draw = $this->input->get_post('draw', true);
+
+// 		$db_where = [];
+// 		$db_like = [];
+
+// 		$db_where['a.Tanggal >='] = $this->input->get_post('date_from', true);
+// 		$db_where['a.Tanggal <='] = $this->input->get_post('date_till', true);
+
+
+// 		// get result filtered
+// 		$db_select = <<<EOSQL
+// 		a.NoBukti, 
+// 		a.NoResep, 
+// 		a.Tanggal,
+// 		a.NRM,
+// 		a.NoReg,
+// 		b.NamaResepObat,
+// 		c.Nama_Supplier AS NamaDokter,
+// 		e.NamaPasien
+			
+// EOSQL;
+// 		$this->db
+// 			->select($db_select)
+// 			->from("BILLFarmasi a")
+// 			->join("BILLFarmasiDetail b", "a.NoBukti = b.NoBukti", "LEFT OUTER JOIN")
+// 			->join("mSupplier c", "a.DokterID = c.Kode_Supplier", "LEFT OUTER JOIN")
+// 			->join("SIMtrRegistrasi d", "a.NoReg = d.NoReg", "INNER")
+// 			->join("mPasien e", "a.NRM = e.NRM", "LEFT OUTER JOIN");
+// 		if (!empty($db_where)) {
+// 			$this->db->where($db_where);
+// 		}
+// 		if (!empty($db_like)) {
+// 			$this->db->group_start()->or_like($db_like)->group_end();
+// 		}
+
+// 		// ordering
+// 		if (isset($order)) {
+// 			$sort_column = $order[0]['column'];
+// 			$sort_dir = $order[0]['dir'];
+
+// 			if ($columns[$sort_column]['orderable'] == 'true') {
+// 				$this->db
+// 					->order_by($columns[intval($this->db->escape_str($sort_column))]['data'], $this->db->escape_str($sort_dir));
+// 			}
+// 		}
+
+// 		// paging
+// 		if (isset($start) && $length != '-1') {
+// 			$this->db
+// 				->limit($length, $start);
+// 		}
+
+// 		// get
+// 		$result = $this->db
+// 			->get()
+// 			->result();
+
+// 		// Output
+// 		$output = array(
+// 			'draw' => intval($draw),
+// 			'recordsTotal' => count($result),
+// 			'recordsFiltered' => count($result),
+// 			'data' => array()
+// 		);
+
+// 		// foreach ($result as $row) {
+// 		// 	$output[$row->NamaPasien][] = (object) [
+// 		// 		'Tanggal' => $row->Tanggal,
+// 		// 		'NoResep' => $row->NoResep,
+// 		// 		'NamaResepObat' => $row->NamaResepObat,
+// 		// 		'NamaDokter' => $row->NamaDokter
+// 		// 	];
+// 		// }
+
+// 		foreach ($result as $row) {
+// 			$output['data'][] = $row;
+// 		}
+
+// 		$this->template
+// 			->build_json($output);
+// 	}
+
 
 	public function group_by_icd()
 	{
@@ -1076,7 +1192,7 @@ EOSQL;
 			->from("VW_Registrasi a")
 			->where(['a.UmurThn <=' => 18,
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'F',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1088,7 +1204,7 @@ EOSQL;
 			->from("VW_Registrasi a")
 			->where(['a.UmurThn <=' => 18,
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'M',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1101,7 +1217,7 @@ EOSQL;
 			->where(['a.UmurThn >' => 18, 
 					'a.UmurThn <' => 60, 
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'F',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1114,7 +1230,7 @@ EOSQL;
 			->where(['a.UmurThn >' => 18, 
 					'a.UmurThn <' => 60, 
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'M',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1126,7 +1242,7 @@ EOSQL;
 			->from("VW_Registrasi a")
 			->where(['a.UmurThn >=' => 60, 
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'F',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1138,7 +1254,7 @@ EOSQL;
 			->from("VW_Registrasi a")
 			->where(['a.UmurThn >=' => 60, 
 					'a.Batal' => 0,
-					'StatusPeriksa' => 'CO', 
+					'StatusPeriksa' => 'Sudah', 
 					'JenisKelamin' => 'M',
 					'TglReg >=' => $this->input->get_post('date_from', true),
 					'TglReg <=' => $this->input->get_post('date_till', true)])
@@ -1204,6 +1320,145 @@ EOSQL;
 		$this->template
 			->build_json($output);
 	}
+
+	
+	public function lookup_registration_collection()
+	{
+		$this->datatable_registration_collection( 1 );
+	}
+	
+	public function datatable_registration_collection( $state=false )
+    {
+        $start = $this->input->get_post('start', true);
+        $length = $this->input->get_post('length', true);
+        $order = $this->input->get_post('order', true);
+        $columns = $this->input->get_post('columns', true);
+        $search = $this->input->get_post('search', true);
+        $draw = $this->input->get_post('draw', true);
+		
+		$db_from = "SIMtrRegistrasi a";
+		$db_where = array();
+		$db_like = array();
+		$db_custome_where = NULL;
+		
+		if( $this->input->post("date_from") ){
+			$db_where['a.TglReg >='] = $this->input->post("date_from");
+		}
+
+		if( $this->input->post("date_till") ){
+			$db_where['a.TglReg <='] = $this->input->post("date_till");
+		}
+
+		// prepare default
+		$db_where['a.Batal'] = 0;	
+		
+		if( isset($search['value']) && ! empty($search['value']) )
+        {
+            $keywords = $this->db->escape_str( $search['value'] );
+			
+			$db_like[ $this->db->escape_str("a.NoBukti") ] = $keywords;
+			$db_like[ $this->db->escape_str("b.NRM") ] = $keywords;
+			$db_like[ $this->db->escape_str("b.NoReg") ] = $keywords;
+			$db_like[ $this->db->escape_str("b.NamaPasien_Reg") ] = $keywords;
+			 
+			
+        }
+		
+		// get total records
+		$this->db->from( $db_from )
+				;
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		if( !empty($db_custome_where) ){ $this->db->where( $db_custome_where ); }
+		$records_total = $this->db->count_all_results();
+		
+		// get total filtered
+		$this->db
+			->from( $db_from )
+			->join( "mPasien b", "a.NRM = b.NRM", "LEFT OUTER" )
+			;
+			
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
+		if( !empty($db_custome_where) ){ $this->db->where( $db_custome_where ); }
+		$records_filtered = $this->db->count_all_results();
+		
+		// get result filtered
+		$db_select = <<<EOSQL
+			a.NoReg,
+			a.TglReg,
+			a.JamReg,
+			a.NRM,
+			b.NamaPasien,
+			b.Alamat,
+			d.JenisKerjasama,
+			c.Nama_Customer,
+			a.NoAnggota AS NoKartu,
+			a.PxKeluar_Dirujuk,
+			a.PxKeluar_PlgPaksa,
+			a.PxKeluar_Pulang,
+			a.PxMeninggal,
+			a.Status
+EOSQL;
+
+		$this->db
+			->select( $db_select )
+			->from( $db_from )
+			->join( "mPasien b", "a.NRM = b.NRM", "LEFT OUTER" )
+			->join( "mCustomer c", "a.KodePerusahaan = c.Kode_Customer", "LEFT OUTER" )
+			->join( "SIMmJenisKerjasama d", "a.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			;
+		if( !empty($db_where) ){ $this->db->where( $db_where ); }
+		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
+		if( !empty($db_custome_where) ){ $this->db->where( $db_custome_where ); }
+		
+		// ordering
+        if( isset($order) )
+        {
+            $sort_column = $order[0]['column'];
+			$sort_dir = $order[0]['dir'];
+			
+			if( $columns[$sort_column]['orderable'] == 'true' )
+			{
+				$this->db
+					->order_by( $columns[intval($this->db->escape_str($sort_column))]['data'], $this->db->escape_str($sort_dir) );
+			}
+        }
+		
+		// paging
+		if( isset($start) && $length != '-1')
+        {
+            $this->db
+				->limit( $length, $start );
+        }
+		
+		// get
+		$result = $this->db
+					->get()
+					->result()
+					;
+		
+        // Output
+        $output = array(
+				'draw' => intval($draw),
+				'recordsTotal' => $records_total,
+				'recordsFiltered' => $records_filtered,
+				'data' => array()
+			);
+        
+		
+		foreach($result as $row)
+        {
+			$date_reg = DateTime::createFromFormat("Y-m-d H:i:s.u", $row->JamReg);
+			
+			$row->JamReg = $date_reg->format('Y-m-d H:i:s');
+      
+            $output['data'][] = $row;
+        }
+		
+		$this->template
+			->build_json( $output );
+    }	
+
 
 	public function export()
 	{
@@ -1324,4 +1579,6 @@ EOSQL;
 			show_404();
 			
 		}
+
+	
 }

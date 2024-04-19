@@ -210,7 +210,7 @@
                 <tr>
                     <td></td>
                     <td rowspan="6" align="right"><img class="barcode" style="width: 15%; padding-top:30px; padding-left:150px;"  src="<?= base_url("resource/images/barcode_surat_keterangan.jpeg") ?>" alt=""></td>
-                    <td align="center" style="font-size:14px; width: 225px;">Tabanan, <?php $tgl = date('d-m-Y'); echo $tgl; ?></td>
+                    <td align="center" style="font-size:14px; width: 225px;">Karangasem, <?php $tgl = date('d-m-Y'); echo $tgl; ?></td>
                     <td></td>
                 </tr>
                 <tr>

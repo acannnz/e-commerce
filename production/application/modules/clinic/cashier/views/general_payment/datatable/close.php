@@ -60,6 +60,7 @@
                 <th>Jenis Kelamin</th>
                 <th>Alamat</th>
                 <th>Tipe</th>
+				<th>Section</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -167,6 +168,13 @@
 									{ data: "JenisKelamin", width: null, render:function(val){if(val == 'M'){return  "Laki-Laki"}else{return "Perempuan"}} },
 									{ data: "Alamat"},
 									{ data: "JenisKerjasama"},
+									{ 
+										data: "SectionPerawatanName",
+										className: "text-center",
+										render: function ( val, type, row ){
+											return '<b>'+ val +'</b>';
+										}
+									},
 									{ 
 										data: "NoBukti",
 										width: "100px",

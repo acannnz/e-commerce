@@ -78,7 +78,13 @@
     <link rel="stylesheet" type="text/css" href="<?php echo base_url(); ?>themes/intuitive/assets/css/dev-other/dev-ie-fix.css">
     <![endif]-->
     
-    <style>.dev-page{visibility: hidden;}</style>
+    <style>
+    .dev-page{visibility: hidden;}
+    .fc-direction-ltr .fc-daygrid-event.fc-event-end, .fc-direction-rtl .fc-daygrid-event.fc-event-start {
+		margin-right: 2px;
+		font-size: 12px !important;
+	}
+    </style>
     
     
 	<!-- javascripts -->
@@ -88,6 +94,7 @@
 <script type="text/javascript" src="<?php echo base_url(); ?>themes/intuitive/assets/js/plugins/json/json2.js"></script>    
 <script type="text/javascript" src="<?php echo base_url(); ?>themes/intuitive/assets/js/plugins/toastr/toastr.min.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>themes/intuitive/assets/js/plugins/moment/moment.js"></script>      
+<script type="text/javascript" src="<?php echo base_url(); ?>themes/intuitive/assets/js/plugins/full-calender/index.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>themes/default/assets/js/plugins/printjs/print.min.js"></script>   
 <!-- ./javascripts -->
 

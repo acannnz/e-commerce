@@ -16,9 +16,17 @@ class Diagnosis extends Admin_Controller
 	
 	public function index( $NoBukti )
 	{
+		$examination = $this->poly_m->get_one($NoBukti);
+		$item = poly_helper::get_outpatient(@$examination->RegNo, @$examination->SectionID, TRUE);
+		$date_reg = new DateTime(@$item->TglReg);
+		$date = @$date_reg->format('Y-m-d');
+
 		$data = array(
+				"item" => @$item,
+				"date" => @$date,
 				"collection" => $this->poly_m->get_icd(["NoBukti" => @$NoBukti]),
 				'nameroutes' => $this->nameroutes,
+				"is_edit" => TRUE,
 				"lookup_icd" => base_url("{$this->nameroutes}/lookup_icd")
 			);
 		

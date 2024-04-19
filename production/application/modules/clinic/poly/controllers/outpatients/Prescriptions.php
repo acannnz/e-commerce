@@ -20,7 +20,7 @@ class Prescriptions extends Admin_Controller
 	public function index( $NoReg, $SectionID )
 	{
 		$data = array(
-				'collection' => $this->poly_m->get_prescriptions_data( ["NoRegistrasi" => $NoReg, "SectionID" => $SectionID] ),
+				'collection' => $this->poly_m->get_prescriptions_data( ["a.NoRegistrasi" => $NoReg, "a.SectionID" => $SectionID] ),
 				'nameroutes' => $this->nameroutes,
 				'create_prescription' => base_url("{$this->nameroutes}/item_create/{$NoReg}/{$SectionID}"),
 				'delete_prescription' => base_url("{$this->nameroutes}/item_delete"),
@@ -93,7 +93,6 @@ class Prescriptions extends Admin_Controller
 			if( $this->form_validation->run() )
 			{
 				$this->db->trans_begin();
-
 					$this->db->insert("SIMtrResep", $resep );	
 					
 					$detail = [];

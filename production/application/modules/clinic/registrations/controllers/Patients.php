@@ -50,10 +50,12 @@ class Patients extends Admin_Controller
 			$db_like[ $this->db->escape_str("a.NRM") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.NRMLama") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.NamaPasien") ] = $keywords;
+			$db_like[ $this->db->escape_str("a.NamaAlias") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.JenisPasien") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.Phone") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.Alamat") ] = $keywords;
 			$db_like[ $this->db->escape_str("a.Pekerjaan") ] = $keywords;
+			$db_like[ $this->db->escape_str("a.NoIdentitas") ] = $keywords;
         }
 		
 		// get total records
@@ -92,6 +94,7 @@ class Patients extends Admin_Controller
 			,a.BanjarID
 			,a.Phone
 			,a.Email
+			,a.RiwayatAlergi
 			
 			,a.JenisPasien
 			,a.JenisKerjasamaID
@@ -147,6 +150,7 @@ class Patients extends Admin_Controller
 			,a.Prematur
 			,a.NamaAlias
 			,a.KodeRegional
+			,a.TempatLahir
 			
 			,c.Nama_Customer
 			,c.Kode_Customer AS CompanyID

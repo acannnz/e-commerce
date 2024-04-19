@@ -64,6 +64,8 @@
                                         <th><?php echo 'Nama Pasien'; ?></th>
                                         <th><?php echo 'Jenis Kelamin'; ?></th>
                                         <th><?php echo 'Tgl Lahir'; ?></th>
+                                        <th><?php echo 'Umur'; ?></th>
+                                        <th><?php echo 'Desa'; ?></th>
                                         <th><?php echo 'Jenis Kerjasama'; ?></th>
                                         <th><?php echo 'Section'; ?></th>
                                     </tr> 
@@ -79,8 +81,10 @@
                                         <td><?php echo @$row->NamaPasien ?></td>
                                         <td><?php echo @$row->JenisKelamin ?></td>
                                         <td><?php echo date('d/m/Y', strtotime(@$row->TglLahir)) ?></td>
-                                        <td><?php echo @$row->JenisKerjasama ?></td>
-                                        <td><?php echo @$row->SectionName ?></td>
+                                        <td  align="center"><?php echo @$row->Umur ?></td>
+                                        <td><?php echo @$row->Desa ?></td>
+                                        <td  align="center"><?php echo @$row->JenisKerjasama ?></td>
+                                        <td  align="center"><?php echo @$row->SectionName ?></td>
                                        
                                     </tr>
                                     <?php endforeach; ?>

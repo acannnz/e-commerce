@@ -208,6 +208,14 @@
             	$( "#dt-cashier-open" ).DataTable_cashier_o();
 				search_datatable_o.init();
 				
+				// Fungsi untuk merefresh form
+			function refreshForm() {
+				$("#dt-cashier-open").DataTable().ajax.reload();
+			}
+
+			// Atur interval refresh setiap 10 detik (10000 ms)
+			setInterval(refreshForm, 10000);
+				
 			});
 	})( jQuery );
 //]]>

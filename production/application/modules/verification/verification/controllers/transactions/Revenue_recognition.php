@@ -35,11 +35,14 @@ class Revenue_recognition extends ADMIN_Controller
 		$this->load->model('section_model');
 		$this->load->model('type_cooperation_model');
 		$this->load->model('user_model');
+		$this->load->model('cashier_model');
+		$this->load->model('customer_model');
 	}
-	
+
 	public function index()
 	{
 		$this->data['form_action'] = base_url("{$this->nameroutes}/process"); 
+		$this->data['option_doctor'] = option_doctor();
 				
 		$this->template
 			->title(lang('heading:revenue_recognition'),lang('heading:transactions'))
@@ -55,10 +58,11 @@ class Revenue_recognition extends ADMIN_Controller
 			$this->_check_system_setup(); // Mengecek Konfigurasi pada Setup Awal
 			
 			$post_data = $this->input->post();		
-				
+			// print_r($post_data);exit;
 			$this->load->library( 'form_validation' );
 			$this->form_validation->set_rules( $this->audit_model->rules['process'] );
 			$this->form_validation->set_data( $post_data );
+			// print_r($post_data);exit;
 			if( $this->form_validation->run() )
 			{
 				verification_helper::init();
@@ -70,7 +74,7 @@ class Revenue_recognition extends ADMIN_Controller
 					break;
 	
 					case 'outpatient':
-						$_response = verification_helper::audit_outpatient( $post_data['date'] );
+						$_response = verification_helper::audit_outpatient( $post_data['date'], $post_data['NoBuktiRJ'] );
 					break;
 
 					case 'otc_drug':
@@ -163,6 +167,7 @@ class Revenue_recognition extends ADMIN_Controller
 	
 	public function view()
 	{
+		$this->data['option_doctor'] = option_doctor();
 
 		$this->template
 			->title(lang('heading:revenue_recognition'),lang('heading:transactions'))
@@ -309,8 +314,27 @@ class Revenue_recognition extends ADMIN_Controller
 			response_json( ["status" => 'success', "message" => lang('message:cancel_audit_successfully'), 'success' => TRUE] );
 		} 
 		
+		
+		// $this->data['form_action'] = current_url();
+
+		// if( $this->input->is_ajax_request() )
+		// {
+		// 	$this->data["is_modal"] = TRUE;
+		// 	$this->load->view('transactions/revenue_recognition/modal/cancel', $this->data);
+		// } else {
+		
+		// 	$this->template
+		// 		->title(lang('heading:revenue_recognition_view'),lang('heading:transactions'))
+		// 		->set_breadcrumb(lang('heading:transactions'))
+		// 		->set_breadcrumb(lang('heading:revenue_recognition_list'), site_url("{$this->nameroutes}/view"))
+		// 		->set_breadcrumb(lang('heading:revenue_recognition_view'))
+		// 		->build('transactions/revenue_recognition/modal/cancel', $this->data);
+		// }
+
+		// $this->data["is_modal"] = TRUE;
 		$this->data['form_action'] = current_url();
 		$this->load->view('transactions/revenue_recognition/modal/cancel', $this->data);
+		
 	}
 	
 	public function cancel_posting($id = 0)
@@ -362,7 +386,7 @@ class Revenue_recognition extends ADMIN_Controller
 		$db_from = "{$this->audit_model->table} a";
 		$db_where = array();
 		$db_like = array();
-		
+		//print_r($this->input->post("date_from"));exit;
 		if ( $this->input->post("group") )
 		{
 			$db_where['a.Kelompok'] = $this->input->post("group");
@@ -370,12 +394,17 @@ class Revenue_recognition extends ADMIN_Controller
 				
 		if ($this->input->post("date_from"))
 		{
-			$db_where['a.Tanggal >='] = $this->input->post("date_from");
+			$db_where['e.Tanggal >='] = $this->input->post("date_from");
 		}
 
 		if ($this->input->post("date_till"))
 		{
-			$db_where['a.Tanggal <='] = $this->input->post("date_till");
+			$db_where['e.Tanggal <='] = $this->input->post("date_till");
+		}
+
+		if ($this->input->post("DokterID"))
+		{
+			$db_where['f.DokterID'] = $this->input->post("DokterID");
 		}
 				
 		// preparing default
@@ -388,10 +417,19 @@ class Revenue_recognition extends ADMIN_Controller
 			$db_like[ $this->db->escape_str("b.NRM") ] = $keywords;
 			$db_like[ $this->db->escape_str("c.NamaPasien") ] = $keywords;
 			$db_like[ $this->db->escape_str("d.JenisKerjasama") ] = $keywords;
+			$db_like[ $this->db->escape_str("g.Nama_Supplier") ] = $keywords;
         }
 		
 		// get total records
-		$this->db->from( $db_from );
+		$this->db
+			->from( $db_from )
+			->join( "{$this->registration_model->table} b", "a.NoReg = b.NoReg", "LEFT OUTER" )
+			->join( "{$this->patient_model->table} c", "b.NRM = c.NRM", "LEFT OUTER" )
+			->join( "{$this->type_cooperation_model->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "{$this->cashier_model->table} e", "a.NoReg = e.NoReg", "LEFT OUTER" )
+			->join( "SIMtrRJ f", "b.NoReg = f.RegNo", "LEFT OUTER" )
+			->join( "mSupplier g", "f.DokterID = g.Kode_Supplier", "LEFT OUTER" )
+			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		$records_total = $this->db->count_all_results();
 		
@@ -401,6 +439,9 @@ class Revenue_recognition extends ADMIN_Controller
 			->join( "{$this->registration_model->table} b", "a.NoReg = b.NoReg", "LEFT OUTER" )
 			->join( "{$this->patient_model->table} c", "b.NRM = c.NRM", "LEFT OUTER" )
 			->join( "{$this->type_cooperation_model->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "{$this->cashier_model->table} e", "a.NoReg = e.NoReg", "LEFT OUTER" )
+			->join( "SIMtrRJ f", "b.NoReg = f.RegNo", "LEFT OUTER" )
+			->join( "mSupplier g", "f.DokterID = g.Kode_Supplier", "LEFT OUTER" )
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		
@@ -418,7 +459,8 @@ class Revenue_recognition extends ADMIN_Controller
 			b.NRM,
 			b.NoReg,
 			c.NamaPasien,
-			d.JenisKerjasama
+			d.JenisKerjasama,
+			g.Nama_Supplier
 EOSQL;
 
 		$this->db
@@ -427,6 +469,9 @@ EOSQL;
 			->join( "{$this->registration_model->table} b", "a.NoReg = b.NoReg", "LEFT OUTER" )
 			->join( "{$this->patient_model->table} c", "b.NRM = c.NRM", "LEFT OUTER" )
 			->join( "{$this->type_cooperation_model->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID", "LEFT OUTER" )
+			->join( "{$this->cashier_model->table} e", "a.NoReg = e.NoReg", "LEFT OUTER" )
+			->join( "SIMtrRJ f", "b.NoReg = f.RegNo", "LEFT OUTER" )
+			->join( "mSupplier g", "f.DokterID = g.Kode_Supplier", "LEFT OUTER" )
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
 		if( !empty($db_like) ){ $this->db->group_start()->or_like( $db_like )->group_end(); }		

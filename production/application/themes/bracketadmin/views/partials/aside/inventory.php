@@ -46,6 +46,7 @@ if (!isset($active_menu)){ $active_menu = ''; }
                                 <?php /*?><li><a href="<?php echo site_url('inventory/transactions/return_stock'); ?>"><i class="fa fa-circle-o"></i> Retur Stok</a></li><?php */?>                             
                                 <li><a href="<?php echo site_url('inventory/transactions/amprahan'); ?>"><i class="fa fa-circle-o"></i> Amprahan</a></li>
                                 <li><a href="<?php echo site_url('inventory/transactions/mutations'); ?>"><i class="fa fa-circle-o"></i> Mutasi Barang</a></li>
+                <li><a href="<?php echo site_url('inventory/transactions/return_stock'); ?>"><i class="fa fa-circle-o"></i> Retur Stok</a></li>
                                 <li><a href="<?php echo site_url('inventory/transactions/mutation_returns'); ?>"><i class="fa fa-circle-o"></i> Retur Mutasi</a></li>   
                                 <?php /*?><li><a href="javascript:;"><i class="fa fa-circle-o"></i> Pembelian Obat Keluar</a></li><?php */?>
                                 <li><a href="<?php echo site_url('inventory/transactions/stock_opname'); ?>"><i class="fa fa-circle-o"></i> Stock Opname</a></li>

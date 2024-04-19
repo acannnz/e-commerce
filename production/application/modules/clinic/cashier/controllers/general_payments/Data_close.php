@@ -78,7 +78,7 @@ class Data_close extends Admin_Controller
 		}
 
 		if( $this->input->post("NRM") ){
-			$db_like['a.NRM'] = $this->input->post("NRM");
+			$db_like['b.NRM'] = $this->input->post("NRM");
 		}
 
 		if( $this->input->post("Nama") ){
@@ -148,7 +148,8 @@ class Data_close extends Admin_Controller
 			d.JenisKerjasama,
 			e.JenisKelamin,
 			e.Alamat,
-			e.Phone
+			e.Phone,
+			f.SectionName as SectionPerawatanName
 EOSQL;
 
 		$this->db
@@ -158,6 +159,7 @@ EOSQL;
 			->join( "{$this->section_m->table} c", "a.SectionID = c.SectionID", "LEFT OUTER" )
 			->join( "{$this->patient_type_m->table} d", "b.JenisKerjasamaID = d.JenisKerjasamaID","LEFT OUTER")
 			->join( "{$this->patient_m->table} e", "b.NRM= e.NRM","LEFT OUTER")
+			->join( "{$this->section_m->table} f", "a.SectionPerawatanID = f.SectionID", "LEFT OUTER" )
 			->order_by("a.NoReg");
 			;
 		if( !empty($db_where) ){ $this->db->where( $db_where ); }
