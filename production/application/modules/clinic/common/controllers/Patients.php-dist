@@ -1,0 +1,657 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Patients extends Admin_Controller
+{
+	protected $_translation = 'common';	
+	protected $_model = 'patient_m';
+	
+	public function __construct()
+	{
+		parent::__construct();
+		
+		$this->load->model( "patient_type_m" );
+		$this->load->model( "zone_m" );
+		$this->load->model( "nationality_m" );
+		
+		$this->load->helper( "patient" );
+		
+		$this->page = lang( 'patients:page' );
+		$this->template->title( $this->page . ' - ' . $this->config->item('company_name') );
+	}
+	
+	public function index()
+	{
+		$data = array(
+				'page' => $this->page,
+				'datatables' => TRUE,
+				'form' => TRUE,
+				'navigation_minimized' => TRUE,
+			);
+		
+		$this->template
+			->set( "heading", $this->page )
+			->set_breadcrumb( lang("common:page"), base_url("common") )
+			->set_breadcrumb( lang("patients:breadcrumb") )
+			->build('patients/datatable', (isset($data) ? $data : NULL));
+	}
+	
+	public function create()
+	{
+		$item_data = array(
+				//'id' => 0,
+				'mr_number' => null,
+				'type_id' => 0,
+				'personal_name' => null,
+				'personal_gender' => 'MALE',
+				'personal_birth_place' => null,
+				'personal_birth_date' => null,
+				'personal_age' => null,
+				'personal_nationality' => 'Indonesian',
+				'personal_mother_name' => null,
+				'personal_religion' => null,
+				'personal_id_type' => null,
+				'personal_id_number' => null,
+				'personal_profession' => null,
+				'personal_address' => null,
+				'postal_code' => null,
+				'country_id' => 1,
+				'province_id' => 2,
+				'county_id' => 324,
+				'district_id' => 0,
+				'area_id' => 0,
+				'phone_number' => null,
+				'mobile_number' => null,
+				'email_address' => null,
+				'state' => 1,
+				'created_at' => null,
+				'updated_at' => null,
+			);
+		
+		$this->load->library( 'my_object', $item_data, 'item' );
+		
+		if( $this->input->post() ) 
+		{
+			
+			
+			$this->load->library( 'form_validation' );
+			
+			$this->item->addData( $this->input->post("f") );
+			$this->form_validation->set_rules( $this->get_model()->rules['insert'] );
+			$this->form_validation->set_data( $this->item->toArray() );
+			
+			if( $this->form_validation->run() )
+			{
+				if( $this->get_model()->insert( $this->item->toArray() ) )
+				{
+					$this->get_model()->delete_cache( 'common_patients.collection' );
+					
+					make_flashdata(array(
+							'response_status' => 'success',
+							'message' => lang('patients:created_successfully')
+						));
+						
+					redirect( 'common/patients' );
+				} else
+				{
+					make_flashdata(array(
+							'response_status' => 'error',
+							'message' => lang('patients:created_failed')
+						));
+				}
+			} else
+			{
+				make_flashdata(array(
+						'response_status' => 'error',
+						'message' => $this->form_validation->get_all_error_string()
+					));
+			}
+		}
+		
+		$options_type = array();
+		$personal_nationality = array();
+		$options_country = array();
+		$options_province = array();
+		$options_county = array();
+		$options_district = array();
+		$options_area = array();
+		
+		if( ! $this->item->mr_number )
+		{
+			$this->item->mr_number = patient_helper::gen_mr_number();
+		}
+		
+//		$this->item->area_id = (int) @$this->item->area_id;
+//		if( $this->item->area_id )
+//		{
+//			$this->item->district_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->area_id))->id;
+//			$this->item->county_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->district_id))->id;
+//			$this->item->province_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->county_id))->id;
+//			$this->item->country_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->province_id))->id;
+//		}
+		
+		// dropdown options
+		$options_type = $this->patient_type_m->options_type();
+		$options_nationality = $this->nationality_m->options_nationality();
+				
+		$options_country = $this->zone_m->options_country();
+		$options_province = $this->zone_m->options_province( $this->item->country_id );
+		$options_county = $this->zone_m->options_county( $this->item->province_id );
+		$options_district = $this->zone_m->options_district( $this->item->county_id );
+		$options_area = $this->zone_m->options_area( $this->item->district_id );
+		
+		if( $this->input->is_ajax_request() )
+		{
+			$data = array(
+					"item" => $this->item,
+					"is_ajax_request" => TRUE,
+					"options_type" => $options_type,
+					"options_nationality" => $options_nationality,
+					"options_country" => $options_country,
+					"options_province" => $options_province,
+					"options_county" => $options_county,
+					"options_district" => $options_district,
+					"options_area" => $options_area,
+				);
+			
+			$this->load->view( 
+					'patients/modal/create_edit', 
+					array('form_child' => $this->load->view('patients/form', $data, true))
+				);
+		} else
+		{
+			$data = array(
+					"page" => $this->page,
+					"item" => $this->item,
+					"form" => TRUE,
+					"options_type" => $options_type,
+					"options_nationality" => $options_nationality,
+					"options_country" => $options_country,
+					"options_province" => $options_province,
+					"options_county" => $options_county,
+					"options_district" => $options_district,
+					"options_area" => $options_area,
+				);
+			
+			$this->template
+				->set( "heading", lang("patients:create_heading") )
+				->set_breadcrumb( lang("common:page"), base_url("common") )
+				->set_breadcrumb( lang("patients:breadcrumb"), base_url("common/patients") )
+				->set_breadcrumb( lang("patients:create_heading") )
+				->build('patients/form', $data);
+		}
+	}
+	
+	public function edit( $id=0 )
+	{
+		$id = (int) @$id;
+		
+		$item = $this->get_model()->as_array()->get( $id );
+		if( ! $item ){ $item = array('id' => 0); }
+		$this->load->library( 'my_object', $item, 'item' );
+		
+		//print_r( $this->item );exit;
+		
+		if( $this->input->post() ) 
+		{
+			
+			
+			$this->load->library( 'form_validation' );
+			
+			$this->item->addData( $this->input->post("f") );
+			$this->form_validation->set_rules( $this->get_model()->rules['insert'] );
+			$this->form_validation->set_data( $this->item->toArray() );
+			
+			if( $this->form_validation->run() )
+			{
+				if( $this->get_model()->update( $this->item->toArray(), @$id ) )
+				{
+					$this->get_model()->delete_cache( 'common_patients.collection' );
+					
+					make_flashdata(array(
+							'response_status' => 'success',
+							'message' => lang('patients:updated_successfully')
+						));
+						
+					redirect( 'common/patients' );
+				} else
+				{
+					make_flashdata(array(
+							'response_status' => 'error',
+							'message' => lang('patients:updated_failed')
+						));
+				}
+			} else
+			{
+				make_flashdata(array(
+						'response_status' => 'error',
+						'message' => $this->form_validation->get_all_error_string()
+					));
+			}
+		}
+		
+		$options_type = array();
+		$personal_nationality = array();
+		$options_country = array();
+		$options_province = array();
+		$options_county = array();
+		$options_district = array();
+		$options_area = array();
+		
+		if( ! $this->item->mr_number )
+		{
+			$this->item->mr_number = patient_helper::gen_mr_number();
+		}
+		
+//		$this->item->area_id = (int) @$this->item->area_id;
+//		if( $this->item->area_id )
+//		{
+//			$this->item->district_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->area_id))->id;
+//			$this->item->county_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->district_id))->id;
+//			$this->item->province_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->county_id))->id;
+//			$this->item->country_id = (int) @$this->zone_m->as_object()->get(array("parent_id" => $this->item->province_id))->id;
+//		}
+		
+		// dropdown options
+		$options_type = $this->patient_type_m->options_type();
+		$options_nationality = $this->nationality_m->options_nationality();
+				
+		$options_country = $this->zone_m->options_country();
+		$options_province = $this->zone_m->options_province( $this->item->country_id );
+		$options_county = $this->zone_m->options_county( $this->item->province_id );
+		$options_district = $this->zone_m->options_district( $this->item->county_id );
+		$options_area = $this->zone_m->options_area( $this->item->district_id );
+		
+		if( $this->input->is_ajax_request() )
+		{
+			$data = array(
+					"item" => $this->item,
+					"is_ajax_request" => TRUE,
+					"options_type" => $options_type,
+					"options_nationality" => $options_nationality,
+					"options_country" => $options_country,
+					"options_province" => $options_province,
+					"options_county" => $options_county,
+					"options_district" => $options_district,
+					"options_area" => $options_area,
+				);
+			
+			$this->load->view( 
+					'patients/modal/create_edit', 
+					array('form_child' => $this->load->view('patients/form', $data, true))
+				);
+		} else
+		{
+			$data = array(
+					"page" => $this->page,
+					"item" => $this->item,
+					"form" => TRUE,
+					"options_type" => $options_type,
+					"options_nationality" => $options_nationality,
+					"options_country" => $options_country,
+					"options_province" => $options_province,
+					"options_county" => $options_county,
+					"options_district" => $options_district,
+					"options_area" => $options_area,
+				);
+				
+			//print_r( $data );exit;
+			
+			$this->template
+				->set( "heading", lang("patients:create_heading") )
+				->set_breadcrumb( lang("common:page"), base_url("common") )
+				->set_breadcrumb( lang("patients:breadcrumb"), base_url("common/patients") )
+				->set_breadcrumb( lang("patients:create_heading") )
+				->build('patients/form', $data);
+		}
+	}
+	
+	public function delete( $id=0 )
+	{
+		$id = (int) @$id;
+		
+		$item = $this->get_model()->as_array()->get( $id );
+		if( ! $item ){ $item = array('id' => 0); }
+		$this->load->library( 'my_object', $item, 'item' );
+		
+		if( $this->input->post() ) 
+		{
+			
+			
+			if( 0 == @$this->item->id )
+			{
+				make_flashdata(array(
+						'response_status' => 'error',
+						'message' => lang( 'global:get_failed' )
+					));
+			
+				redirect( $this->input->post( 'r_url' ) );
+			}
+			
+			if( $this->item->id == $this->input->post( 'confirm' ) )
+			{
+				$this->get_model()->where( $id )->delete();				
+				
+				$this->get_model()->delete_cache( 'common_patients.collection' );
+				
+				make_flashdata(array(
+						'response_status' => 'success',
+						'message' => lang('patients:deleted_successfully')
+					));
+			}
+			
+			redirect( $this->input->post( 'r_url' ) );
+		}
+		
+		$this->load->view( 'patients/modal/delete', array('item' => $this->item) );
+	}
+	
+	public function lookup( $resource=false )
+	{
+		if( $this->input->is_ajax_request() )
+		{
+			$this->load->view( 'patients/lookup/datatable', array("resource" => $resource) );
+		} else
+		{
+			$data = array(
+					'page' => $this->page,
+					'datatables' => TRUE,
+					'form' => TRUE,
+					'resource' => $resource,
+				);
+			
+			$this->template
+				->set( "heading", "Lookup Box" )
+				->set_breadcrumb( lang("common:page"), base_url("common") )
+				->set_breadcrumb( "Lookup Box" )
+				->build('patients/lookup', (isset($data) ? $data : NULL));
+		}
+	}
+	
+	public function lookup_collection( $resource=false )
+	{
+		$this->datatable_collection( $resource );
+	}
+	
+	public function datatable_collection( $resource=false )
+    {
+        $start = $this->input->get_post('start', true);
+        $length = $this->input->get_post('length', true);
+        $order = $this->input->get_post('order', true);
+        $columns = $this->input->get_post('columns', true);
+        $search = $this->input->get_post('search', true);
+        $draw = $this->input->get_post('draw', true);
+		
+		$params = array(
+				"start" => $start,
+				"length" => $length,
+				"columns" => $columns,
+				"search" => $search,
+				"draw" => $draw,
+				"resource" => $resource,
+			);
+		
+		// Total data set length
+		$records_total = $this->_records_total( $params );
+		// Data set length after filtering
+		$records_filtered = $this->_records_filtered( $params );
+		
+		$from_table = "{$this->get_model()->table} a";
+		$select_table = <<<EOSQL
+			a.id,
+			a.mr_number,
+			a.type_id,
+			b.type_name,
+			a.personal_name,
+			a.personal_gender,
+			a.personal_birth_place,
+			a.personal_birth_date,
+			a.personal_age,
+			a.personal_nationality,
+			a.personal_mother_name,
+			a.personal_religion,
+			a.personal_id_type,
+			a.personal_id_number,
+			a.personal_profession,
+			a.personal_address,
+			a.country_id,
+			c.zone_name AS county_name,
+			a.province_id,
+			d.zone_name AS province_name,
+			a.county_id,
+			e.zone_name AS county_name,
+			a.district_id,
+			f.zone_name AS district_name,
+			a.area_id,
+			g.zone_name AS area_name,
+			g.zone_postcode,
+			a.phone_number,
+			a.mobile_number,
+			a.email_address,
+			a.state,
+			a.created_at,
+			a.updated_at
+EOSQL;
+		
+		$this->db
+			->select( $select_table )
+			->from( $from_table )
+			->join( "{$this->patient_type_m->table} b", "a.type_id = b.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} c", "a.country_id = c.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} d", "a.province_id = d.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} e", "a.county_id = e.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} f", "a.district_id = f.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} g", "a.area_id = g.id", "LEFT OUTER" )
+			;
+		
+		/* 
+         * Filtering
+         * NOTE this does not match the built-in DataTables filtering which does it
+         * word by word on any field. It's possible to do here, but concerned about efficiency
+         * on very large tables, and MySQL's regex functionality is very limited
+         */		 
+		$this->db->group_start();
+		$this->db->where('a.deleted_at', NULL);
+		if( $resource != false ){ $this->db->where('a.state', 1); }
+		$this->db->group_end();
+		 
+        if( isset($search['value']) && ! empty($search['value']) )
+        {
+            $search_fields = array();
+			
+			$this->db->group_start();
+			
+			for($i=0; $i<count($columns); $i++)
+            {
+                // Individual column filtering
+                if( isset($columns[$i]['searchable']) && $columns[$i]['searchable'] == 'true')
+                {
+					$column_name = $columns[$i]['data'];
+					$column_value = $search['value'];
+					
+					if( "personal_address" == $columns[$i]['data'] )
+					{
+						$this->db->or_like( $column_name, "{$column_value}" );
+						$this->db->or_like( "c.zone_name", "{$column_value}" );
+						$this->db->or_like( "d.zone_name", "{$column_value}" );
+						$this->db->or_like( "e.zone_name", "{$column_value}" );
+						$this->db->or_like( "f.zone_name", "{$column_value}" );
+						$this->db->or_like( "g.zone_name", "{$column_value}" );
+					} else if( "type_name" == $columns[$i]['data'] )
+					{
+						$this->db->or_like( "b.type_name", "{$column_value}" );
+					} else
+					{
+                    	$this->db->or_like( $column_name, "{$column_value}" );
+					}
+				}
+            }
+			
+			$this->db->group_end();
+        }
+		
+        // Ordering
+        if( isset($order) )
+        {
+            $sort_column = $order[0]['column'];
+			$sort_dir = $order[0]['dir'];
+			
+			if( $columns[$sort_column]['orderable'] == 'true' )
+			{
+				$column_name = $columns[intval($this->db->escape_str($sort_column))]['data'];
+				$column_dir = $this->db->escape_str($sort_dir);
+				
+				if( "personal_address" == $columns[intval($this->db->escape_str($sort_column))]['data'] )
+				{
+					$this->db->order_by( "c.zone_name", $column_dir );
+					$this->db->order_by( "d.zone_name", $column_dir );
+					$this->db->order_by( "e.zone_name", $column_dir );
+					$this->db->order_by( "f.zone_name", $column_dir );
+					$this->db->order_by( "g.zone_name", $column_dir );
+					$this->db->order_by( $column_name, $column_dir );
+				} else
+				{
+					$this->db->order_by( $column_name, $column_dir );
+				}
+			}
+        }
+		
+		// Paging
+        if( isset($start) && $length != '-1')
+        {
+            $this->db->limit( $length, $start );
+        }
+		
+		//print $this->db->get_compiled_select();exit;
+		
+		// Select Data
+        $result = $this->db
+			->get()
+			->result()
+			//->result_array()
+			;
+			
+		// Output
+        $output = array(
+				'draw' => intval($draw),
+				'recordsTotal' => $records_total,
+				'recordsFiltered' => $records_filtered,
+				'data' => array()
+			);
+        
+        foreach($result as $row)
+        {
+			$row->created_at = @strftime(config_item('date_format'), @$row->created_at);
+			$row->updated_at = @strftime(config_item('date_format'), @$row->updated_at);
+			
+            $output['data'][] = $row;
+        }
+		
+		//print_r($output);exit;
+		
+		$this->template
+			->build_json( $output );
+    }
+	
+	private function _records_total( $params )
+	{
+		@extract( $params, EXTR_OVERWRITE );
+		
+		$from_table = "{$this->get_model()->table} a";
+		
+		$this->db
+			->select( "*" )
+			->from( $from_table )
+			->join( "{$this->patient_type_m->table} b", "a.type_id = b.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} c", "a.country_id = c.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} d", "a.province_id = d.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} e", "a.county_id = e.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} f", "a.district_id = f.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} g", "a.area_id = g.id", "LEFT OUTER" )
+			;
+		
+		/* 
+         * Filtering
+         * NOTE this does not match the built-in DataTables filtering which does it
+         * word by word on any field. It's possible to do here, but concerned about efficiency
+         * on very large tables, and MySQL's regex functionality is very limited
+         */		 
+		//$this->db->group_start();
+		$this->db->where('a.deleted_at', NULL);
+		if( $resource != false ){ $this->db->where('a.state', 1); }
+		//$this->db->group_end();
+		
+		// Total data set length
+		$records_total = $this->db->count_all_results();
+		
+       	return (int) $records_total;
+	}
+	
+	private function _records_filtered( $params )
+	{
+		@extract( $params, EXTR_OVERWRITE );
+		
+		$from_table = "{$this->get_model()->table} a";
+		
+		$this->db
+			->select( "*" )
+			->from( $from_table )
+			->join( "{$this->patient_type_m->table} b", "a.type_id = b.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} c", "a.country_id = c.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} d", "a.province_id = d.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} e", "a.county_id = e.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} f", "a.district_id = f.id", "LEFT OUTER" )
+			->join( "{$this->zone_m->table} g", "a.area_id = g.id", "LEFT OUTER" )
+			;
+		
+		/* 
+         * Filtering
+         * NOTE this does not match the built-in DataTables filtering which does it
+         * word by word on any field. It's possible to do here, but concerned about efficiency
+         * on very large tables, and MySQL's regex functionality is very limited
+         */		 
+		$this->db->group_start();
+		$this->db->where('a.deleted_at', NULL);
+		if( $resource != false ){ $this->db->where('a.state', 1); }
+		$this->db->group_end();
+		 
+        if( isset($search['value']) && ! empty($search['value']) )
+        {
+            $search_fields = array();
+			
+			$this->db->group_start();
+			
+			for($i=0; $i<count($columns); $i++)
+            {
+                // Individual column filtering
+                if( isset($columns[$i]['searchable']) && $columns[$i]['searchable'] == 'true')
+                {
+					$column_name = $columns[$i]['data'];
+					$column_value = $search['value'];
+					
+					if( "personal_address" == $columns[$i]['data'] )
+					{
+						$this->db->or_like( $column_name, "{$column_value}" );
+						$this->db->or_like( "c.zone_name", "{$column_value}" );
+						$this->db->or_like( "d.zone_name", "{$column_value}" );
+						$this->db->or_like( "e.zone_name", "{$column_value}" );
+						$this->db->or_like( "f.zone_name", "{$column_value}" );
+						$this->db->or_like( "g.zone_name", "{$column_value}" );
+					} else if( "type_name" == $columns[$i]['data'] )
+					{
+						$this->db->or_like( "b.type_name", "{$column_value}" );
+					} else
+					{
+                    	$this->db->or_like( $column_name, "{$column_value}" );
+					}
+				}
+            }
+			
+			$this->db->group_end();
+        }
+		
+		// Total data set length
+		$records_filtered = $this->db->count_all_results();
+		
+       	return (int) $records_filtered;
+	}
+}

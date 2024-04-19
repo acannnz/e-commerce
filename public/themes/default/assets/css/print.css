@@ -1,0 +1,90 @@
+
+html {
+    overflow-y:scroll;
+}
+body {
+    background: #ffffff;
+    color: #333;
+    border: none;
+    font-weight: 400;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    width: 100%; 
+	font-family: "Courier New", Courier, monospace;
+}
+body:after {
+    top: 0;
+    left: 14.422%;
+    position: absolute;
+    content: '';
+    height: 100%;
+    width: 85.578%;
+    background: #ffffff;
+}
+body:before {
+    content: '';
+    position: absolute;
+    background: #ffffff;
+    width: 14.422%;
+    top: 0;
+    right: 85.578%;
+}
+h1 {
+    font-size: 32px;
+    line-height: 32px;
+    font-weight: bold;
+}
+h2 {
+    font-size: 16px;
+    line-height: 16px;
+    font-weight: bold;
+}
+h3 {
+    font-size: 15px;
+    line-height: 15px;
+}
+h4 {
+    font-size: 14px;
+    line-height: 14px;
+}
+h5 {
+    font-size: 13px;
+    line-height: 13px;
+}
+h6 {
+    font-size: 12px;
+    line-height: 12px;
+}
+p,td,th{font-size: 12px;line-height: 12px;}
+strong{font-weight: 700;}
+
+.text-center{ text-align: center!important; }
+.text-right{ text-align: right!important; }
+.text-left{ text-align: left!important; }
+
+@media print {
+	html, body, .container, 
+    .box-content, .col-lg-12, .table-responsive, 
+    .table-responsive .table, .dataTable, .box, .row {width: 100%!important;height: auto!important;border: none!important;padding: 0!important;margin: 0!important;} 
+    
+	.container { width: auto !important; }
+    
+	.table-responsive .table th, 
+    .table-responsive .table td {display: table-cell;border-top: none!important;border-left: none!important;border-right: none!important;border-bottom: none!important;padding: 1px 2px!important;}
+    
+	a:after{display: none;}
+	hr{margin-top: 6px!important;margin-bottom: 6px!important;border-top: 1px solid #000;}
+	td > hr{}
+    
+	.print-table thead th:first-child, 
+	.print-table thead th:last-child, 
+	.print-table td:first-child, 
+	.print-table td:last-child {display: table-cell !important;}
+	
+	.table thead th { background: #F5F5F5 !important; background-color: #F5F5F5 !important; border-top: 1px solid #f5F5F5 !important; }
+    .well { border-top: 0 !important; }
+    .print-only { display: block !important; }
+    .reports-table th, .reports-table td { display: table-cell !important; }
+    table thead { display: table-header-group; }
+}

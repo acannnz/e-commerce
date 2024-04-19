@@ -1,0 +1,110 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+?>
+<div class="row">
+	<div class="col-md-12">
+        <?php echo form_open_multipart(current_url(), array('id' => 'form_upload_personal_picture', 'name' => 'form_upload_personal_picture')); ?>
+        <div class="form-group">
+            <div class="col-md-12">
+                <div class="fileinput fileinput-new" data-provides="fileinput">
+                    <div class="fileinput-new thumbnail" style="width: 320px; height: 320px;">
+                        <?php if( $profile->personal_picture ): ?>
+                        <img src="<?php echo base_url( "resource/customer_cooperations/pictures" ) ?>/<?php echo $profile->personal_picture ?><?php echo (sprintf("?rand=%s", @time())) ?>">
+                        <?php else: ?>
+                        <img src="<?php echo base_url( "resource/customer_cooperations/pictures" ) ?>/default_picture.jpg">
+                        <?php endif ?>
+                    </div>
+                    <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 320px;max-height: 320px;">
+                    </div>
+                    <div>
+                        <span class="btn btn-default btn-file">
+                            <span class="fileinput-new"><?php echo lang("buttons:select_picture") ?></span>
+                            <span class="fileinput-exists"><?php echo lang("buttons:change") ?></span>
+                            <input type="file" name="userfile">
+                        </span>
+                        <a href="javascript:;" class="btn btn-danger fileinput-exists" data-dismiss="fileinput"><?php echo lang("buttons:remove") ?></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+        	<div class="col-md-6">
+            	<button type="submit" id="" name="" title="<?php echo lang("buttons:upload_picture") ?>" class="btn btn-block btn-submit btn-info"><i class="fa fa-cloud-upload"></i> <?php echo lang("buttons:upload_picture") ?></button>
+            </div>
+            <div class="col-md-6">
+            	<?php if( isset($is_ajax_request) ): ?>
+                <a href="<?php echo base_url( "common/customer_cooperations/picture/{$profile_id}" ) ?>" data-toggle="ajax-modal" title="<?php echo lang("buttons:cancel") ?>" class="btn btn-block btn-cancel btn-danger"><i class="fa fa-times"></i> <?php echo lang("buttons:cancel") ?></a>
+                <?php else: ?>
+                <a href="<?php echo base_url( "common/customer_cooperations/picture/{$profile_id}" ) ?>" title="<?php echo lang("buttons:cancel") ?>" class="btn btn-block btn-cancel btn-danger"><i class="fa fa-times"></i> <?php echo lang("buttons:cancel") ?></a>
+            	<?php endif ?>
+            </div>
+        </div>
+        <input type="hidden" name="picture_upload" value="1">
+		<?php echo form_close() ?>
+    </div>
+</div>
+<script type="text/javascript">
+//<![CDATA[
+;(function( $ ){
+		$.fn.extend({
+				form_picture_upload: function( remote_server ){
+						if( ! this.size() ){ return this; }
+						
+						var _this = this;
+						
+						_this.on( "submit", function(e){
+								e.preventDefault();
+								
+								_this.find( "input[name=\"userfile\"]" ).simpleUpload( remote_server, {
+										start: function(file){
+												//upload started
+												console.log("Upload started");
+											},							
+										progress: function( progress ){
+												//received progress
+												console.log("Upload progress: " + Math.round(progress) + "%");
+											},							
+										success: function( response ){
+												//upload successful
+												if( response.status == "success" ){
+													console.log( "Upload successful!" );
+													console.log( response );
+													
+													<?php if( isset($is_ajax_request) ): ?>
+													try{ ajax_modal.show( "<?php echo base_url( "common/customer_cooperations/picture_crop/{$profile_id}" ) ?>" ); } catch(e){ /**/ }
+													<?php else: ?>
+													window.location = "<?php echo base_url( "common/customer_cooperations/picture_crop/{$profile_id}" ) ?>";
+													<?php endif ?>
+												} else {
+													console.log( response.message || "Upload failed!" );
+													console.log( response );
+												}
+											},							
+										error: function(error){
+												//upload failed
+												console.log("upload error: " + error.name + ": " + error.message);
+											}
+									});
+								
+								return false;
+							} );
+						
+						_this.on( "keyup keypress", function(e){
+								var kc = e.keyCode || e.which;
+								if( kc == 13 ){ 
+									e.preventDefault();
+									return false;
+								}
+							} );
+						
+						return this;
+					}
+			});
+		
+		$( document ).ready(function(e) {
+            	$( "form[name=\"form_upload_personal_picture\"]" )
+					.form_picture_upload( "<?php echo base_url( "common/customer_cooperations/picture_upload/{$profile_id}" ) ?>" );
+        	});
+	})( jQuery );
+//]]>
+</script>
+
