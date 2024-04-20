@@ -328,6 +328,7 @@ class Drug_payment extends Admin_Controller
 				if ($row->Qty <= $row->JmlRetur) continue;
 
 				$row->SubTotal = $row->Qty * $row->Harga - ($row->Qty * $row->Harga * $row->Disc / 100) + $row->HExt + $row->BiayaResep;
+				$row->TotDisc = ($row->Qty * $row->Harga * $row->Disc / 100);
 
 				if (empty($sub_total[$row->NamaResepObat])) {
 					$sub_total[$row->NamaResepObat] = $row->SubTotal;
