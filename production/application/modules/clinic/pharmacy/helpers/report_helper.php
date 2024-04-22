@@ -37,14 +37,14 @@ final class report_helper
 					// print_r($data);
 					// exit;
 					$item->Nama_Supplier = !empty($data->Nama_Supplier) ? $data->Nama_Supplier : '-';
-					if ($data->NoReg == '-') {
-						$item->NamaPasien = !empty($data->NamaPasien) ? 'OB - ' . $data->NamaPasien : 'OB - ' . @$data->Keterangan;
+					if (@$data->NoReg == '-') {
+						$item->NamaPasien = !empty(@$data->NamaPasien) ? 'OB - ' . @$data->NamaPasien : 'OB - ' . @$data->Keterangan;
 					} else {
-						$item->NamaPasien = !empty($data->NamaPasien) ? $data->NamaPasien : @$item->Keterangan;
+						$item->NamaPasien = !empty(@$data->NamaPasien) ? @$data->NamaPasien : @$item->Keterangan;
 					}
-					$item->Alamat = !empty($data->Alamat) ? $data->Alamat : '-';
-					$item->Nama_Asli = !empty($data->Nama_Asli) ? $data->Nama_Asli : '-';
-					$item->Nama_Singkat = !empty($data->Nama_Singkat) ? $data->Nama_Singkat : '-';
+					$item->Alamat = !empty(@$data->Alamat) ? @$data->Alamat : '-';
+					$item->Nama_Asli = !empty(@$data->Nama_Asli) ? @$data->Nama_Asli : '-';
+					$item->Nama_Singkat = !empty(@$data->Nama_Singkat) ? @$data->Nama_Singkat : '-';
 				}
 
 				$collection[] = $item;
