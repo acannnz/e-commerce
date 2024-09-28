@@ -1216,10 +1216,10 @@ EOSQL;
 			->join("SIMtrRegistrasi h", "a.NoReg = h.NoReg", "LEFT OUTER")
 			->where(['b.NoReg' => $NoReg, 'b.SectionID' => $SectionID]);
 
-		if ($is_edit)
-			$_ci->db->select('e.TindakLanjutCekUpUlang, e.TglCekUp')
-				->join("{$_ci->poly_m->table} e", "e.RegNo = a.NoReg", "INNER")
-				->where(['e.Batal' => 0]);
+		// if ($is_edit)
+		// 	$_ci->db->select('e.TindakLanjutCekUpUlang, e.TglCekUp')
+		// 		->join("{$_ci->poly_m->table} e", "e.RegNo = a.NoReg", "INNER")
+		// 		->where(['e.Batal' => 0]);
 
 		return $query->get()->row();
 	}
