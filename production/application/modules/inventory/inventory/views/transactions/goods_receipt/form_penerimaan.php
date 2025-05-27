@@ -836,6 +836,7 @@ if (!defined('BASEPATH'))
 					Ongkos_Angkut: $('#Ongkos_Angkut').val(),
 					Potongan: $('#Potongan').val(),
 					Total_Nilai: $('#Total_Nilai').val(),
+					JenisPengadaanID: 1
 				};
 
 				data_post['additional'] = {
