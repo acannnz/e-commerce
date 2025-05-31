@@ -139,7 +139,8 @@ final class Verification_helper
 		$_ci->db->trans_begin();
 
 		$collection = self::_get_examination_trans(self::$_trans_date, 0, $NoBuktiRJ);
-
+		// print_r($collection);
+		// exit;
 		if (!empty($collection)) : foreach ($collection as $row) :
 
 				$_prepare_audit = [
@@ -168,7 +169,8 @@ final class Verification_helper
 				if ($_get_cashier->Nilai == 0) {
 					$_ci->cashier_model->update(['Audit' => 1], $row->NoBukti);
 				}
-
+				// print_r($_get_cashier);
+				// exit;
 				/*
 					State Of Progress:
 					0 -> error : All data must be ROLLBACK
@@ -190,7 +192,7 @@ final class Verification_helper
 					case 2:
 						break 2;
 				}
-
+				// print_r($_response);exit;
 				if (!empty(self::$_split_component) || self::$_is_split) {
 
 					$_response = self::_audit_split_examination($_prepare_audit, $_response['evidence_number']);
@@ -219,11 +221,11 @@ final class Verification_helper
 	private static function _get_examination_trans($date, $inpatient, $NoBuktiRJ)
 	{
 		$_ci = self::$_ci;
-
+		// print_r($NoBuktiRJ);exit;
 		$date = DateTime::createFromFormat('Y-m-d', $date)->setTime(0, 0);
 		$date->modify('+1 day');
 		$date->modify('+8 hour');
-
+		// print_r($date);exit;
 		if ($NoBuktiRJ == '') {
 			$_ci->db->where([
 				'a.Jam <=' => $date->format('Y-m-d H:i:s'),
@@ -330,6 +332,8 @@ final class Verification_helper
 	{
 		$_ci = self::$_ci;
 		extract($arguments);
+		// print_r($arguments);
+		// exit;
 
 		$AkunNo_BonDokter = "1010303005";
 		$CurNilaiPPNAkum = 0;
@@ -495,7 +499,8 @@ final class Verification_helper
 
 		if ($_union_collection = $_ci->db->query(" {$_union_service_group} UNION {$_union_cost_component} ")->result()):
 			foreach ($_union_collection as $row):
-
+				// print_r($row);
+				// exit;
 				$CurNilaiAkumJasa = 0;
 				$CurHarga = round($row->Harga, 0);
 				$CurHargaOrig = round($row->HargaOrig, 0);
@@ -612,7 +617,7 @@ final class Verification_helper
 
 							endforeach;
 						endif;
-
+						// print_r($CurNilaiJasaDetail);exit;
 						if (($CurNilaiJasaDetail - $CurNilaiJasa) > 100):
 							self::_cancel_audit($NoBukti, $NoInvoice);
 							return [
@@ -883,10 +888,12 @@ final class Verification_helper
 			->where(['NilaiBayar !=' => 0, 'a.NoBukti' => $NoInvoice])
 			->order_by('b.IDBayar', 'ASC')
 			->get()->result();
-
+		// print_r($_cashier_detail);
+		// exit;
 		if (!empty($_cashier_detail)):
 			foreach ($_cashier_detail as $cad): // cad = cashier detail
-
+				// print_r($cad);
+				// exit;
 				$CurNilaiDiskonTdkLangsung = $cad->DiskonTdkLangsung;
 				$StrNoBuktiJurnal = sprintf("%s#%s#%s", $NoInvoice, "BYR", $cad->IDBayar);
 				$StrKeterangan = sprintf("Pembayaran Pasien : %s", $NamaPasien);
@@ -1167,7 +1174,7 @@ final class Verification_helper
 	{
 		$_ci = self::$_ci;
 		extract($arguments);
-
+		// print_r($arguments);exit;
 		// Account Prefix Untuk Group Jasa, Jika Polikinik Spesialis maka Gunakan Akun_2 (Rekening Ke 2)
 		$_account_suffix = '';
 		$_db_suffix = 'BO_1';
@@ -1437,7 +1444,7 @@ final class Verification_helper
 					"AkunNo" => $StrAkun,
 					"NoBukti" => $NoBukti,
 				];
-
+				// print_r($_insert_audit_revenue);exit;
 				$_ci->audit_revenue_model->create($_insert_audit_revenue);
 
 				if (self::$_is_split)
@@ -3517,7 +3524,8 @@ final class Verification_helper
 	private static function _audit_otc_drug($TglTransaksi, $NoInvoice, $IntAkunPendapatanObat)
 	{
 		$_ci = self::$_ci;
-
+		// print_r($IntAkunPendapatanObat);
+		// exit;
 		$StrPiutangDokter = "1010303005";
 		$StrAkunPPN = "2010404";
 
@@ -4442,7 +4450,7 @@ final class Verification_helper
 	private static function _cancel_audit($NoBukti, $NoInvoice)
 	{
 		$_ci = self::$_ci;
-
+		// print_r($NoBukti);exit;
 		$_ci->audit_model->update(['Batal' => 1], $NoBukti);
 		$_ci->cashier_model->update(['Audit' => 0], $NoInvoice);
 		$_ci->bill_pharmacy_model->update(['IncomeAudit' => 0], $NoInvoice);
@@ -4455,6 +4463,7 @@ final class Verification_helper
 
 	public static function cancel_audit($item, $item_split = NULL)
 	{
+		// print_r($item);exit;
 		$_ci = self::$_ci;
 		$_ci->BO_1 = $_ci->load->database('BO_1', TRUE);
 
