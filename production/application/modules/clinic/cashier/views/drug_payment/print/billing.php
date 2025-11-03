@@ -55,110 +55,6 @@
                             </p>
                         </div>
                     </div>
-                    <table width="100%" style="font-size: 11px !important; font-family: Tahoma, Arial, sans-serif;">
-                        <tbody>
-                            <!-- <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr> -->
-                            <!-- <tr>              
-                                <td colspan="5" style="padding:1px;border-bottom:1px solid #000000;" align="left">
-                                    <span style="font-size:15px"><strong><?= config_item('apotek_name') ?></strong></span><br>
-                                    <p style="font-size:11px; margin:0 !important;">
-                                        <?= config_item('company_address') ?><br>
-                                        <?= config_item('company_phone') ?> 
-                                    </p>
-                                </td>
-                            </tr> -->
-                            <!-- <tr>
-                                <td width="150px" align="left" style="padding:2px;font-size:11px!important;" colspan="">User:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= $this->user_auth->Nama_Singkat ?></td>
-                            </tr>
-                            <tr>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">Tanggal:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= DateTime::createFromFormat('Y-m-d H:i:s.u', $item->Jam)->format('d M Y, H.i') ?></td>
-                            </tr>
-                            <tr>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">No. Transaksi:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= $item->NoBukti ?></td>
-                            </tr>
-                            <tr>              
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">Dokter:</td>
-                                <td width="300px" align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= $item->Nama_Supplier ?></td>
-                            </tr>
-							<tr>              
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">Tgl. Lahir:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= date('d M Y', strtotime($item->TglLahir)) ?></td>
-                            </tr>
-							<tr>              
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">Alamat:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= $item->Alamat ?></td>
-                            </tr>
-                            <tr>              
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan="">Pasien:</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;" colspan=""><?= $item->Keterangan ?></td>
-                            </tr> -->
-                            <!-- <tr>              
-                                <td align="left" style="padding:2px;font-size:11px!important;border-bottom:1px dashed #000000;" colspan="2">Peruntukan</td>
-                                <td align="left" style="padding:2px;font-size:11px!important;border-bottom:1px dashed #000000;" colspan="3"><?= @$item->Peruntukan ?></td>
-                            </tr>
-
-                            <?php foreach ($collection as $row) : ?>
-                                <?php
-                                if ($row->Nama_Barang != $row->NamaResepObat) {
-                                    continue;
-                                }
-
-                                $left = sprintf("%s x %s -%s%%", number_format($sub_total[$row->NamaResepObat] / $row->Qty), $row->Qty, (float)@$row->Disc);
-                                $right = number_format($sub_total[$row->NamaResepObat]);
-                                ?>
-                                <tr>
-                                    <td colspan="5" style="padding:2px 2px;font-size:11px!important;"><b><?= $row->Nama_Barang ?></b></td>
-                                </tr>
-                                <tr>
-                                    <td align="left" colspan="3" style="padding:2px 2px;font-size:11px!important;"><?= $left ?></td>
-                                    <td align="right" colspan="2" style="padding:2px 2px;font-size:11px!important;"><?= $right ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-
-                            <?php if (@$item->BiayaAdministrasi > 0) : ?>
-                            <tr>
-                                <td align="left" colspan="2" style="padding:5px 2px;font-size:11px!important;"><?= "Administrasi" ?></td>
-                                <td align="right" colspan="3" style="padding:5px 2px;font-size:11px!important;"><?= number_format(@$item->BiayaAdministrasi) ?></td>
-                            </tr>
-                            <?php endif; ?>
-
-                            <tr>
-                                <td align="left" colspan="2" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;">Total</td>
-                                <td align="right" colspan="3" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;"><?= number_format($grand_total) ?></td>
-                            </tr>
-
-                            <?php foreach ($type_payment_used as $key => $val) :
-                                if ($val > 0) : ?>
-                                    <tr>
-                                        <td align="left" colspan="2" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;"><?= $key ?></td>
-                                        <td align="right" colspan="3" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;"><?= number_format($val) ?></td>
-                                    </tr>
-                            <?php
-                                endif;
-                            endforeach; ?>
-                            <tr>
-                                <td align="center" colspan="5" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;">
-                                    <p>### LUNAS ###</p>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td align="center" colspan="5" style="padding:5px 2px;font-size:11px!important;border-top:1px dashed #000000;">
-                                    <p><?= "Semoga lekas sembuh" ?></p>
-                                </td>
-                            </tr> -->
-
-                        </tbody>
-                    </table>
                     <div class="row" style="border:1px solid #000;border-style: dotted;">
                         <div class="col-sm-12" style="padding:0;">
                             <div class="">
@@ -205,8 +101,6 @@
                                 <td class="pad10  w200 bold center" style="font-size: 11px;">Jml</td>
                                 <td class="pad10  bold center" style="font-size: 11px;">Satuan</td>
                                 <td class="pad10  w100 bold center" style="font-size: 11px;">Harga</td>
-                                <!--<td class="pad10  w100 bold center">Pot</td> -->
-                                <!--<td class="pad10  w200 bold center">Tax</td> -->
                                 <td class="pad10  w200 bold center" style="font-size: 11px;">Total</td>
                             </tr>
                         </thead>
@@ -214,8 +108,9 @@
                             <?php $i = 1;
                             $totalQty = 0;
                             $totalAmount = 0;
-                            foreach ($collection as $row) : $totalQty += $row->Qty;
-                                $totalAmount += $row->Harga * $row->Qty + @$item->AddCharge; ?>
+                            $total_disc = 0;
+                            foreach ($collection as $row) :
+                                $totalQty += $row->Qty; ?>
                                 <tr>
                                     <td class="center pad5" style="font-size: 11px;"><?php echo $i++ ?></td>
                                     <td class="center pad5" style="font-size: 11px;"><?= $row->Barang_ID ?></td>
@@ -223,44 +118,36 @@
                                     <td class="pad5" style="font-size: 11px;"><?= $row->Qty ?></td>
                                     <td class="pad5" style="font-size: 11px;"><?= $row->Satuan ?></td>
                                     <td class="pad5" style="font-size: 11px;"><?= number_format($row->Harga) ?></td>
-                                    <!--<td class="pad5"><?= (float)@$row->Disc ?></td> -->
-                                    <!--<td class="pad5"><?= $item->AddCharge ?></td> -->
                                     <td class="pad5" style="font-size: 11px;"><?= number_format($row->Harga * $row->Qty) ?></td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php $total_disc += $row->TotDisc;
+                                $totalAmount += $row->Harga * $row->Qty + @$item->AddCharge;
+                            endforeach;
+                            ?>
                         </tbody>
                     </table>
 
                     <table width="100%" class="rapi-table" style="font-size: 11px">
-                        <tr>
-                            <td>Keterangan:</td>
-                            <td class="align-right"><b>DISKON =</b></td>
-                            <td class="align-right">Rp.<?= (float)@$row->Disc ?></td>
-                        </tr>
-                        <?php /*?><tr>
-                            <td></td>
-                            <td class="align-right"><b>TAX =</b></td>
-                            <td class="align-right">Rp.<?= $item->AddCharge ?></td>
-                        </tr>
-                        <tr>
-                            <td>Jml Item: <?= $totalQty ?></td>
-                            <td class="align-right">Sub Total: <?= number_format($grand_total) ?></td>
-                        </tr><?php */ ?>
                         <?php foreach ($type_payment_used as $key => $val) :
                             if ($val > 0) : ?>
                                 <tr>
-                                    <td></td>
+                                    <td>Keterangan :</td>
                                     <?php $key = strtoupper($key); ?>
                                     <td class="align-right"><b><?= $key ?> =</b></td>
-                                    <td class="align-right">Rp.<?= number_format($val) ?></td>
+                                    <td class="align-right">Rp.<?= number_format($val + @$total_disc) ?></td>
                                 </tr>
                         <?php
                             endif;
                         endforeach; ?>
                         <tr>
                             <td></td>
+                            <td class="align-right"><b>DISKON =</b></td>
+                            <td class="align-right">Rp.<?= number_format(@$total_disc) ?></td>
+                        </tr>
+                        <tr>
+                            <td></td>
                             <td class="align-right"><b>GRAND TOTAL =</b></td>
-                            <td class="align-right">Rp.<?= number_format($totalAmount + @$type_payment_used['Card Charge']) ?></td>
+                            <td class="align-right">Rp.<?= number_format(@$totalAmount - @$total_disc + @$type_payment_used['Card Charge']) ?></td>
                         </tr>
                     </table>
                     <div class="col-lg-12" style="border-top:1px solid black;border-bottom:1px solid black;border-style: dotted;">
