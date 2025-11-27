@@ -76,8 +76,16 @@ class Details extends Admin_Controller
 				$data_post = (object) $this->input->post();
 				//exce KlinikFarmasiEtiket 'NoBuktiFarmasi','BarangID'
 				$query = "exec KlinikFarmasiEtiket '$data_post->NoBukti', '$data_post->BarangID'";
-				$query = $this->db->query( $query );
-				$item = $query->row();
+                $query = $this->db->query( $query );
+                $item = $query->row();
+				
+                if (empty(@$item->NamaPasien) || @$item->NamaPasien === 'NULL') {
+                    $pharmacy = $this->db->where('NoBukti', $data_post->NoBukti)->get('BILLFarmasi')->row();
+                    if (!empty($pharmacy)) {
+                        $item->NamaPasien = !empty(@$pharmacy->NamaPasien) ? @$pharmacy->NamaPasien : @$pharmacy->Keterangan;
+                        if (empty(@$item->NRM)) { $item->NRM = @$pharmacy->NRM; }
+                    }
+                }
 
 				$item->NoEtiket = substr($item->NoBukti, -5);
 				$data = array(
