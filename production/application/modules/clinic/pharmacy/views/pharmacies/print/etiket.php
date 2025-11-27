@@ -34,7 +34,7 @@
                             </tr>
                             <tr>
                                 <td align="left" style="padding:2px;font-size:10px!important;">Nama</td>
-                                <td align="left" style="padding:2px;font-size:10px!important;" colspan="4">: <?= ucwords(strtolower(@$item->NamaPasien)) ?></td>
+                                <td align="left" style="padding:2px;font-size:10px!important;" colspan="4">: <?= ucwords(strtolower(!empty(@$item->NamaPasien) ? @$item->NamaPasien : @$item->Keterangan)) ?></td>
                             </tr>
                             <tr>              
                                 <td align="left" style="padding:2px;font-size:10px!important;">RM</td>
