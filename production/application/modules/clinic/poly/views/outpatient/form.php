@@ -1,7 +1,7 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 ?>
 
-<?php echo form_open(current_url(), array("name" => "form_poly")); ?>
+<?php echo form_open(current_url(), array("name" => "form_poly", "class" => "draft-autosave", "data-patient-id" => @$item->NRM, "data-no-reg" => @$item->NoReg, "data-form-id" => "form-poly-outpatient")); ?>
 <?php if (@$item->ProsesPayment == 1 || (!empty($item->StatusBayar) && @$item->StatusBayar == "Sudah Bayar")) : ?>
 	<h3 class="subtitle well">Status Data: <span class='text-info'><?php echo $item->ProsesPayment ? 'Proses' : $item->StatusBayar ?></span> di Kasir.</h3>
 <?php endif; ?>

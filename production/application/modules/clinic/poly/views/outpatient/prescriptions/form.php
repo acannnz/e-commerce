@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 ?>
-<?php echo form_open(current_url(), array("id" => "form_prescriptions")) ?>
+<?php echo form_open(current_url(), array("id" => "form_prescriptions", "class" => "draft-autosave")) ?>
 <div class="modal-dialog modal-xlg">
     <div class="modal-content">
         <div class="modal-header"> 
@@ -93,8 +93,8 @@
                     <div class="form-group">
                         <label class="control-label">Nama Obat</label>
 						<div class="input-group">
-							<input type="hidden" id="product_object" data-product="{}" class="detail_form">
-							<input type="text" id="Nama_Barang" placeholder="" class="form-control detail_form typeahead" autocomplete="off">
+							<input type="hidden" id="product_object" name="product_object" data-product="{}" class="detail_form">
+							<input type="text" id="Nama_Barang" name="Nama_Barang" placeholder="" class="form-control detail_form typeahead" autocomplete="off">
 							<span class="input-group-btn">
 								<a href="<?php echo @$lookup_product ?>" data-toggle="lookup-ajax-modal" class="btn btn-default" title="Cari obat..."><i class="fa fa-search"></i></a>
 								<a href="javascript:;" id="detail_form" class="btn btn-default btn-clear" title="Bersihkan info obat..."><i class="fa fa-times"></i></a>
