@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 ?>
-<?php echo form_open(current_url(), array("id" => "form_consumables")) ?>
+<?php echo form_open(current_url(), array("id" => "form_consumables", "class" => "draft-autosave")) ?>
 <div class="modal-dialog modal-xlg">
     <div class="modal-content">
         <div class="modal-header"> 
