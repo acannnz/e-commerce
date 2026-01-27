@@ -84,6 +84,31 @@ final class report_helper
 		return FALSE;
 	}
 
+	public static function get_daily_stock_recap_data($date_start, $date_end, $Lokasi_ID)
+	{
+		$db = self::ci()->db;
+
+		// exec SIM_Rpt_RekapStok_FIFO '2016-11-01','2016-11-30',296
+		$query = "exec SIM_Rpt_RekapStok_FIFO '$date_start', '$date_end', $Lokasi_ID";
+
+		$query = $db->query($query);
+		if ($query->num_rows()) {
+			$collection = array();
+			foreach ($query->result() as $item) {
+				// Pengelompokan Barang Berdasarkan Kelompok Jenis (NmJenis from SP)
+				$group_name = !empty($item->NmJenis) ? $item->NmJenis : 'Lain-lain';
+				$collection[$group_name][] = $item;
+			}
+
+			// Urutkan berdasarkan Kelompok Jenisnya
+			ksort($collection);
+
+			return $collection;
+		}
+
+		return FALSE;
+	}
+
 	public static function export_excel_stock_opname($date_start, $date_end, $section_id, $show_zero_difference = 0)
 	{
 		$_ci = self::ci();
@@ -291,8 +316,6 @@ final class report_helper
 				$item->Harga = $HargaGrading->Harga_Baru;
 				$collection[] = $item;
 			}
-			print_r($collection);
-			exit;
 
 			return $collection;
 		}
@@ -840,6 +863,114 @@ final class report_helper
 		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
 		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
 		header('Pragma: public'); // HTTP/1.0
+
+		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output');
+		exit;
+	}
+
+	public static function export_excel_daily_stock_recap($date_start, $date_end, $lokasi_id)
+	{
+		$_ci = self::ci();
+		$_ci->load->model('section_model');
+
+		$section = $_ci->section_model->get_by(['Lokasi_ID' => $lokasi_id]);
+		$collection = self::get_daily_stock_recap_data($date_start, $date_end, $lokasi_id);
+
+		$date_start = DateTime::createFromFormat("Y-m-d", $date_start);
+		$date_end = DateTime::createFromFormat("Y-m-d", $date_end);
+		$file_name = sprintf('%s %s periode %s s/d %s ', 'Laporan Rekap Stok Harian', $section->SectionName, $date_start->format('d F Y'), $date_end->format('d F Y'));
+
+		$helper = new Sample();
+		if ($helper->isCli()) {
+			$helper->log('403. Forbidden Access!' . PHP_EOL);
+			return false;
+		}
+
+		// Create new Spreadsheet object
+		$spreadsheet = new Spreadsheet();
+
+		// Set document properties
+		$spreadsheet->getProperties()->setCreator(config_item("company_name"))
+			->setLastModifiedBy(config_item("company_name"))
+			->setTitle('Laporan Rekap Stok Harian')
+			->setSubject('Laporan Rekap Stok Harian')
+			->setDescription($file_name)
+			->setKeywords($file_name);
+
+		$_sheet = $spreadsheet->setActiveSheetIndex(0);
+
+		// Default Style
+		$spreadsheet->getDefaultStyle()->applyFromArray(self::_get_style('default'));
+
+		$_sheet->mergeCells("A1:H1");
+		$_sheet->setCellValue('A1', $file_name);
+		$_sheet->getStyle("A1")->applyFromArray(self::_get_style('header'));
+		$_sheet->getStyle("A1")->getAlignment()->setWrapText(true);
+
+		$tb_row = 3;
+		$i = 1;
+		if (!empty($collection)) : foreach ($collection as $key => $value) :
+
+				$_sheet->mergeCells("A{$tb_row}:H{$tb_row}");
+				$_sheet->setCellValue("A{$tb_row}", sprintf("%s : %s", lang("reports:group_label"), $key));
+				$_sheet->getStyle("A{$tb_row}")->applyFromArray(['font'  => ['bold'	=> TRUE, 'size'  => 11]]);
+				$tb_row++;
+
+				$_sheet->setCellValue("A{$tb_row}", lang('reports:no_label'));
+				$_sheet->getStyle("A{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("B{$tb_row}", lang('reports:code_label'));
+				$_sheet->getStyle("B{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("C{$tb_row}", lang('reports:item_label'));
+				$_sheet->getStyle("C{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("D{$tb_row}", lang('reports:unit_label'));
+				$_sheet->getStyle("D{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("E{$tb_row}", 'SALDO AWAL');
+				$_sheet->getStyle("E{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("F{$tb_row}", 'MASUK');
+				$_sheet->getStyle("F{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("G{$tb_row}", 'KELUAR');
+				$_sheet->getStyle("G{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$_sheet->setCellValue("H{$tb_row}", 'STOK AKHIR');
+				$_sheet->getStyle("H{$tb_row}")->applyFromArray(self::_get_style('thead'));
+				$tb_row++;
+
+				if (!empty($value)) : foreach ($value as $row) :
+						$_sheet->setCellValue("A{$tb_row}", $i++);
+						$_sheet->getStyle("A{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("B{$tb_row}", @$row->KOde_Barang);
+						$_sheet->getStyle("B{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("C{$tb_row}", @$row->Nama_Barang);
+						$_sheet->getStyle("C{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("D{$tb_row}", @$row->Satuan_Stok);
+						$_sheet->getStyle("D{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("E{$tb_row}", @$row->SA);
+						$_sheet->getStyle("E{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("F{$tb_row}", @$row->MASUK);
+						$_sheet->getStyle("F{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("G{$tb_row}",  @$row->KELUAR);
+						$_sheet->getStyle("G{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$_sheet->setCellValue("H{$tb_row}", (@$row->SA + @$row->MASUK - @$row->KELUAR));
+						$_sheet->getStyle("H{$tb_row}")->applyFromArray(self::_get_style('tbody'));
+						$tb_row++;
+					endforeach;
+				endif;
+
+			endforeach;
+		endif;
+
+		// Set active sheet index to the first sheet
+		$spreadsheet->setActiveSheetIndex(0);
+
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="' . $file_name . '.xls"');
+		header('Cache-Control: max-age=0');
+		header('Cache-Control: max-age=1');
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+		header('Cache-Control: cache, must-revalidate');
+		header('Pragma: public');
 
 		$writer = IOFactory::createWriter($spreadsheet, 'Xls');
 		$writer->save('php://output');

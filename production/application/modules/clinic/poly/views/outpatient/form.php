@@ -162,8 +162,13 @@
 					</div>
 				</div>
 			</div>
+			<div class="col-md-8 text-right" style="padding-top: 30px;">
+				<button type="submit" class="btn btn-primary" style="min-width: 200px;" id="js-btn-submit"><i class="fa fa-save"></i> <?php echo lang('buttons:submit') ?></button>
+				<!-- <button type="submit" class="btn btn-primary btn-lg" style="min-width: 500px;" id="js-btn-submit-sticky"><i class="fa fa-save"></i> <?php echo lang('buttons:submit') ?></button> -->
+			</div>
+		</div>
 
-			<?php /*?><div class="form-group">
+		<?php /*?><div class="form-group">
 					<label class="col-lg-3 control-label">Kecelakaan</label>
 					<div class="col-lg-9">
 						<select id="Kecelakaan" name="f[Kecelakaan]" class="form-control">

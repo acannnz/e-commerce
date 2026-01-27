@@ -42,9 +42,8 @@
                             </tr>
                             <tr>              
                                 <td align="left" style="padding:2px;font-size:10px!important;">Obat</td>
-                                <td align="left" style="padding:2px;font-size:10px!important;" colspan="4">: <?= ucwords(strtolower(@$item->Nama_Barang)) ?></td>
+                                <td align="left" style="padding:2px;font-size:10px!important;" colspan="4">: <?= ucwords(strtolower(@$item->Nama_Barang)) ?> (<?= !empty(@$item->JmlObat) ? @$item->JmlObat : @$item->Qty ?>)</td>
                             </tr>
-        
 
                             <tr>
                                 <td align="left" colspan="5" style="padding:5px 2px;font-size:10px!important;border-top:1px dashed #000000;">

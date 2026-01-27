@@ -278,10 +278,18 @@
 						},
 						{
 							data: "UntukHari",
-							width: "130px",
+							width: "145px",
 							className: "text-center",
 							render: function(val, type, row) {
-								return row.UntukHari + ", " + row.UntukTanggal.substr(0, 10) + " " + row.estimation_time
+								if (row.UntukTanggal) {
+									var date_parts = row.UntukTanggal.substr(0, 10).split('-');
+									var d = new Date(date_parts[0], date_parts[1] - 1, date_parts[2]);
+									var days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+									var dayName = days[d.getDay()];
+									return dayName + ", " + row.UntukTanggal.substr(0, 10) + " " + row.estimation_time
+								}
+
+								return val + ", " + row.UntukTanggal.substr(0, 10) + " " + (row.estimation_time || "")
 							}
 
 						},

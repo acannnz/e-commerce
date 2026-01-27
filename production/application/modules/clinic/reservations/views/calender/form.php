@@ -100,10 +100,11 @@
 								</div>
 								<div class="form-group">
 									<label class="col-sm-3 control-label">Tanggal <span class="text-danger">*</span></label>
-									<div class="col-sm-9">
-										<div class="form-group">
-											<input type="date" name="f[Tanggal]" id="Tanggal" value="<?php echo @$item->UntukTanggal ?>" class="form-control" placeholder="Tanggal">
-										</div>
+									<div class="col-sm-6">
+										<input type="text" name="f[Tanggal]" id="UntukTanggal" value="<?php echo @$item->UntukTanggal ?>" class="form-control datepicker" placeholder="Tanggal">
+									</div>
+									<div class="col-sm-3">
+										<input type="text" id="UntukHari" class="form-control" value="<?php echo @$item->UntukHari ?>" readonly>
 									</div>
 								</div>
 								<div class="form-group">
@@ -149,7 +150,6 @@
 </div>
 <script>
 	var calendarEl = document.getElementById('calendar');
-	var events = new Array();
 	var calendar = new FullCalendar.Calendar(calendarEl, {
 		headerToolbar: {
 			left: 'prev,next today',
@@ -171,7 +171,29 @@
 			var formattedDate = date.format("dddd, MMMM DD YYYY, h:mm A");
 			alert('Nama Pasien : ' + args.event._def.title + '\nTanggal : ' + formattedDate + '\nMEMO : ' + args.event._def.extendedProps.description);
 		},
-		events: events,
+		events: function(info, successCallback, failureCallback) {
+			var dokterId = $("#UntukDokterID").val();
+			if (!dokterId) {
+				successCallback([]);
+				return;
+			}
+			$.ajax({
+				url: '<?php echo $get_calender ?>',
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					DokterID: dokterId,
+					start: info.startStr,
+					end: info.endStr
+				},
+				success: function(response) {
+					successCallback(response);
+				},
+				error: function() {
+					failureCallback();
+				}
+			});
+		},
 		select: function(event) {
 			$('#event_entry_modal').modal('show');
 			var Tanggal = event.startStr;
@@ -203,8 +225,8 @@
 			format: "YYYY-MM-DD"
 		}).on("dp.change", function(e) {
 			var weekday = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
-			var d = new Date($(this).val());
-			var dayName = weekday[d.getDay()];
+			var d = moment($(this).val());
+			var dayName = weekday[d.day()];
 
 			$("#UntukHari").val(dayName);
 			get_reservation_queue();
@@ -248,31 +270,7 @@
 				$.alert_error('Silahkan Pilih Dokter Terlebih Dahulu.');
 				return false;
 			}
-
-			try {
-
-				var data_post = {
-					"DokterID": $("#UntukDokterID").val(),
-				}
-				$.post("<?php echo $get_calender ?>", data_post, function(response, status, xhr) {
-					calendar.removeAllEvents();
-
-					$.each(response, function(index, item) {
-						calendar.addEvent({
-							title: item.title,
-							start: item.start,
-							color: item.color,
-							description: item.description,
-						});
-
-					});
-
-				});
-
-			} catch (e) {
-				$.alert_error(e);
-				return false;
-			}
+			calendar.refetchEvents();
 		});
 
 		$("#refresh").trigger("click");

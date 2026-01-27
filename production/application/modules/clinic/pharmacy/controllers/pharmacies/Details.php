@@ -87,6 +87,13 @@ class Details extends Admin_Controller
                     }
                 }
 
+                if (empty(@$item->JmlObat) && empty(@$item->Qty)) {
+                    $pharmacy_detail = $this->db->where(['NoBukti' => $data_post->NoBukti, 'Barang_ID' => $data_post->BarangID])->get('BILLFarmasiDetail')->row();
+                    if (!empty($pharmacy_detail)) {
+                        $item->JmlObat = !empty($pharmacy_detail->JmlObat) ? $pharmacy_detail->JmlObat : $pharmacy_detail->Qty;
+                    }
+                }
+
 				$item->NoEtiket = substr($item->NoBukti, -5);
 				$data = array(
 					"item" => $item,

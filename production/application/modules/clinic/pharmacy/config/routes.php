@@ -41,6 +41,11 @@ $route['pharmacy/reports/recap-transactions'] = "reports/recap_transactions";
 $route['pharmacy/reports/recap-transactions(/:any)'] = "reports/recap_transactions$1";
 $route['pharmacy/reports/recap-transactions(/:any)(/:any)'] = "reports/recap_transactions$1$2";
 
+// daily stock recap
+$route['pharmacy/reports/daily-stock-recap'] = "reports/daily_stock_recap";
+$route['pharmacy/reports/daily-stock-recap(/:any)'] = "reports/daily_stock_recap$1";
+$route['pharmacy/reports/daily-stock-recap(/:any)(/:any)'] = "reports/daily_stock_recap$1$2";
+
 // total sales
 $route['pharmacy/reports/total-sales'] = "reports/total_sales";
 $route['pharmacy/reports/total-sales(/:any)'] = "reports/total_sales$1";
