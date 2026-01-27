@@ -80,7 +80,10 @@ class Reservations extends Admin_Controller
 
 			$item = array_merge($item, $this->input->post("f"));
 			$item['NoReservasi'] = reservation_helper::gen_reservation_number();
-			$item['UntukJam'] = $item['UntukTanggal'] + " " + date("H:i:s");
+			$item['UntukJam'] = $item['UntukTanggal'] . " " . date("H:i:s");
+
+			$weekDay = array("MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU");
+			$item['UntukHari'] = $weekDay[date("w", strtotime($item['UntukTanggal']))];
 
 			$this->load->library('form_validation');
 			//$this->form_validation->set_rules( $this->reservation_m->rules['insert'] );
@@ -176,6 +179,9 @@ class Reservations extends Admin_Controller
 			$item['Email'] = $pasien->Email;
 			$item['Alamat'] = $pasien->Alamat;
 
+			$weekDay = array("MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU");
+			$item['UntukHari'] = $weekDay[date("w", strtotime($item['UntukTanggal']))];
+
 			$this->load->library('form_validation');
 			$this->form_validation->set_data($item);
 
@@ -244,11 +250,21 @@ class Reservations extends Admin_Controller
 
 	public function calender_collection($UntukDokterID = NULL)
 	{
-		if ($this->input->post()) {
-			$data = $this->input->post();
+		$data = $this->input->get_post(NULL, TRUE);	
+		if (!empty($data['DokterID'])) {
 			$collection = [];
-			$whare = array('UntukDokterID' => $data['DokterID'], 'Batal' => 0);
-			$item = $this->db->where($whare)->get($this->reservation_m->table)->result();
+			$where = array('UntukDokterID' => $data['DokterID'], 'Batal' => 0);
+
+			$this->db->where($where);
+
+			if (!empty($data['start'])) {
+				$this->db->where('UntukTanggal >=', date('Y-m-d', strtotime($data['start'])));
+			}
+			if (!empty($data['end'])) {
+				$this->db->where('UntukTanggal <=', date('Y-m-d', strtotime($data['end'])));
+			}
+
+			$item = $this->db->get($this->reservation_m->table)->result();
 
 
 			foreach ($item as $key => $value) {
@@ -279,7 +295,9 @@ class Reservations extends Admin_Controller
 			}
 
 			response_json($collection);
-		};
+		} else {
+			response_json([]);
+		}
 	}
 
 	public function edit($NoReservasi = 0)
@@ -307,6 +325,9 @@ class Reservations extends Admin_Controller
 
 		if ($this->input->post()) {
 			$data = $this->input->post("f");
+
+			$weekDay = array("MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU");
+			$data['UntukHari'] = $weekDay[date("w", strtotime($data['UntukTanggal']))];
 
 			$this->load->library('form_validation');
 			$this->form_validation->set_rules($this->reservation_m->rules['insert']);

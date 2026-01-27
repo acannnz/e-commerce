@@ -193,8 +193,8 @@
 				format: "YYYY-MM-DD"
 			}).on("dp.change", function(e) {
 				var weekday = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
-				var d = new Date($(this).val());
-				var dayName = weekday[d.getDay()];
+				var d = moment($(this).val());
+				var dayName = weekday[d.day()];
 
 				$("#UntukHari").val(dayName);
 				get_reservation_queue();

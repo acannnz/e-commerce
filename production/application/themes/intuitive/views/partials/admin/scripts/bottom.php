@@ -186,6 +186,10 @@ if ($this->session->flashdata('message')):
 
 
 
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <!-- CryptoJS for Autosave Encryption -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YWDego2b5g5GpKbQ2T1UE1Sk1gM2pH8h/YhS1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -197,4 +201,4 @@ if ($this->session->flashdata('message')):
 	};
 </script>
 
-<script type="text/javascript" src="<?php echo base_url(); ?>themes/bracketadmin/js/dev-draft.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>themes/bracketadmin/js/dev-draft.js?v=1.0.1"></script>

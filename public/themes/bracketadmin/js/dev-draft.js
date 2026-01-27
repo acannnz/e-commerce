@@ -397,20 +397,17 @@
             Swal.fire({
                 title: 'Data Draft Ditemukan',
                 html: '<p>Terdapat data yang belum tersimpan sejak <strong>' + savedTime + '</strong>.</p>' +
-                      '<p>Apakah Anda ingin memulihkan data tersebut?</p>',
+                    '<p>Apakah Anda ingin memulihkan data yang belum tersimpan tersebut?</p>',
                 icon: 'question',
-                showDenyButton: true,
-                confirmButtonText: '<i class="fa fa-check"></i> Restore',
-                denyButtonText: '<i class="fa fa-trash"></i> Hapus Draft',
+                showDenyButton: false,
+                confirmButtonText: '<i class="fa fa-folder-open"></i> Ya, Restore Draft',
                 confirmButtonColor: '#28a745',
-                denyButtonColor: '#dc3545',
-                reverseButtons: true
             }).then(function(result) {
                 if (result.isConfirmed) {
                     // Restore data
                     restoreFormData(form, draftData.data);
                     Swal.fire({
-                        title: 'Data Dipulihkan!',
+                        title: 'Data yang belum tersimpan berhasil di Restore!',
                         text: 'Data draft berhasil dimuat ke form.',
                         icon: 'success',
                         timer: 2000,
@@ -421,7 +418,7 @@
                     // Hapus draft
                     deleteDraft(form);
                     Swal.fire({
-                        title: 'Draft Dihapus',
+                        title: 'Data yang belum tersimpan berhasil di Hapus',
                         text: 'Data draft telah dihapus.',
                         icon: 'info',
                         timer: 2000,
@@ -434,8 +431,7 @@
         // Fallback ke confirm() jika SweetAlert2 tidak tersedia
         else {
             var message = 'Ditemukan data yang belum tersimpan sejak : ' + savedTime + '.\n\n' +
-                          'Klik OK untuk restore data, Cancel untuk abaikan.\n' +
-                          '(Klik Cancel akan menghapus data draft ini permanen)';
+                          '(Klik Hapus akan menghapus data draft ini permanen)';
             
             if (confirm(message)) {
                 restoreFormData(form, draftData.data);
