@@ -121,7 +121,7 @@ $autoload['helper'] = [
 |
 */
 
-$autoload['config'] = array('redis');
+$autoload['config'] = array();
 
 
 /*

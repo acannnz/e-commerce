@@ -1,0 +1,20 @@
+{
+  "name": "ecommerce-dev",
+  "version": "1.0.0",
+  "description": "[![Latest Stable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/stable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Total Downloads](https://poser.pugx.org/kenjis/codeigniter-composer-installer/downloads)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Latest Unstable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/unstable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![License](https://poser.pugx.org/kenjis/codeigniter-composer-installer/license)](https://packagist.org/packages/kenjis/codeigniter-composer-installer)",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./production/application/themes/modern/assets/css/input.css -o ./public/production/ecommerce/assets/css/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./production/application/themes/modern/assets/css/input.css -o ./public/production/ecommerce/assets/css/tailwind.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  }
+}
