@@ -11,7 +11,7 @@ class Cart extends MY_Controller {
 
     public function index()
     {
-        $data['title'] = 'Shopping Cart - Arcnad Store';
+        $data['title'] = 'Shopping Cart - Arcand Store';
         $data['cart_items'] = $this->session->userdata('cart') ?: [];
         
         $data['content'] = $this->load->view('cart/index', $data, TRUE);

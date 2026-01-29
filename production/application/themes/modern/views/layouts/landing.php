@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($title) ? $title : 'Arcnad Store - Modern E-Commerce'; ?></title>
+    <title><?php echo isset($title) ? $title : 'Arcand Store - Modern E-Commerce'; ?></title>
     
     <!-- Meta Tags -->
-    <meta name="description" content="Arcnad Store - Experience modern shopping with high performance and premium design.">
+    <meta name="description" content="Arcand Store - Experience modern shopping with high performance and premium design.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,14 +26,14 @@
     <nav id="main-nav" class="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 py-6 font-outfit">
         <div class="max-w-7xl mx-auto flex items-center justify-between glass rounded-full px-8 py-3 shadow-sm">
             <a href="<?php echo base_url(); ?>" class="text-2xl font-black tracking-tight text-primary-600">
-                ARCNAD<span class="text-slate-900">STORE</span>
+                ARCAND<span class="text-slate-900">STORE</span>
             </a>
             
             <div class="hidden md:flex items-center space-x-10 text-sm font-semibold uppercase tracking-wider">
                 <a href="<?php echo base_url(); ?>#hero" class="hover:text-primary-500 transition-colors">Home</a>
                 <a href="<?php echo base_url('ecommerce/product_catalog'); ?>" class="hover:text-primary-500 transition-colors">Products</a>
                 <a href="<?php echo base_url(); ?>#categories" class="hover:text-primary-500 transition-colors">Categories</a>
-                <a href="<?php echo base_url(); ?>#about" class="hover:text-primary-500 transition-colors">About</a>
+                <a href="<?php echo base_url('about'); ?>" class="hover:text-primary-500 transition-colors">About</a>
             </div>
             
             <div class="flex items-center space-x-4">
@@ -58,7 +58,7 @@
         <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
             <div class="col-span-1 md:col-span-1">
                 <a href="#" class="text-2xl font-black tracking-tight text-primary-500 mb-6 block">
-                    ARCNAD<span class="text-white">STORE</span>
+                    ARCAND<span class="text-white">STORE</span>
                 </a>
                 <p class="text-sm leading-relaxed mb-6">
                     Redefining the digital shopping experience with premium quality and state-of-the-art design.
@@ -102,7 +102,7 @@
             </div>
         </div>
         <div class="max-w-7xl mx-auto border-t border-slate-800 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center text-xs uppercase tracking-widest">
-            <p>© 2026 Arcnad Store. All rights reserved.</p>
+            <p>© 2026 Arcand Store. All rights reserved.</p>
             <div class="flex space-x-8 mt-4 md:mt-0">
                 <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
                 <a href="#" class="hover:text-white transition-colors">Terms of Service</a>

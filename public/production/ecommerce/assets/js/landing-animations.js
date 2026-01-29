@@ -3,19 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
     gsap.registerPlugin(ScrollTrigger);
 
     // 1. Initial Hero Animations (Load immediately)
-    // Target only elements inside #hero to prevent conflicts
     const heroTl = gsap.timeline();
-    heroTl.from("#hero .reveal-up", {
-        y: 80,
-        opacity: 0,
-        duration: 1.5,
-        stagger: 0.3,
-        ease: "expo.out",
-        onComplete: () => {
-            // Ensure they stay visible after animation
-            gsap.set("#hero .reveal-up", { clearProps: "all" });
+    heroTl.fromTo("#hero .reveal-up", 
+        { y: 80, autoAlpha: 0 },
+        {
+            y: 0,
+            autoAlpha: 1,
+            duration: 1.5,
+            stagger: 0.3,
+            ease: "expo.out"
         }
-    });
+    );
 
     // 2. 3D Parallax Scrolling Effect for Hero Object
     if (document.getElementById("main-3d-object")) {
@@ -39,16 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
             scrollTrigger: {
                 trigger: "#brand-showcase",
                 start: "top top",
-                end: "bottom top",
-                pin: ".pin-panel", // Pin the inner panel
+                end: "+=1500", // Pin for 1500px of scrolling
+                pin: true,
                 scrub: 1,
+                anticipatePin: 1
             }
         });
 
-        showcaseTl.from(".showcase-content", { x: -100, opacity: 0, duration: 1 })
-                  .from(".showcase-image", { scale: 0.8, rotate: 0, opacity: 0, duration: 1 }, "-=0.5")
-                  .from(".showcase-card", { y: 50, opacity: 0, duration: 1 }, "-=0.8")
-                  .from(".showcase-stat", { y: 30, opacity: 0, stagger: 0.2, duration: 0.8 }, "-=0.5");
+        showcaseTl.from(".showcase-content", { x: -100, autoAlpha: 0, duration: 1 })
+                  .from(".showcase-image", { scale: 0.8, rotate: 0, autoAlpha: 0, duration: 1 }, "-=0.5")
+                  .from(".showcase-card", { y: 50, autoAlpha: 0, duration: 1 }, "-=0.8")
+                  .from(".showcase-stat", { y: 30, autoAlpha: 0, stagger: 0.2, duration: 0.8 }, "-=0.5");
     }
 
     // 4. Horizontal Scroll Categories
@@ -73,27 +72,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Scroll-based reveals for OTHER sections (Exclude hero)
-    // We only target reveal-up elements that are NOT in #hero
-    const scrollReveals = document.querySelectorAll('section:not(#hero) .reveal-up');
-    scrollReveals.forEach((el) => {
+    // 5. Scroll-based reveals 
+    // Handle Grids (Why Choose Us, Featured Products) with coordinated staggers
+    const gridReveals = document.querySelectorAll('section:not(#hero) .grid');
+    gridReveals.forEach(grid => {
+        const items = grid.querySelectorAll('.reveal-up');
+        if (items.length > 0) {
+            gsap.fromTo(items, 
+                { y: 50, autoAlpha: 0 },
+                {
+                    scrollTrigger: {
+                        trigger: grid,
+                        start: "top 50%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 1,
+                    stagger: 0.1,
+                    ease: "power2.out"
+                }
+            );
+        }
+    });
+
+    // Handle single reveal-up elements that ARE NOT inside a grid already handled
+    const singleReveals = document.querySelectorAll('section:not(#hero) .reveal-up:not(.grid .reveal-up), section:not(#hero) > .reveal-up');
+    singleReveals.forEach((el) => {
+        const delay = el.getAttribute('data-delay') || 0;
+        
         gsap.fromTo(el, 
-            { y: 60, opacity: 0 },
+            { y: 50, autoAlpha: 0 },
             {
                 scrollTrigger: {
                     trigger: el,
-                    start: "top 90%",
+                    start: "top 85%", // Trigger slightly later for better visibility
                     toggleActions: "play none none reverse"
                 },
                 y: 0,
-                opacity: 1,
+                autoAlpha: 1,
                 duration: 1.2,
+                delay: parseFloat(delay),
                 ease: "power3.out"
             }
         );
     });
 
-    // 6. Interaction Extras (Hero 3D & Product Hover)
+    // 6. Interaction Extras
     const heroContainer = document.getElementById('hero-3d-container');
     const mainObject = document.getElementById('main-3d-object');
 
@@ -122,7 +147,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 7. Refresh ScrollTrigger to ensure all positions are calculated correctly
+    // 7. Clean URL Navigation (Remove hashes from URL)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('href');
+            
+            // Only handle internal links that are not just "#"
+            if (targetId.startsWith('#') && targetId.length > 1) {
+                e.preventDefault();
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80, // Adjust for fixed navbar height
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    });
+
+    // 8. Refresh ScrollTrigger
     window.onload = () => {
         ScrollTrigger.refresh();
     };

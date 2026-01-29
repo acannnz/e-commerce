@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
-<div class="bg-gray-50 min-h-screen pt-24 pb-20">
+<section class="bg-gray-50 min-h-screen pt-24 pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Header & Breadcrumbs -->
@@ -97,7 +97,7 @@
                 <?php if (!empty($products)): ?>
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                         <?php foreach ($products as $index => $product): ?>
-                            <div class="reveal-up group" style="transition-delay: <?php echo ($index % 4) * 0.1; ?>s">
+                            <div class="reveal-up group">
                                 <div class="relative overflow-hidden rounded-[3rem] bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500">
                                     <!-- Image Container -->
                                     <div class="aspect-[4/5] overflow-hidden bg-gray-100 relative">
@@ -119,7 +119,7 @@
                                         
                                         <!-- Quick Action Overlay -->
                                         <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                            <a href="<?php echo base_url('ecommerce/product_catalog/'.$product->id); ?>" class="bg-white text-gray-900 p-4 rounded-full shadow-xl hover:bg-primary-600 hover:text-white transition-all transform hover:scale-110">
+                                            <a href="<?php echo base_url('ecommerce/product_catalog/'.$product->slug); ?>" class="bg-white text-gray-900 p-4 rounded-full shadow-xl hover:bg-primary-600 hover:text-white transition-all transform hover:scale-110">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             </a>
                                         </div>
@@ -174,7 +174,7 @@
             </main>
         </div>
     </div>
-</div>
+</section>
 
 <!-- Mobile Filter Drawer (Overlay) -->
 <div id="filter-drawer" class="fixed inset-0 z-[110] hidden">
@@ -191,7 +191,7 @@
              <!-- Repeat sidebar filters here for mobile drawer -->
              <div>
                 <h3 class="text-sm font-black uppercase tracking-widest text-gray-900 mb-6 italic border-b border-gray-100 pb-2">Sorting</h3>
-                <form action="<?php echo base_url('ecommerce/catalog'); ?>" method="GET">
+                <form action="<?php echo base_url('ecommerce/product_catalog'); ?>" method="GET">
                     <select name="sort" onchange="this.form.submit()" class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold">
                         <option value="latest">Terbaru</option>
                         <option value="price_low">Harga Terendah</option>
@@ -205,7 +205,7 @@
                 <ul class="space-y-4">
                     <?php foreach ($categories as $cat): ?>
                     <li>
-                        <a href="<?php echo base_url('ecommerce/catalog?category='.$cat['id']); ?>" class="flex items-center justify-between group">
+                        <a href="<?php echo base_url('ecommerce/product_catalog?category='.$cat['id']); ?>" class="flex items-center justify-between group">
                             <span class="text-sm font-bold text-gray-500"><?php echo $cat['name']; ?></span>
                             <span class="w-2 h-2 rounded-full bg-gray-200"></span>
                         </a>
