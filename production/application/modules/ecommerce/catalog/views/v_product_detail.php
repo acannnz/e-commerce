@@ -27,7 +27,7 @@
             </div>
 
             <!-- Product Info -->
-            <div class="flex flex-col reveal-up" style="transition-delay: 0.1s">
+            <div class="flex flex-col reveal-up" data-delay="0.1">
                 <div class="mb-10">
                     <span class="inline-block bg-primary-50 text-primary-600 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-6">Premium Choice</span>
                     <h1 class="text-5xl md:text-6xl font-black font-outfit text-gray-900 leading-tight mb-4 uppercase italic tracking-tighter"><?php echo $product->name; ?></h1>

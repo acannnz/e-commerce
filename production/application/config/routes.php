@@ -56,14 +56,17 @@ $route['login'] = 'base/login';
 $route['logout'] = 'base/logout';
 
 // E-Commerce Routes
-$route['ecommerce/catalog'] = 'catalog/Catalog/index';
-$route['ecommerce/catalog/(:num)'] = 'catalog/Catalog/detail/$1';
+$route['ecommerce/catalog'] = 'catalog/Product_catalog/index';
+$route['ecommerce/catalog/(:any)'] = 'catalog/Product_catalog/detail/$1';
+$route['ecommerce/product_catalog'] = 'catalog/Product_catalog/index';
+$route['ecommerce/product_catalog/(:any)'] = 'catalog/Product_catalog/detail/$1';
 $route['ecommerce/orders/cart'] = 'orders/Cart/index';
 $route['ecommerce/orders/cart/(:any)'] = 'orders/Cart/$1';
 
 // Shorthand aliases
-$route['products'] = 'catalog/Catalog/index';
-$route['products/(:num)'] = 'catalog/Catalog/detail/$1';
+$route['products'] = 'catalog/Product_catalog/index';
+$route['products/(:any)'] = 'catalog/Product_catalog/detail/$1';
+$route['about'] = 'home/Home/about';
 $route['cart'] = 'orders/Cart/index';
 
 $route['set-medics(/:any)?'] = 'auth/medics$1';

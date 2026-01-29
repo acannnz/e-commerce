@@ -21,7 +21,7 @@
             </h1>
             
             <p class="text-xl text-slate-600 mb-10 max-w-lg leading-relaxed font-medium">
-                Discover the future of digital commerce with Arcnad Store. Premium quality meets avant-garde design.
+                Discover the future of digital commerce with Arcand Store. Premium quality meets avant-garde design.
             </p>
             
             <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
@@ -62,14 +62,14 @@
                     <div class="absolute bottom-10 left-10 right-10 flex justify-between items-end">
                         <div class="text-white">
                             <p class="text-xs font-bold uppercase tracking-widest opacity-80">Premium Pack</p>
-                            <h3 class="text-2xl font-black font-outfit">ARCNAD EDITION</h3>
+                            <h3 class="text-2xl font-black font-outfit">ARCAND EDITION</h3>
                         </div>
                         <span class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-white text-xs font-bold">LIMITED</span>
                     </div>
                 </div>
 
                 <!-- Decorative floating elements -->
-                <div class="parallax-el absolute -top-10 left-0 w-32 h-32 glass rounded-[2rem] shadow-xl flex items-center justify-center z-20Rotate">
+                <div class="parallax-el absolute -top-10 left-0 w-32 h-32 glass rounded-[2rem] shadow-xl flex items-center justify-center z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
                 </div>
                 <div class="parallax-el absolute -bottom-10 right-0 w-40 h-40 bg-slate-900 rounded-[2.5rem] shadow-2xl flex items-center justify-center z-20">
@@ -91,7 +91,7 @@
     <div class="max-w-7xl mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-end mb-20 reveal-up">
             <div class="max-w-2xl">
-                <h2 class="text-5xl font-black font-outfit mb-6 italic tracking-tight uppercase">Why <span class="text-primary-600">Arcnad?</span></h2>
+                <h2 class="text-5xl font-black font-outfit mb-6 italic tracking-tight uppercase">Why <span class="text-primary-600">Arcand?</span></h2>
                 <p class="text-lg text-slate-500 font-medium">We deliver excellence in every detail, from the first click to the final unboxing.</p>
             </div>
             <div class="hidden md:block">
@@ -109,14 +109,14 @@
                 <h3 class="text-2xl font-bold mb-4 font-outfit">Instant Delivery</h3>
                 <p class="text-slate-500 leading-relaxed font-medium">Faster than light. We ensure your package arrives before you even expect it.</p>
             </div>
-            <div class="reveal-up p-10 bg-white rounded-[3rem] shadow-sm hover:shadow-xl transition-all group border border-slate-100" style="transition-delay: 0.1s">
+            <div class="reveal-up p-10 bg-white rounded-[3rem] shadow-sm hover:shadow-xl transition-all group border border-slate-100" data-delay="0.1">
                 <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary-600 transition-colors">
                     <svg class="text-primary-600 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
                 <h3 class="text-2xl font-bold mb-4 font-outfit">Unmatched Quality</h3>
                 <p class="text-slate-500 leading-relaxed font-medium">Curated products from premium materials. We don't settle for less than perfect.</p>
             </div>
-            <div class="reveal-up p-10 bg-white rounded-[3rem] shadow-sm hover:shadow-xl transition-all group border border-slate-100" style="transition-delay: 0.2s">
+            <div class="reveal-up p-10 bg-white rounded-[3rem] shadow-sm hover:shadow-xl transition-all group border border-slate-100" data-delay="0.2">
                 <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary-600 transition-colors">
                     <svg class="text-primary-600 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 </div>
@@ -128,51 +128,45 @@
 </section>
 
 <!-- Brand Experience Showcase (Pinning Section) -->
-<section id="brand-showcase" class="relative py-0 bg-slate-900 overflow-hidden">
-    <div class="pin-panel h-screen flex items-center overflow-hidden">
-        <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2000" alt="Showcase Background" class="w-full h-full object-cover opacity-30 grayscale">
-        </div>
-        <div class="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-20">
-            <div class="showcase-content">
-                <span class="text-primary-500 font-bold uppercase tracking-[0.3em] text-xs mb-6 block">The Arcnad Philosophy</span>
-                <h2 class="text-7xl md:text-8xl font-black text-white font-outfit leading-none mb-10 italic uppercase tracking-tighter">
-                    Crafting <br> <span class="text-primary-400">Pure</span> <br> Elegance
-                </h2>
-                <p class="text-xl text-slate-400 font-medium max-w-md leading-relaxed mb-12">
-                    Every element we design is a testament to our commitment to perfection. Immerse yourself in a world where luxury meets function.
-                </p>
-                <div class="flex items-center space-x-12">
-                   <div class="showcase-stat">
-                        <p class="text-4xl font-black text-white font-outfit">100%</p>
-                        <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Premium Silk</p>
-                   </div>
-                   <div class="showcase-stat">
-                        <p class="text-4xl font-black text-white font-outfit">2026</p>
-                        <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Design Era</p>
-                   </div>
+<section id="brand-showcase" class="relative py-24 bg-slate-900 overflow-hidden">
+    <!-- Content container -->
+    <div class="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <div class="showcase-content">
+            <span class="text-primary-500 font-bold uppercase tracking-[0.3em] text-xs mb-6 block">The Arcand Philosophy</span>
+            <h2 class="text-7xl md:text-8xl font-black text-white font-outfit leading-none mb-10 italic uppercase tracking-tighter">
+                Crafting <br> <span class="text-primary-400">Pure</span> <br> Elegance
+            </h2>
+            <p class="text-xl text-slate-400 font-medium max-w-md leading-relaxed mb-12">
+                Every element we design is a testament to our commitment to perfection. Immerse yourself in a world where luxury meets function.
+            </p>
+            <div class="flex items-center space-x-12">
+                <div class="showcase-stat">
+                    <p class="text-4xl font-black text-white font-outfit">100%</p>
+                    <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Premium Silk</p>
+                </div>
+                <div class="showcase-stat">
+                    <p class="text-4xl font-black text-white font-outfit">2026</p>
+                    <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Design Era</p>
                 </div>
             </div>
-            <div class="relative flex items-center justify-center">
-                <div class="showcase-image relative w-full aspect-square rounded-[4rem] overflow-hidden shadow-2xl skew-y-3">
-                    <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1000" alt="Premium Product" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                </div>
-                <!-- Floating decorative card -->
-                <div class="absolute -bottom-10 -left-10 glass p-8 rounded-[3rem] shadow-2xl z-20 max-w-[200px] showcase-card">
-                    <p class="text-xs font-bold uppercase tracking-widest text-primary-600 mb-2">Editor's Choice</p>
-                    <p class="text-sm font-medium text-slate-800 italic">"The peak of minimalist design and high-end performance."</p>
-                </div>
+        </div>
+        <div class="relative flex items-center justify-center">
+            <div class="showcase-image relative w-full aspect-square rounded-[4rem] overflow-hidden shadow-2xl skew-y-3">
+                <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1000" alt="Premium Product" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            </div>
+            <!-- Floating decorative card -->
+            <div class="absolute -bottom-10 -left-10 glass p-8 rounded-[3rem] shadow-2xl z-20 max-w-[200px] showcase-card">
+                <p class="text-xs font-bold uppercase tracking-widest text-primary-600 mb-2">Editor's Choice</p>
+                <p class="text-sm font-medium text-slate-800 italic">"The peak of minimalist design and high-end performance."</p>
             </div>
         </div>
     </div>
-    <!-- Spacer to allow scroll length for pinning -->
-    <div class="h-[120vh]"></div>
 </section>
 
 <!-- Horizontal Scroll Categories -->
 <section id="categories-scroll" class="py-32 bg-white overflow-hidden">
-    <div class="max-w-7xl mx-auto px-6 mb-20 flex justify-between items-end">
+    <div class="max-w-7xl mx-auto px-6 mb-12 flex justify-between items-end">
         <div>
             <h2 class="text-5xl font-black font-outfit italic tracking-tighter uppercase">Curated <span class="text-primary-600">Categories</span></h2>
         </div>
@@ -183,39 +177,39 @@
     
     <div class="horizontal-container flex space-x-12 px-6 lg:px-[10%] cursor-grab active:cursor-grabbing">
         <!-- Category Card 1 -->
-        <div class="category-card min-w-[350px] md:min-w-[450px] aspect-[4/5] relative rounded-[3rem] overflow-hidden group">
+        <div class="category-card min-w-[280px] md:min-w-[380px] aspect-square relative rounded-[2.5rem] overflow-hidden group">
             <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Footwear">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-            <div class="absolute bottom-10 left-10 text-white">
-                <h3 class="text-4xl font-black font-outfit italic uppercase mb-2">Footwear</h3>
-                <p class="text-sm font-bold uppercase tracking-widest text-primary-400">42 Items</p>
+            <div class="absolute bottom-8 left-8 text-white">
+                <h3 class="text-3xl font-black font-outfit italic uppercase mb-2">Footwear</h3>
+                <p class="text-xs font-bold uppercase tracking-widest text-primary-400">42 Items</p>
             </div>
         </div>
         <!-- Category Card 2 -->
-        <div class="category-card min-w-[350px] md:min-w-[450px] aspect-[4/5] relative rounded-[3rem] overflow-hidden group">
+        <div class="category-card min-w-[280px] md:min-w-[380px] aspect-square relative rounded-[2.5rem] overflow-hidden group">
             <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Accessories">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-            <div class="absolute bottom-10 left-10 text-white">
-                <h3 class="text-4xl font-black font-outfit italic uppercase mb-2">Essentials</h3>
-                <p class="text-sm font-bold uppercase tracking-widest text-primary-400">18 Items</p>
+            <div class="absolute bottom-8 left-8 text-white">
+                <h3 class="text-3xl font-black font-outfit italic uppercase mb-2">Essentials</h3>
+                <p class="text-xs font-bold uppercase tracking-widest text-primary-400">18 Items</p>
             </div>
         </div>
         <!-- Category Card 3 -->
-        <div class="category-card min-w-[350px] md:min-w-[450px] aspect-[4/5] relative rounded-[3rem] overflow-hidden group">
+        <div class="category-card min-w-[280px] md:min-w-[380px] aspect-square relative rounded-[2.5rem] overflow-hidden group">
             <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Electronics">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-            <div class="absolute bottom-10 left-10 text-white">
-                <h3 class="text-4xl font-black font-outfit italic uppercase mb-2">Tech</h3>
-                <p class="text-sm font-bold uppercase tracking-widest text-primary-400">25 Items</p>
+            <div class="absolute bottom-8 left-8 text-white">
+                <h3 class="text-3xl font-black font-outfit italic uppercase mb-2">Tech</h3>
+                <p class="text-xs font-bold uppercase tracking-widest text-primary-400">25 Items</p>
             </div>
         </div>
         <!-- Category Card 4 -->
-        <div class="category-card min-w-[350px] md:min-w-[450px] aspect-[4/5] relative rounded-[3rem] overflow-hidden group">
+        <div class="category-card min-w-[280px] md:min-w-[380px] aspect-square relative rounded-[2.5rem] overflow-hidden group">
             <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1000" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Premium">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-            <div class="absolute bottom-10 left-10 text-white">
-                <h3 class="text-4xl font-black font-outfit italic uppercase mb-2">Limited</h3>
-                <p class="text-sm font-bold uppercase tracking-widest text-primary-400">09 Items</p>
+            <div class="absolute bottom-8 left-8 text-white">
+                <h3 class="text-3xl font-black font-outfit italic uppercase mb-2">Limited</h3>
+                <p class="text-xs font-bold uppercase tracking-widest text-primary-400">09 Items</p>
             </div>
         </div>
     </div>
@@ -235,7 +229,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <?php if (!empty($featured_products)): ?>
                 <?php foreach ($featured_products as $index => $product): ?>
-                    <div class="reveal-up group" style="transition-delay: <?php echo $index * 0.05; ?>s">
+                    <div class="reveal-up group">
                         <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-100 aspect-[4/5] mb-6">
                             <?php if ($product->image): ?>
                                 <?php 
@@ -250,7 +244,7 @@
                             
                             <!-- Overlay Actions -->
                             <div class="absolute inset-x-0 bottom-0 p-6 flex justify-between items-center translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                                <a href="<?php echo base_url('ecommerce/product_catalog/' . $product->id); ?>" class="bg-white text-slate-900 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary-600 hover:text-white transition-colors">
+                                <a href="<?php echo base_url('ecommerce/product_catalog/' . $product->slug); ?>" class="bg-white text-slate-900 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary-600 hover:text-white transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
                                 <button class="bg-slate-900 text-white px-6 py-3 rounded-full text-xs font-bold hover:bg-primary-600 transition-colors">

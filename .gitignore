@@ -53,3 +53,5 @@ development/application/cache
 
 # Ignore all CodeIgniter database config files
 **/database.php
+
+.vscode

@@ -11,7 +11,7 @@ class Product_catalog extends MY_Controller {
 
     public function index()
     {
-        $data['title'] = 'Semua Produk - Arcnad Store';
+        $data['title'] = 'Semua Produk - Arcand Store';
         
         // Filter Inputs
         $filters = [
@@ -42,14 +42,15 @@ class Product_catalog extends MY_Controller {
         $this->load->view('layouts/landing', $data);
     }
 
-    public function detail($id)
+    public function detail($slug)
     {
-        $product = $this->Product_model->get($id);
+        $product = $this->Product_model->get_by_slug($slug);
+
         if (!$product) {
             show_404();
         }
 
-        $data['title'] = $product->name . ' - Arcnad Store';
+        $data['title'] = $product->name . ' - Arcand Store';
         $data['product'] = $product;
         
         $data['content'] = $this->load->view('v_product_detail', $data, TRUE);

@@ -5,7 +5,7 @@ class Base extends MY_Controller {
 
 	public function index()
 	{
-		$data['title'] = 'Dashboard - Arcnad Store';
+		$data['title'] = 'Dashboard - Arcand Store';
 		$data['content'] = $this->load->view('dashboard', $data, TRUE);
 		$this->load->view('layouts/main', $data);
 	}
